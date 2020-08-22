@@ -1,0 +1,383 @@
+<!doctype html><meta charset=utf-8>
+<style>
+*{font-family:sans-serif}
+h3{margin:0;display:inline-block}
+textarea{min-width:80%;min-height:100px}
+.note{
+  position:absolute;
+  border:2px solid red;
+  border-radius:3px;
+  opacity:0.9; box-shadow:5px 5px 5px rgba(0,0,0,0.3);
+  min-height:50px; min-width:50px;
+  resize:both; overflow:auto;
+}
+.note div{user-select: none;}
+.subnote {
+  position:absolute;
+  border: 1px solid red;
+  box-shadow:2px 2px 2px rgba(0,0,0,0.3);
+  z-index:-1;
+}
+.gear{
+  display:block;float:right;
+  width:13px; height:13px;
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6+R8AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAOtJREFUeNp8kj0LwkAMhtterau26uCgIPixOIiTf91fIeiiIo6C2joIFj/rG3kPwlE8eOglby6X5Gq88jUCMxCAsysG/PpgABL6OvR3aCfUfRssa0inrBcIVWJtb8Da3pSpoNCpRtupdojxBgbcwYqJYjAGEfVfcsOmJ6DCBAtwYFlXkIM2e+tKnNzUd8q5/LGrEi+nd+CphNg5VFd7idtJeSewBz013pwBLfZk2NMcHEOVzagSpiUPLnpNhmZH3lDixwnWdtNT2TM+9BYsOSXRHiwpZcnyuIU9VPAfu3EfcSDS65H+MzXvK8AAT5g1PwYr5mUAAAAASUVORK5CYII=)
+}
+#menu{
+  display:none;
+  position:absolute;
+  background:#ccc;
+  border:2px solid red;
+  border-radius:3px;
+  box-shadow:5px 5px 5px rgba(0,0,0,0.3);
+  z-index:99999999;
+}
+#main{position:absolute;top:0;left:0;width:100%;min-height:100vh;margin:0;}
+#trail{
+  position:fixed;
+  background:#eee;
+  width:100%;
+  left:0;top:0;
+}
+#trail a{
+  color:#000; text-decoration:none;
+  display:inline-block;
+  padding:3px;
+  border: 2px solid red;
+  border-radius:3px;
+  margin:2px;
+}
+#trail a:hover{opacity:0.6}
+</style>
+
+<div id=menu>
+  Change color<br>
+  Move to different note<br>
+  <a href='#' onclick='deleteNote()'>Delete</a><br>
+</div>
+<div id=main></div>
+
+<div id=trail>
+<span>root</span> 
+<span>something</span>
+<span>something</span>
+</div>
+<a style='position:fixed;right:0;top:0' href='#' onclick='localStorage.tree="";window.location.reload()'>reset</a>
+
+<div style='position:fixed;bottom:0;left:0'>
+Click and drag to move note<br>
+Double click note body to expand<br>
+Double click text to edit<br>
+Double click background to add note<br>
+Drag corners to resize<br>
+</div>
+
+<script>
+// each layer has different default colour?
+// scroll wheel locally zooms page
+
+// markdown to support: bold, italic, strikethrough (toggleable for titles?), preformatted
+
+// locally zoomable - infinite canvas on each note - handle dragging off the edge.
+// click to organise?
+
+// overlapping notes should push each other away
+// drag onto another note to jump it into that note, drag onto trail at top to jump it out of that note
+
+// gear wheel: lock, change color, delete
+
+// zoom out by clicking on breadcrumb trail
+// back/forward needs to function
+
+// collaborative stuff comes later
+
+
+testtree = {title:"root", children:[
+  {
+    title: "Test note one",
+    x: 20,
+    y: 30,
+    width: 100,
+    height: 50,
+    color: {h: 50, s:100, l:50},
+    children: []
+  },
+  {
+    title: "Test note two",
+    x: 250,
+    y: 30,
+    width: 100,
+    height: 50,
+    color: {h: 10, s:100, l:50},
+    children: []
+  },
+  {
+    title: "Test note three",
+    x: 150,
+    y: 230,
+    width: 100,
+    height: 50,
+    color: {h: 90, s:100, l:50},
+    children: []
+  }
+]}
+
+testtree = {"children":[{"title":"Test note one","x":221,"y":130,"width":102,"height":193,"color":{"h":50,"s":100,"l":50},"children":[]},{"title":"Test note two","x":847,"y":190,"width":274,"height":427,"color":{"h":10,"s":100,"l":50},"children":[{"title":"Test note one","x":48,"y":91,"width":233,"height":253,"color":{"h":50,"s":100,"l":50},"children":[]},{"title":"Test note two","x":442,"y":101,"width":505,"height":253,"color":{"h":10,"s":100,"l":50},"children":[{"title":"New note","x":475,"y":254,"width":100,"height":50,"color":{"h":300,"s":55.69454618806493,"l":50},"children":[]}]},{"title":"Test note three","x":58,"y":443,"width":484,"height":323,"color":{"h":90,"s":100,"l":50},"children":[{"title":"New note","x":152,"y":122,"width":244,"height":161,"color":{"h":300,"s":55.69454618806493,"l":50},"children":[{"title":"New note","x":375,"y":302,"width":100,"height":50,"color":{"h":300,"s":55.69454618806493,"l":50},"children":[]}]},{"title":"New note","x":518,"y":501,"width":600,"height":166,"color":{"h":192.07740010771843,"s":39.92474370556675,"l":50},"children":[]}]},{"title":"New note","x":715,"y":366,"width":215,"height":66,"color":{"h":300,"s":55.69454618806493,"l":50},"children":[]},{"title":"New note","x":241,"y":230,"width":79,"height":185,"color":{"h":192.07740010771843,"s":39.92474370556675,"l":50},"children":[]},{"title":"#New note with a very long title you know","x":524,"y":546,"width":253,"height":273,"color":{"h":160.2823250564796,"s":89.68752541348653,"l":50},"children":[{"title":"New note","x":447,"y":427,"width":100,"height":50,"color":{"h":300,"s":55.69454618806493,"l":50},"children":[{"title":"New note","x":463,"y":458,"width":100,"height":50,"color":{"h":192.07740010771843,"s":39.92474370556675,"l":50},"children":[{"title":"New note","x":430,"y":399,"width":100,"height":50,"color":{"h":160.2823250564796,"s":89.68752541348653,"l":50},"children":[{"title":"New note","x":444,"y":433,"width":100,"height":50,"color":{"h":64.83472336507462,"s":100,"l":50},"children":[{"title":"New note","x":463,"y":461,"width":100,"height":50,"color":{"h":25.93403270082507,"s":57.039608536320316,"l":50},"children":[{"title":"New note","x":449,"y":445,"width":100,"height":50,"color":{"h":300,"s":52.858673508032815,"l":50},"children":[{"title":"New note","x":441,"y":434,"width":100,"height":50,"color":{"h":180,"s":56.628941489471615,"l":50},"children":[{"title":"is this the end?","x":457,"y":434,"width":100,"height":50,"color":{"h":134.92647495651107,"s":84.03049499220974,"l":50},"children":[]},{"title":"Yay!","x":157,"y":241,"width":725,"height":151,"color":{"h":60,"s":100,"l":50},"children":[]}]}]}]}]}]}]}]}]},{"title":"New note","x":764,"y":469,"width":115,"height":124,"color":{"h":300,"s":55.69454618806493,"l":50},"children":[]}]},{"title":"#a title\nand here's *some* markdown _almost_ maybe","x":458,"y":105,"width":273,"height":194,"color":{"h":192.07740010771843,"s":39.92474370556675,"l":50},"children":[{"title":"New note","x":257,"y":204,"width":255,"height":357,"color":{"h":160.2823250564796,"s":89.68752541348653,"l":50},"children":[]}]},{"title":"New note","x":278,"y":555,"width":218,"height":218,"color":{"h":300,"s":55.69454618806493,"l":50},"children":[]},{"title":"New note","x":306,"y":443,"width":252,"height":98,"color":{"h":192.07740010771843,"s":39.92474370556675,"l":50},"children":[]}],"title":"Root"}
+
+if (localStorage.tree) tree=JSON.parse(localStorage.tree); else tree=testtree;
+
+
+var level;
+var menu=document.getElementById('menu')
+var trail=document.getElementById('trail')
+var trailobj=[]
+var menuRef=null;
+
+function deleteNote(){
+  for (let i in level.children)
+    if (level.children[i]===menuRef) level.children.splice(i,1);
+  save()
+  populate(level)
+  menu.style.display='none'
+}
+
+function createNote(n){
+  var d = document.createElement('div');
+  d.className='note'
+  
+  d.style.backgroundColor='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
+  d.style.borderColor='hsl('+n.color.h+','+n.color.s+'%,'+(n.color.l*0.8)+'%)';
+
+  d.style.width=n.width+'px'
+  d.style.height=n.height+'px'
+  d.style.left=n.x+'px'
+  d.style.top=n.y+'px'
+  d.style.zIndex = autoIndex(n)
+
+  var a = document.createElement('a');
+  a.className='gear'
+  a.href="#"
+  a.onclick=function(e){
+    menu.style.left=e.pageX+'px'
+    menu.style.top=e.pageY+'px'
+    menu.style.display='block'
+    menuRef=n;
+  }
+  d.appendChild(a)
+
+  var t = document.createElement('div');
+  t.innerHTML=markdown(n.title)
+  t.ondblclick=function(e){
+    e.stopPropagation()
+    var e = document.createElement('textarea')
+    function saveText(){ n.title = e.value; t.innerHTML = markdown(n.title); d.style.overflow='auto'; save() }
+
+    e.innerHTML = n.title
+    t.innerHTML = "";
+    d.style.overflow='visible'
+    t.appendChild(e);
+
+    e.focus()
+    e.onblur=saveText;
+    e.onkeydown=function(e){
+      if (((e.keyCode==13 || e.keyCode==10) && e.ctrlKey) || e.keyCode==27)
+        saveText();
+    }
+  }
+
+  d.appendChild(t)
+  d.ondblclick=function(e){
+    //animate here...
+
+    trailobj.push(n)
+    regenTrail()
+    populate(n)
+  }
+
+  d.onmousedown=function(e){
+    if (e.target.tagName=="TEXTAREA") return;
+    var sw = d.style.width, sh = d.style.height;
+    d.style.zIndex = 99999;
+
+    var offx = e.pageX - (parseFloat(d.style.left)||0), offy = e.pageY - (parseFloat(d.style.top)||0);
+    document.onmousemove=function(e){
+      if (d.style.width!=sw || d.style.height!=sh) {
+        n.width = parseFloat(d.style.width)
+        n.height= parseFloat(d.style.height)
+        return
+      }
+
+      n.x = e.pageX - offx
+      n.y = e.pageY - offy
+      d.style.left = n.x +'px'
+      d.style.top  = n.y +'px'
+    }
+    document.onmouseup=function(){
+      d.style.zIndex = autoIndex(n)
+      document.onmouseup=null;
+      document.onmousemove=null;
+      save()
+    }
+  }
+
+  let bound = childSize(n.children)
+  let scale = Math.min(0.9*n.width/bound.w, 0.9*n.height/bound.h) || 0.1;
+
+  for (let i of n.children) {
+    let sn = document.createElement('div')
+    sn.className='subnote'
+    
+    sn.style.backgroundColor='hsl('+i.color.h+','+i.color.s+'%,'+i.color.l*1.5+'%)';
+    sn.style.borderColor='hsl('+i.color.h+','+i.color.s+'%,'+(i.color.l*1.5*0.8)+'%)';
+
+    
+    sn.style.width=i.width*scale+'px'
+    sn.style.height=i.height*scale+'px'
+    sn.style.left=i.x*scale+'px'
+    sn.style.bottom=(bound.h-i.y-i.height)*scale+'px'
+
+    d.appendChild(sn)
+  }
+
+
+  main.appendChild(d)
+}
+function populate(t){
+  main.innerHTML="";
+  for (let i of t.children)
+    createNote(i)
+  level = t
+}
+function setLevel(i){
+  trailobj=trailobj.slice(0,i+1)
+  regenTrail()
+  populate(trailobj[i])
+}
+function regenTrail(){
+  let s=[]
+  for (let i in trailobj) {
+    let n=trailobj[i]
+    let c1 = n.color? "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l*1.2+"%)" : "#fff"
+    let c2 = n.color? "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l*0.8+"%)" : "#ccc"
+    s.push("<a href=# onclick='setLevel("+i+")' style='background:"+c1+"; border-color:"+c2+"'>"+shortTitle(n.title)+"</a>")
+  }
+
+  trail.innerHTML = s.join(" &rarr; ")
+}
+function shortTitle(t){
+  if (!t) return "(no name)"
+  t = t.split("\n")[0].replace(/^[#]+/,"");
+  
+  if (t.length>23) t=t.slice(0,20)+"..."
+  return t
+}
+
+main.ondblclick=function(e){
+//main.onclick=function(e){
+  if (e.target.id!="main")return;
+  var newNote = {
+    title: "New note",
+    //text: "Some stuff about it",
+    x: e.pageX,
+    y: e.pageY,
+    width: 100,
+    height: 50,
+    color: randomColor(),
+    children: []
+  }
+  createNote(newNote)
+  level.children.push(newNote)
+  save()
+}
+main.onmousedown=function(e){
+  menu.style.display='none'
+}
+
+function markdown(s){ //placeholder
+
+  let lines = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').split("\n")
+  for (let i in lines){
+    lines[i]=lines[i].replace(/^[#]+(.+)$/,'<h3>$1</h3>');
+  }
+// pre tags
+// links (don't format)
+
+  return lines.join("<br>").replace(/_([^_]+)_/g,'<i>$1</i>').replace(/\*([^\*]+)\*/g,'<b>$1</b>')
+}
+function autoIndex(n){
+  return Math.round(Math.sqrt(n.x*n.x +n.y*n.y))
+}
+function childSize(ch){
+  let minx=1e6, miny=1e6, maxx=-1e6, maxy=-1e6;
+  for (let i of ch){
+    if (i.x<minx) minx=i.x;
+    if (i.y<miny) miny=i.y;
+    if (i.x+i.width >maxx) maxx=i.x+i.width;
+    if (i.y+i.height >maxy) maxy=i.y+i.height;
+  }
+  return {x:minx,y:miny,w:maxx,h:maxy}
+}
+
+function clamp(i){
+  if (i>1) return 1;
+  if (i<0) return 0
+  return i
+}
+/*
+function yuv2rgb(y,u,v){
+  let r = clamp(y + (1.370705 * (v-128)));
+  let g = clamp(y - (0.698001 * (v-128)) - (0.337633 * (u-128)));
+  let b = clamp(y + (1.732446 * (u-128)));
+  return `rgb(${r},${g},${b})`
+}*/
+function yiq2hsl(y, i, q)
+{
+	var r = clamp((y + ( 0.956 * i) + ( 0.621 * q)) );
+	var g = clamp((y + (-0.272 * i) + (-0.647 * q)) );
+	var b = clamp((y + (-1.105 * i) + ( 1.702 * q)) );
+  
+
+// r,g,b values are from 0 to 1
+// h = [0,360], s = [0,1], v = [0,1]
+
+
+  let min = Math.min( r, g, b );
+  let max = Math.max( r, g, b );
+  l = max*50;
+  if (max==0) return {h:0,s:0,l:0};
+
+  let delta = max - min;
+
+  s = 100* delta / max;
+
+  if (r == max)
+    h = ( g - b ) / delta;     // between yellow & magenta
+  else if (g == max)
+    h = 2 + ( b - r ) / delta; // between cyan & yellow
+  else
+    h = 4 + ( r - g ) / delta; // between magenta & cyan
+
+  h *= 60; // degrees
+  if (h < 0)
+    h += 360;
+
+  return {h,s,l}
+}
+
+var sColor=0
+function randomColor(){
+  let angle = sColor+=1.3 // Math.random()*2*3.1415926535;
+  return yiq2hsl( 1, 0.8*Math.cos(angle), 0.8*Math.sin(angle) );
+}
+
+function save(){
+  localStorage.tree=JSON.stringify(tree)
+}
+
+//document.onscroll
+
+
+trailobj[0]=tree;
+regenTrail()
+populate(tree)
+</script>
