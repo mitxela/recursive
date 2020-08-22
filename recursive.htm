@@ -32,10 +32,15 @@ textarea{min-width:80%;min-height:100px}
   box-shadow:5px 5px 5px rgba(0,0,0,0.3);
   z-index:99999999;
 }
-#main{position:absolute;top:0;left:0;width:100%;min-height:100vh;margin:0;}
+#main{
+  position:absolute;
+  top:0;left:0;width:100%;min-height:100vh;
+  margin:0;
+  transition:opacity 0.3s;
+}
 #trail{
   position:fixed;
-  background:#eee;
+  background:rgba(128,128,128,0.3);
   width:100%;
   left:0;top:0;
 }
@@ -188,10 +193,23 @@ function createNote(n){
   d.appendChild(t)
   d.ondblclick=function(e){
     //animate here...
+    
+    d.style.transition="0.3s linear"
+    
+    d.style.left=(window.innerWidth -n.width )/2 + 'px'
+    d.style.top=(window.innerHeight -n.height)/2  + 'px'
+    d.style.transform="scale("+(window.innerWidth/n.width)*1.2+")"
+    d.style.zIndex="9999999"
+    //main.style.transition='opacity 0.2s'
+    main.style.opacity='0'
+    
 
-    trailobj.push(n)
-    regenTrail()
-    populate(n)
+    setTimeout(()=>{
+      main.style.opacity=''
+      trailobj.push(n)
+      regenTrail()
+      populate(n)
+    },300)
   }
 
   d.onmousedown=function(e){
@@ -247,6 +265,8 @@ function populate(t){
   for (let i of t.children)
     createNote(i)
   level = t
+
+  main.style.backgroundColor= t.color? 'hsl('+t.color.h+','+t.color.s+'%,'+(t.color.l*0.3+70)+'%)' : '#fff';
 }
 function setLevel(i){
   trailobj=trailobj.slice(0,i+1)
