@@ -200,7 +200,6 @@ function createNote(n){
     d.style.top=(window.innerHeight -n.height)/2  + 'px'
     d.style.transform="scale("+(window.innerWidth/n.width)*1.2+")"
     d.style.zIndex="9999999"
-    //main.style.transition='opacity 0.2s'
     main.style.opacity='0'
     
 
@@ -238,8 +237,10 @@ function createNote(n){
     }
   }
 
-  let bound = childSize(n.children)
+  //let bound = childSize(n.children)
+  let bound = {w:window.innerWidth,h:window.innerHeight}
   let scale = Math.min(0.9*n.width/bound.w, 0.9*n.height/bound.h) || 0.1;
+  
 
   for (let i of n.children) {
     let sn = document.createElement('div')
