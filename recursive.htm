@@ -56,7 +56,7 @@ textarea{min-width:80%;min-height:100px}
 </style>
 
 <div id=menu>
-  Change color<br>
+  Change color <input type=color onchange='changeColor()'><br>
   Move to different note<br>
   <a href='#' onclick='deleteNote()'>Delete</a><br>
 </div>
@@ -97,7 +97,7 @@ Drag corners to resize<br>
 // collaborative stuff comes later
 
 
-testtree = {title:"root", children:[
+testtree = {title:"Root", children:[
   {
     title: "Test note one",
     x: 20,
@@ -137,6 +137,7 @@ var menu=document.getElementById('menu')
 var trail=document.getElementById('trail')
 var trailobj=[]
 var menuRef=null;
+var zTopIndex = 0;
 
 function deleteNote(){
   for (let i in level.children)
@@ -144,6 +145,11 @@ function deleteNote(){
   save()
   populate(level)
   menu.style.display='none'
+}
+function changeColor(){
+  menuRef.color = hex2hsl(document.querySelector('input[type=color]').value)
+  save()
+  populate(level)
 }
 
 function createNote(n){
@@ -157,7 +163,6 @@ function createNote(n){
   d.style.height=n.height+'px'
   d.style.left=n.x+'px'
   d.style.top=n.y+'px'
-  d.style.zIndex = autoIndex(n)
 
   var a = document.createElement('a');
   a.className='gear'
@@ -166,6 +171,7 @@ function createNote(n){
     menu.style.left=e.pageX+'px'
     menu.style.top=e.pageY+'px'
     menu.style.display='block'
+    document.querySelector('input[type=color]').value=hsl2rgb(n.color.h,n.color.s,n.color.l)
     menuRef=n;
   }
   d.appendChild(a)
@@ -199,9 +205,9 @@ function createNote(n){
     d.style.left=(window.innerWidth -n.width )/2 + 'px'
     d.style.top=(window.innerHeight -n.height)/2  + 'px'
     d.style.transform="scale("+(window.innerWidth/n.width)*1.2+")"
-    d.style.zIndex="9999999"
+    d.style.zIndex=++zTopIndex;
     main.style.opacity='0'
-    
+    menu.style.display='none'
 
     setTimeout(()=>{
       main.style.opacity=''
@@ -212,11 +218,11 @@ function createNote(n){
   }
 
   d.onmousedown=function(e){
-    if (e.target.tagName=="TEXTAREA") return;
+    if (e.target.tagName=="TEXTAREA" || e.button!=0) return;
     var sw = d.style.width, sh = d.style.height;
-    d.style.zIndex = 99999;
+    d.style.zIndex = ++zTopIndex
 
-    var offx = e.pageX - (parseFloat(d.style.left)||0), offy = e.pageY - (parseFloat(d.style.top)||0);
+    var offx = e.pageX - n.x, offy = e.pageY - n.y;
     document.onmousemove=function(e){
       if (d.style.width!=sw || d.style.height!=sh) {
         n.width = parseFloat(d.style.width)
@@ -230,7 +236,6 @@ function createNote(n){
       d.style.top  = n.y +'px'
     }
     document.onmouseup=function(){
-      d.style.zIndex = autoIndex(n)
       document.onmouseup=null;
       document.onmousemove=null;
       save()
@@ -262,6 +267,7 @@ function createNote(n){
   main.appendChild(d)
 }
 function populate(t){
+  zTopIndex=0
   main.innerHTML="";
   for (let i of t.children)
     createNote(i)
@@ -270,9 +276,26 @@ function populate(t){
   main.style.backgroundColor= t.color? 'hsl('+t.color.h+','+t.color.s+'%,'+(t.color.l*0.3+70)+'%)' : '#fff';
 }
 function setLevel(i){
-  trailobj=trailobj.slice(0,i+1)
-  regenTrail()
-  populate(trailobj[i])
+  if (trailobj[i]==level) {
+    populate(level) //redraw anyway
+    return
+  }
+  main.style.opacity='0';
+
+/*
+  for (let i of main.children) {
+    i.style.transition='0.3s'
+    i.style.transform='scale(0)'
+    i.style.left=(window.innerWidth-parseFloat(i.style.width ))/2 +'px'
+    i.style.top=(window.innerHeight-parseFloat(i.style.height))/2 +'px'
+  }
+*/
+  setTimeout(()=>{
+    main.style.opacity=''
+    trailobj=trailobj.slice(0,i+1)
+    regenTrail()
+    populate(trailobj[i])
+  },300);
 }
 function regenTrail(){
   let s=[]
@@ -344,56 +367,86 @@ function clamp(i){
   if (i<0) return 0
   return i
 }
-/*
-function yuv2rgb(y,u,v){
-  let r = clamp(y + (1.370705 * (v-128)));
-  let g = clamp(y - (0.698001 * (v-128)) - (0.337633 * (u-128)));
-  let b = clamp(y + (1.732446 * (u-128)));
-  return `rgb(${r},${g},${b})`
-}*/
-function yiq2hsl(y, i, q)
-{
-	var r = clamp((y + ( 0.956 * i) + ( 0.621 * q)) );
-	var g = clamp((y + (-0.272 * i) + (-0.647 * q)) );
-	var b = clamp((y + (-1.105 * i) + ( 1.702 * q)) );
-  
-
-// r,g,b values are from 0 to 1
-// h = [0,360], s = [0,1], v = [0,1]
-
-
+function yiq2hsl(y, i, q) {
+  let r = clamp((y + ( 0.956 * i) + ( 0.621 * q)) );
+  let g = clamp((y + (-0.272 * i) + (-0.647 * q)) );
+  let b = clamp((y + (-1.105 * i) + ( 1.702 * q)) );
+  return rgb2hsl(r,g,b)
+}
+function rgb2hsl(r,g,b) {
   let min = Math.min( r, g, b );
   let max = Math.max( r, g, b );
-  l = max*50;
-  if (max==0) return {h:0,s:0,l:0};
+  l = (max+min)*50;
+  if (max==min) return {h:0,s:0,l:0};
 
-  let delta = max - min;
-
-  s = 100* delta / max;
-
-  if (r == max)
-    h = ( g - b ) / delta;     // between yellow & magenta
-  else if (g == max)
-    h = 2 + ( b - r ) / delta; // between cyan & yellow
-  else
-    h = 4 + ( r - g ) / delta; // between magenta & cyan
-
-  h *= 60; // degrees
-  if (h < 0)
-    h += 360;
+  let d = max - min;
+  s = l > 50 ? d / (2 - max - min) : d / (max + min);
+  switch(max){
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+  }
+  h *= 60;
+  s *=100;
 
   return {h,s,l}
 }
+function hex2hsl(c){
+  c = c.match(/[a-z0-9]{2}/gi)
+  return rgb2hsl( parseInt(c[0],16)/255, parseInt(c[1],16)/255, parseInt(c[2],16)/255 );
+}
+function hex(s){
+  return ('00'+Math.round(s * 255).toString(16)).substr(-2,2);
+}
+function hue2rgb(p, q, t){
+  if(t < 0) t += 1;
+  if(t > 1) t -= 1;
+  if(t < 1/6) return p + (q - p) * 6 * t;
+  if(t < 1/2) return q;
+  if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+  return p;
+}
+function hsl2rgb(h, s, l){
+  var r, g, b;
+  h/=360;
+  s/=100;
+  l/=100;
 
-var sColor=0
+  if(s == 0){
+    r = g = b = l;
+  }else{
+    var q = l <= 0.5 ? l * (1 + s) : l + s - l * s;
+    var p = 2 * l - q;
+
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+
+  return '#'+hex(r)+hex(g)+hex(b);
+}
+
+
+
+
+var sColor=Math.random()*3.14159
 function randomColor(){
   let angle = sColor+=1.3 // Math.random()*2*3.1415926535;
-  return yiq2hsl( 1, 0.8*Math.cos(angle), 0.8*Math.sin(angle) );
+  return yiq2hsl( 0.8, 0.5*Math.cos(angle), 0.5*Math.sin(angle) );
 }
 
 function save(){
   localStorage.tree=JSON.stringify(tree)
 }
+function download(){
+  let a = document.createElement('a')
+  a.href="data:application/json;base64,"+btoa(JSON.stringify(tree));
+  a.download="tree.json"
+  document.body.appendChild(a);
+  a.click()
+  document.body.removeChild(a);
+}
+
 
 //document.onscroll
 
