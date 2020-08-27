@@ -23,7 +23,7 @@ textarea{min-width:80%;min-height:100px}
   width:13px; height:13px;
   background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6+R8AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAOtJREFUeNp8kj0LwkAMhtterau26uCgIPixOIiTf91fIeiiIo6C2joIFj/rG3kPwlE8eOglby6X5Gq88jUCMxCAsysG/PpgABL6OvR3aCfUfRssa0inrBcIVWJtb8Da3pSpoNCpRtupdojxBgbcwYqJYjAGEfVfcsOmJ6DCBAtwYFlXkIM2e+tKnNzUd8q5/LGrEi+nd+CphNg5VFd7idtJeSewBz013pwBLfZk2NMcHEOVzagSpiUPLnpNhmZH3lDixwnWdtNT2TM+9BYsOSXRHiwpZcnyuIU9VPAfu3EfcSDS65H+MzXvK8AAT5g1PwYr5mUAAAAASUVORK5CYII=)
 }
-.hl{box-shadow: inset 0px 0px 50px white;}
+.hl{box-shadow: inset 0px 0px 50px white, 5px 5px 5px rgba(0,0,0,0.3); opacity:0.5}
 #menu{
   display:none;
   position:absolute;
@@ -59,16 +59,13 @@ textarea{min-width:80%;min-height:100px}
 
 <div id=menu>
   <p>Change color <input type=color onchange='changeColor()'>
+  <p><a href='#' onclick='editNote()'>Edit</a>
   <p><a href='#' onclick='moveUpNote()'>Move up a level</a>
   <p><a href='#' onclick='deleteNote()'>Delete</a>
 </div>
 <div id=main></div>
 
-<div id=trail>
-<span>root</span> 
-<span>something</span>
-<span>something</span>
-</div>
+<div id=trail></div>
 <a style='position:fixed;right:0;top:0' href='#' onclick='localStorage.tree="";window.location.reload()'>reset</a>
 
 <div style='position:fixed;bottom:0;left:0'>
@@ -80,26 +77,17 @@ Drag corners to resize<br>
 </div>
 
 <script>
-// each layer has different default colour?
-// scroll wheel locally zooms page
-
-// markdown to support: bold, italic, strikethrough (toggleable for titles?), preformatted
-
+// different default colour for each layer?
+// markdown to support: strikethrough (toggleable for titles?), preformatted, autolinks?
 // locally zoomable - infinite canvas on each note - handle dragging off the edge.
 // click to organise?
-
-// overlapping notes should push each other away
-// drag onto another note to jump it into that note, drag onto trail at top to jump it out of that note
-
-// gear wheel: lock, change color, delete
-
-// zoom out by clicking on breadcrumb trail
+// if easy: drag onto trail at top to jump it to specific note
+// allow locking / pinning
+// history / undo
 // back/forward needs to function
 
 // collaborative stuff comes later
 
-
-// #### if notes spawn overlapping, assume you don't want to jump them
 
 
 testtree = {title:"Root", children:[
@@ -152,6 +140,8 @@ function deleteNote(){
   menu.style.display='none'
 }
 function changeColor(){
+console.log(document.querySelector('input[type=color]').value)
+console.log(hex2hsl(document.querySelector('input[type=color]').value))
   menuRef.color = hex2hsl(document.querySelector('input[type=color]').value)
   save()
   populate(level)
@@ -174,6 +164,11 @@ function moveUpNote(){
     if (level.children[i]===menuRef) level.children.splice(i,1);
   save()
   setLevel(trailobj.length-2)
+}
+function editNote(){
+  menu.style.display='none';
+  for (let i in level.children)
+    if (level.children[i]===menuRef) main.children[i].children[1].ondblclick() //super hacky, needs improvement
 }
 
 function createNote(n){
@@ -203,7 +198,7 @@ function createNote(n){
   var t = document.createElement('div');
   t.innerHTML=markdown(n.title)
   t.ondblclick=function(e){
-    e.stopPropagation()
+    if (e) e.stopPropagation()
     var e = document.createElement('textarea')
     function saveText(){ n.title = e.value; t.innerHTML = markdown(n.title); d.style.overflow='auto'; save() }
 
@@ -222,8 +217,6 @@ function createNote(n){
 
   d.appendChild(t)
   d.ondblclick=function(e){
-    //animate here...
-    
     d.style.transition="0.3s linear"
     
     d.style.left=(window.innerWidth -n.width )/2 + 'px'
@@ -267,7 +260,7 @@ function createNote(n){
       for (let i of main.children){ i.className='note'}
       if (ma>0) {
         if (!suppressJump) main.children[m].className='note hl';
-      } else suppressJump=null;
+      } else suppressJump=false;
     }
     document.onmouseup=function(){
       document.onmouseup=null;
@@ -326,8 +319,6 @@ function populate(t){
   for (let i of t.children)
     createNote(i)
   level = t
-
-  
   
   setTimeout(()=>{document.body.style.backgroundColor=main.style.backgroundColor}, 300)
   main.style.backgroundColor= t.color? 'hsl('+t.color.h+','+t.color.s+'%,'+(t.color.l*0.3+70)+'%)' : '#fff';
@@ -375,14 +366,12 @@ function shortTitle(t){
 }
 
 main.ondblclick=function(e){
-//main.onclick=function(e){
   if (e.target.id!="main")return;
   var newNote = {
     title: "New note",
-    //text: "Some stuff about it",
     x: e.pageX,
     y: e.pageY,
-    width: 100,
+    width: 200,
     height: 50,
     color: randomColor(),
     children: []
@@ -448,7 +437,7 @@ function rgb2hsl(r,g,b) {
   let min = Math.min( r, g, b );
   let max = Math.max( r, g, b );
   l = (max+min)*50;
-  if (max==min) return {h:0,s:0,l:0};
+  if (max==min) return {h:0,s:0,l};
 
   let d = max - min;
   s = l > 50 ? d / (2 - max - min) : d / (max + min);
