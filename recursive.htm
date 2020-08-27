@@ -23,15 +23,17 @@ textarea{min-width:80%;min-height:100px}
   width:13px; height:13px;
   background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6+R8AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAOtJREFUeNp8kj0LwkAMhtterau26uCgIPixOIiTf91fIeiiIo6C2joIFj/rG3kPwlE8eOglby6X5Gq88jUCMxCAsysG/PpgABL6OvR3aCfUfRssa0inrBcIVWJtb8Da3pSpoNCpRtupdojxBgbcwYqJYjAGEfVfcsOmJ6DCBAtwYFlXkIM2e+tKnNzUd8q5/LGrEi+nd+CphNg5VFd7idtJeSewBz013pwBLfZk2NMcHEOVzagSpiUPLnpNhmZH3lDixwnWdtNT2TM+9BYsOSXRHiwpZcnyuIU9VPAfu3EfcSDS65H+MzXvK8AAT5g1PwYr5mUAAAAASUVORK5CYII=)
 }
+.hl{box-shadow: inset 0px 0px 50px white;}
 #menu{
   display:none;
   position:absolute;
-  background:#ccc;
-  border:2px solid red;
+  background:#eee;
+  border:3px solid #ccc;
   border-radius:3px;
   box-shadow:5px 5px 5px rgba(0,0,0,0.3);
   z-index:99999999;
 }
+#menu p{margin:7px}
 #main{
   position:absolute;
   top:0;left:0;width:100%;min-height:100vh;
@@ -56,9 +58,9 @@ textarea{min-width:80%;min-height:100px}
 </style>
 
 <div id=menu>
-  Change color <input type=color onchange='changeColor()'><br>
-  Move to different note<br>
-  <a href='#' onclick='deleteNote()'>Delete</a><br>
+  <p>Change color <input type=color onchange='changeColor()'>
+  <p><a href='#' onclick='moveUpNote()'>Move up a level</a>
+  <p><a href='#' onclick='deleteNote()'>Delete</a>
 </div>
 <div id=main></div>
 
@@ -95,6 +97,9 @@ Drag corners to resize<br>
 // back/forward needs to function
 
 // collaborative stuff comes later
+
+
+// #### if notes spawn overlapping, assume you don't want to jump them
 
 
 testtree = {title:"Root", children:[
@@ -150,6 +155,25 @@ function changeColor(){
   menuRef.color = hex2hsl(document.querySelector('input[type=color]').value)
   save()
   populate(level)
+}
+function moveUpNote(){
+  menu.style.display='none';
+  if (trailobj.length<=1) {
+    if (!confirm("Create new note above root?")) return;
+    tree.x=50 //todo: check it doesn't collide with menuref
+    tree.y=50
+    tree.width=200
+    tree.height=200
+    tree.color={h:0,s:0,l:100}
+    tree.title="Old root"
+    tree = {title:"Root", children:[tree]}
+    trailobj.unshift(tree)
+  }
+  trailobj[trailobj.length-2].children.push(menuRef);
+  for (let i in level.children)
+    if (level.children[i]===menuRef) level.children.splice(i,1);
+  save()
+  setLevel(trailobj.length-2)
 }
 
 function createNote(n){
@@ -222,7 +246,10 @@ function createNote(n){
     var sw = d.style.width, sh = d.style.height;
     d.style.zIndex = ++zTopIndex
 
+    var startx=n.x, starty=n.y;
     var offx = e.pageX - n.x, offy = e.pageY - n.y;
+    let suppressJump = mostOverlapping(n)[1]>0;
+
     document.onmousemove=function(e){
       if (d.style.width!=sw || d.style.height!=sh) {
         n.width = parseFloat(d.style.width)
@@ -234,10 +261,37 @@ function createNote(n){
       n.y = e.pageY - offy
       d.style.left = n.x +'px'
       d.style.top  = n.y +'px'
+
+      
+      let [m, ma] = mostOverlapping(n);
+      for (let i of main.children){ i.className='note'}
+      if (ma>0) {
+        if (!suppressJump) main.children[m].className='note hl';
+      } else suppressJump=null;
     }
     document.onmouseup=function(){
       document.onmouseup=null;
       document.onmousemove=null;
+
+      if (d.style.width!=sw || d.style.height!=sh) {save(); return}
+      
+      let [m, ma] = mostOverlapping(n);
+      if (ma>0 && !suppressJump) {
+        if (confirm('Move "'+shortTitle(n.title)+'" into "'+shortTitle(level.children[m].title)+'"?')) {
+          level.children[m].children.push(n)
+          level.children.splice(level.children.indexOf(n), 1)
+          n.x = startx
+          n.y = starty
+
+          d.style.transition="0.3s linear"
+          d.style.transform="scale(0)"
+          setTimeout(()=>{populate(level)},300)
+        } else {
+          suppressJump = true;
+          main.children[m].className='note'
+        }
+      }
+
       save()
     }
   }
@@ -250,9 +304,9 @@ function createNote(n){
   for (let i of n.children) {
     let sn = document.createElement('div')
     sn.className='subnote'
-    
-    sn.style.backgroundColor='hsl('+i.color.h+','+i.color.s+'%,'+i.color.l*1.5+'%)';
-    sn.style.borderColor='hsl('+i.color.h+','+i.color.s+'%,'+(i.color.l*1.5*0.8)+'%)';
+    let lighter = i.color.l*0.5 + 50;
+    sn.style.backgroundColor='hsl('+i.color.h+','+i.color.s+'%,'+lighter+'%)';
+    sn.style.borderColor='hsl('+i.color.h+','+i.color.s+'%,'+(lighter*0.8)+'%)';
 
     
     sn.style.width=i.width*scale+'px'
@@ -273,6 +327,9 @@ function populate(t){
     createNote(i)
   level = t
 
+  
+  
+  setTimeout(()=>{document.body.style.backgroundColor=main.style.backgroundColor}, 300)
   main.style.backgroundColor= t.color? 'hsl('+t.color.h+','+t.color.s+'%,'+(t.color.l*0.3+70)+'%)' : '#fff';
 }
 function setLevel(i){
@@ -281,7 +338,8 @@ function setLevel(i){
     return
   }
   main.style.opacity='0';
-
+  document.body.style.backgroundColor='';
+  menu.style.display='none'
 /*
   for (let i of main.children) {
     i.style.transition='0.3s'
@@ -301,7 +359,7 @@ function regenTrail(){
   let s=[]
   for (let i in trailobj) {
     let n=trailobj[i]
-    let c1 = n.color? "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l*1.2+"%)" : "#fff"
+    let c1 = n.color? "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l+"%)" : "#fff"
     let c2 = n.color? "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l*0.8+"%)" : "#ccc"
     s.push("<a href=# onclick='setLevel("+i+")' style='background:"+c1+"; border-color:"+c2+"'>"+shortTitle(n.title)+"</a>")
   }
@@ -361,7 +419,20 @@ function childSize(ch){
   }
   return {x:minx,y:miny,w:maxx,h:maxy}
 }
-
+function areaOfOverlap(a,b){
+  let h = Math.min(Math.max(0,Math.min(a.x+a.width-b.x, b.x+b.width-a.x)),a.width,b.width);
+  let v = Math.min(Math.max(0,Math.min(a.y+a.height-b.y, b.y+b.height-a.y)),a.height,b.height);
+  return h*v // / Math.min(a.width*a.height, b.width*b.height)
+}
+function mostOverlapping(n){
+  let m, ma=0;
+  for (let i in level.children){
+    if (n==level.children[i]) continue;
+    let a=areaOfOverlap(n,level.children[i])
+    if (a>ma) {ma=a; m=i}
+  }
+  return [m, ma]
+}
 function clamp(i){
   if (i>1) return 1;
   if (i<0) return 0
@@ -382,9 +453,9 @@ function rgb2hsl(r,g,b) {
   let d = max - min;
   s = l > 50 ? d / (2 - max - min) : d / (max + min);
   switch(max){
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
+    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+    case g: h = (b - r) / d + 2; break;
+    case b: h = (r - g) / d + 4; break;
   }
   h *= 60;
   s *=100;
