@@ -86,6 +86,11 @@ Drag corners to resize<br>
 // history / undo
 // back/forward needs to function
 
+// drawings / pen tool
+// expanded tree structure for quick access
+
+// load json when dragged onto page, save button - need more error checking
+
 // collaborative stuff comes later
 
 
@@ -187,8 +192,21 @@ function createNote(n){
   a.className='gear'
   a.href="#"
   a.onclick=function(e){
-    menu.style.left=e.pageX+'px'
-    menu.style.top=e.pageY+'px'
+    if (e.pageX>window.innerWidth-200){
+      menu.style.left=''
+      menu.style.right=window.innerWidth-e.pageX +'px'
+    } else {
+      menu.style.left=e.pageX+'px'
+      menu.style.right=''
+    }
+    if (e.pageY>window.innerHeight-200){
+      menu.style.top=''
+      menu.style.bottom=window.innerHeight-e.pageY +'px'
+    } else {
+      menu.style.top=e.pageY+'px'
+      menu.style.bottom=''
+    }
+    
     menu.style.display='block'
     document.querySelector('input[type=color]').value=hsl2rgb(n.color.h,n.color.s,n.color.l)
     menuRef=n;
