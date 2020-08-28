@@ -74,6 +74,8 @@ Double click note body to expand<br>
 Double click text to edit<br>
 Double click background to add note<br>
 Drag corners to resize<br>
+<a href=# onclick='downloadJson()'>Download the current state</a>, drag & drop .json file onto this page to load<br>
+<br>
 </div>
 
 <script>
@@ -145,8 +147,6 @@ function deleteNote(){
   menu.style.display='none'
 }
 function changeColor(){
-console.log(document.querySelector('input[type=color]').value)
-console.log(hex2hsl(document.querySelector('input[type=color]').value))
   menuRef.color = hex2hsl(document.querySelector('input[type=color]').value)
   save()
   populate(level)
@@ -516,7 +516,7 @@ function randomColor(){
 function save(){
   localStorage.tree=JSON.stringify(tree)
 }
-function download(){
+function downloadJson(){
   let a = document.createElement('a')
   a.href="data:application/json;base64,"+btoa(JSON.stringify(tree));
   a.download="tree.json"
@@ -525,6 +525,29 @@ function download(){
   document.body.removeChild(a);
 }
 
+
+document.body.addEventListener('dragover', function(e){e.preventDefault();e.stopPropagation()},false);
+document.body.addEventListener('drop', function(e){
+  e.stopPropagation();
+  e.preventDefault();
+
+  let files = e.dataTransfer.files;
+  if (files[0].name.indexOf(".json")==-1) return;
+
+  let reader = new FileReader();
+  reader.onload = function(e) {
+
+    newtree = JSON.parse(e.target.result);
+    if (!newtree.title || !Array.isArray(newtree.children)) return
+
+    tree=newtree;
+    trailobj=[tree];
+    regenTrail()
+    populate(tree)
+  }
+  reader.readAsText(files[0])
+
+},false);
 
 //document.onscroll
 
