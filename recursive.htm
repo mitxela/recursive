@@ -90,7 +90,6 @@ Left click drag on background to draw - change pen color:<input id=pencolor type
 // click to organise?
 // if easy: drag onto trail at top to jump it to specific note
 // allow locking / pinning
-// history / undo
 // back/forward needs to function
 
 // expanded tree structure for quick access
@@ -227,6 +226,7 @@ function createNote(n){
     e.focus()
     e.onblur=saveText;
     e.onkeydown=function(e){
+      e.stopPropagation()
       if (((e.keyCode==13 || e.keyCode==10) && e.ctrlKey) || e.keyCode==27)
         saveText();
     }
@@ -583,9 +583,21 @@ function randomColor(){
   return yiq2hsl( 0.8, 0.5*Math.cos(angle), 0.5*Math.sin(angle) );
 }
 
+var undoHistory=[], maxUndoHistory=10;
 function save(){
+  undoHistory.push(localStorage.tree)
+  undoHistory=undoHistory.slice(-maxUndoHistory)
   localStorage.tree=JSON.stringify(tree)
 }
+function undo(){
+  if (!undoHistory.length) return
+  localStorage.tree=undoHistory.pop()
+  tree=JSON.parse(localStorage.tree)
+  trailobj=[tree];
+  regenTrail()
+  populate(tree)
+}
+document.onkeydown=function(e){if (e.ctrlKey&&e.keyCode==90) undo()}
 function downloadJson(){
   let a = document.createElement('a')
   a.href="data:application/json;base64,"+btoa(JSON.stringify(tree));
