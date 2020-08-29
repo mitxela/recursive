@@ -60,7 +60,7 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 </style>
 <svg></svg>
 <div id=menu>
-  <p>Change color <input type=color onchange='changeColor()'>
+  <p>Change color <input id=notecolor type=color onchange='changeColor()'>
   <p><a href='#' onclick='editNote()'>Edit</a>
   <p><a href='#' onclick='moveUpNote()'>Move up a level</a>
   <p><a href='#' onclick='deleteNote()'>Delete</a>
@@ -149,7 +149,7 @@ function deleteNote(){
   menu.style.display='none'
 }
 function changeColor(){
-  menuRef.color = hex2hsl(document.querySelector('input[type=color]').value)
+  menuRef.color = hex2hsl(document.getElementById('notecolor').value)
   save()
   populate(level)
 }
@@ -198,6 +198,7 @@ function createNote(n){
   a.className='gear'
   a.href="#"
   a.onclick=function(e){
+    e.stopPropagation(); e.preventDefault()
     if (e.pageX>window.innerWidth-200){
       menu.style.left=''
       menu.style.right=window.innerWidth-e.pageX +'px'
@@ -214,7 +215,7 @@ function createNote(n){
     }
     
     menu.style.display='block'
-    document.querySelector('input[type=color]').value=hsl2rgb(n.color.h,n.color.s,n.color.l)
+    document.getElementById('notecolor').value=hsl2rgb(n.color.h,n.color.s,n.color.l)
     menuRef=n;
   }
   d.appendChild(a)
@@ -374,14 +375,7 @@ function setLevel(i){
   mainSvg.style.opacity='0';
   document.body.style.backgroundColor='';
   menu.style.display='none'
-/*
-  for (let i of main.children) {
-    i.style.transition='0.3s'
-    i.style.transform='scale(0)'
-    i.style.left=(window.innerWidth-parseFloat(i.style.width ))/2 +'px'
-    i.style.top=(window.innerHeight-parseFloat(i.style.height))/2 +'px'
-  }
-*/
+
   setTimeout(()=>{
     main.style.opacity=''
     mainSvg.style.opacity=''
@@ -426,20 +420,20 @@ document.ondblclick=function(e){
   level.children.push(newNote)
   save()
 }
+menu.onmousedown=function(e){e.stopPropagation()}
+
 var penColor = document.getElementById('pencolor').value || "black";
 document.onmousedown=function(e){
   menu.style.display='none'
-  if (!background(e.target))return;
-
-  var erase = (e.button!=0)
+  if (!background(e.target)) return;
+  var button = e.button
   //brace for drawing - but don't start yet
   var sx = e.pageX, sy = e.pageY, drawing = false;
   var line = {color:penColor, points:[[sx,sy]]}, path=null;
 
   document.onmousemove=function(e){
-    if (erase) {
+    if (button!=0) {
       // erase lines or something
-
       return;
     }
     if (!drawing) {
@@ -596,7 +590,7 @@ function setSVGsize(svg, w,h){
 }
 function addSVGline(svg, line){
   let path=document.createElementNS(svgNS, "path");
-  path.setAttributeNS(null, "style", "stroke-width: 2px; fill: none; stroke: "+(line.color||'black'))
+  path.setAttributeNS(null, "style", "stroke-width: 3px; fill: none; stroke: "+(line.color||'black'))
   if (!line.points.length) return;
   updateSVGline(svg,path,line);
   svg.appendChild(path)
@@ -608,8 +602,8 @@ function updateSVGline(svg,path,line){
   path.setAttributeNS(null, "d", pathstring)
   var ex=0, ey=0, w=svg.getAttribute("width"), h=svg.getAttribute("height");
   for (let i of line.points) {
-    if (i[0]>ex) ex=i[0];
-    if (i[1]>ey) ey=i[1];
+    if (i[0]>ex) ex=i[0]+2;
+    if (i[1]>ey) ey=i[1]+2;
   }
   if (ex>w || ey>h)
     setSVGsize(svg,Math.max(ex,w),Math.max(ey,h))
