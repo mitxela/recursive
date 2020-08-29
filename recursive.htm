@@ -2,6 +2,7 @@
 <style>
 *{font-family:sans-serif}
 h3{margin:0;display:inline-block}
+body{transition: background-color 0.3s}
 textarea{min-width:80%;min-height:100px}
 .note{
   position:absolute;
@@ -55,8 +56,9 @@ textarea{min-width:80%;min-height:100px}
   margin:2px;
 }
 #trail a:hover{opacity:0.6}
+svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 </style>
-
+<svg></svg>
 <div id=menu>
   <p>Change color <input type=color onchange='changeColor()'>
   <p><a href='#' onclick='editNote()'>Edit</a>
@@ -75,6 +77,7 @@ Double click text to edit<br>
 Double click background to add note<br>
 Drag corners to resize<br>
 <a href=# onclick='downloadJson()'>Download the current state</a>, drag & drop .json file onto this page to load<br>
+Left click drag on background to draw - change pen color:<input id=pencolor type=color oninput='penColor=this.value'> <a href='#' onclick='eraseAllLines()'>erase all lines from this note</a><br>
 <br>
 </div>
 
@@ -91,7 +94,6 @@ Drag corners to resize<br>
 // drawings / pen tool
 // expanded tree structure for quick access
 
-// load json when dragged onto page, save button - need more error checking
 
 // collaborative stuff comes later
 
@@ -175,7 +177,11 @@ function editNote(){
   for (let i in level.children)
     if (level.children[i]===menuRef) main.children[i].children[1].ondblclick() //super hacky, needs improvement
 }
-
+function eraseAllLines(){
+  delete level.lines;
+  save()
+  populate(level)
+}
 function createNote(n){
   var d = document.createElement('div');
   d.className='note'
@@ -242,10 +248,13 @@ function createNote(n){
     d.style.transform="scale("+(window.innerWidth/n.width)*1.2+")"
     d.style.zIndex=++zTopIndex;
     main.style.opacity='0'
+    mainSvg.style.opacity='0'
     menu.style.display='none'
+    document.body.style.backgroundColor='';
 
     setTimeout(()=>{
       main.style.opacity=''
+      mainSvg.style.opacity=''
       trailobj.push(n)
       regenTrail()
       populate(n)
@@ -311,6 +320,18 @@ function createNote(n){
   let bound = {w:window.innerWidth,h:window.innerHeight}
   let scale = Math.min(0.9*n.width/bound.w, 0.9*n.height/bound.h) || 0.1;
   
+  if (n.lines){
+    let container = document.createElement("div")
+    let svg = document.createElementNS(svgNS, "svg");
+    setSVGsize(svg,bound.w,bound.h)
+    for (let line of n.lines) addSVGline(svg, line)
+    svg.style.transform='scale('+scale+')'
+    container.appendChild(svg)
+    container.style.position='absolute'
+    container.style.left='0'
+    container.style.bottom=bound.h*scale+'px'
+    d.appendChild(container)
+  }
 
   for (let i of n.children) {
     let sn = document.createElement('div')
@@ -337,9 +358,12 @@ function populate(t){
   for (let i of t.children)
     createNote(i)
   level = t
-  
-  setTimeout(()=>{document.body.style.backgroundColor=main.style.backgroundColor}, 300)
-  main.style.backgroundColor= t.color? 'hsl('+t.color.h+','+t.color.s+'%,'+(t.color.l*0.3+70)+'%)' : '#fff';
+
+  resetSVG(mainSvg)
+  if (t.lines) {
+    for (let line of t.lines) addSVGline(mainSvg, line)
+  }
+  document.body.style.backgroundColor= t.color? 'hsl('+t.color.h+','+t.color.s+'%,'+(t.color.l*0.3+70)+'%)' : '#fff';
 }
 function setLevel(i){
   if (trailobj[i]==level) {
@@ -347,6 +371,7 @@ function setLevel(i){
     return
   }
   main.style.opacity='0';
+  mainSvg.style.opacity='0';
   document.body.style.backgroundColor='';
   menu.style.display='none'
 /*
@@ -359,6 +384,7 @@ function setLevel(i){
 */
   setTimeout(()=>{
     main.style.opacity=''
+    mainSvg.style.opacity=''
     trailobj=trailobj.slice(0,i+1)
     regenTrail()
     populate(trailobj[i])
@@ -382,9 +408,11 @@ function shortTitle(t){
   if (t.length>23) t=t.slice(0,20)+"..."
   return t
 }
-
-main.ondblclick=function(e){
-  if (e.target.id!="main")return;
+function background(t){
+  return (t.id=="main" || t==mainSvg || t.tagName=="HTML")
+}
+document.ondblclick=function(e){
+  if (!background(e.target))return;
   var newNote = {
     title: "New note",
     x: e.pageX,
@@ -398,8 +426,40 @@ main.ondblclick=function(e){
   level.children.push(newNote)
   save()
 }
-main.onmousedown=function(e){
+var penColor = document.getElementById('pencolor').value || "black";
+document.onmousedown=function(e){
   menu.style.display='none'
+  if (!background(e.target))return;
+
+  var erase = (e.button!=0)
+  //brace for drawing - but don't start yet
+  var sx = e.pageX, sy = e.pageY, drawing = false;
+  var line = {color:penColor, points:[[sx,sy]]}, path=null;
+
+  document.onmousemove=function(e){
+    if (erase) {
+      // erase lines or something
+
+      return;
+    }
+    if (!drawing) {
+      if (!level.lines) level.lines=[]
+      level.lines.push(line)
+      path=addSVGline(mainSvg, line)
+      drawing = true
+    }
+    line.points.push([e.pageX,e.pageY])
+    updateSVGline(mainSvg,path,line)
+  }
+  document.onmouseup=function(e){
+    document.onmouseup=null;
+    document.onmousemove=null;
+    if (drawing){
+      line.points.push([e.pageX,e.pageY])
+      updateSVGline(mainSvg,path,line)
+      save();
+    }
+  }
 }
 
 function markdown(s){ //placeholder
@@ -451,6 +511,10 @@ function yiq2hsl(y, i, q) {
   let b = clamp((y + (-1.105 * i) + ( 1.702 * q)) );
   return rgb2hsl(r,g,b)
 }
+function hex2hsl(c){
+  c = c.match(/[a-z0-9]{2}/gi)
+  return rgb2hsl( parseInt(c[0],16)/255, parseInt(c[1],16)/255, parseInt(c[2],16)/255 );
+}
 function rgb2hsl(r,g,b) {
   let min = Math.min( r, g, b );
   let max = Math.max( r, g, b );
@@ -468,13 +532,6 @@ function rgb2hsl(r,g,b) {
   s *=100;
 
   return {h,s,l}
-}
-function hex2hsl(c){
-  c = c.match(/[a-z0-9]{2}/gi)
-  return rgb2hsl( parseInt(c[0],16)/255, parseInt(c[1],16)/255, parseInt(c[2],16)/255 );
-}
-function hex(s){
-  return ('00'+Math.round(s * 255).toString(16)).substr(-2,2);
 }
 function hue2rgb(p, q, t){
   if(t < 0) t += 1;
@@ -495,15 +552,15 @@ function hsl2rgb(h, s, l){
   }else{
     var q = l <= 0.5 ? l * (1 + s) : l + s - l * s;
     var p = 2 * l - q;
-
     r = hue2rgb(p, q, h + 1/3);
     g = hue2rgb(p, q, h);
     b = hue2rgb(p, q, h - 1/3);
   }
-
   return '#'+hex(r)+hex(g)+hex(b);
 }
-
+function hex(s){
+  return ('00'+Math.round(s * 255).toString(16)).substr(-2,2);
+}
 
 
 
@@ -525,6 +582,41 @@ function downloadJson(){
   document.body.removeChild(a);
 }
 
+const mainSvg=document.querySelector('svg')
+const svgNS = "http://www.w3.org/2000/svg"
+function resetSVG(svg){
+  // erase existing contents
+  let c; while (c = svg.firstChild) svg.removeChild(c)
+  setSVGsize(svg, window.innerWidth,window.innerHeight);
+}
+function setSVGsize(svg, w,h){
+  svg.setAttribute("width",w)
+  svg.setAttribute("height",h)
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`)
+}
+function addSVGline(svg, line){
+  let path=document.createElementNS(svgNS, "path");
+  path.setAttributeNS(null, "style", "stroke-width: 2px; fill: none; stroke: "+(line.color||'black'))
+  if (!line.points.length) return;
+  updateSVGline(svg,path,line);
+  svg.appendChild(path)
+  return path
+}
+function updateSVGline(svg,path,line){
+  let pathstring = "M "+line.points[0].join(',')
+  for (let i=1;i<line.points.length;i++) pathstring += "L "+line.points[i].join(',')
+  path.setAttributeNS(null, "d", pathstring)
+  var ex=0, ey=0, w=svg.getAttribute("width"), h=svg.getAttribute("height");
+  for (let i of line.points) {
+    if (i[0]>ex) ex=i[0];
+    if (i[1]>ey) ey=i[1];
+  }
+  if (ex>w || ey>h)
+    setSVGsize(svg,Math.max(ex,w),Math.max(ey,h))
+}
+window.onresize=function(){
+  console.log('resize')
+}
 
 document.body.addEventListener('dragover', function(e){e.preventDefault();e.stopPropagation()},false);
 document.body.addEventListener('drop', function(e){
@@ -538,9 +630,10 @@ document.body.addEventListener('drop', function(e){
   reader.onload = function(e) {
 
     newtree = JSON.parse(e.target.result);
-    if (!newtree.title || !Array.isArray(newtree.children)) return
+    if (!newtree.title || !Array.isArray(newtree.children)) return // more error checking needed - version number?
 
     tree=newtree;
+    save()
     trailobj=[tree];
     regenTrail()
     populate(tree)
