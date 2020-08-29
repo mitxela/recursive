@@ -33,6 +33,7 @@ textarea{min-width:80%;min-height:100px}
   border-radius:3px;
   box-shadow:5px 5px 5px rgba(0,0,0,0.3);
   z-index:99999999;
+  min-width:200px
 }
 #menu p{margin:7px}
 #main{
@@ -199,14 +200,14 @@ function createNote(n){
   a.href="#"
   a.onclick=function(e){
     e.stopPropagation(); e.preventDefault()
-    if (e.pageX>window.innerWidth-200){
+    if (e.clientX>window.innerWidth-220){
       menu.style.left=''
       menu.style.right=window.innerWidth-e.pageX +'px'
     } else {
       menu.style.left=e.pageX+'px'
       menu.style.right=''
     }
-    if (e.pageY>window.innerHeight-200){
+    if (e.clientY>window.innerHeight-220){
       menu.style.top=''
       menu.style.bottom=window.innerHeight-e.pageY +'px'
     } else {
