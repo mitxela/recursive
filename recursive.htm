@@ -1,9 +1,9 @@
 <!doctype html><meta charset=utf-8>
 <style>
-*{font-family:sans-serif}
-h3{margin:0;display:inline-block}
-body{transition: background-color 0.3s}
+h3,h2,h1{margin:0;display:inline-block}
+body{font-family:sans-serif; transition: background-color 0.3s}
 textarea{min-width:80%;min-height:100px}
+pre{background:rgba(128,128,128,0.2)}
 .note{
   position:absolute;
   border:2px solid red;
@@ -13,6 +13,7 @@ textarea{min-width:80%;min-height:100px}
   resize:both; overflow:auto;
 }
 .note div{user-select: none;}
+.note svg{z-index:-1}
 .subnote {
   position:absolute;
   border: 1px solid red;
@@ -92,7 +93,6 @@ Left click drag on background to draw - change pen color:<input id=pencolor type
 // history / undo
 // back/forward needs to function
 
-// drawings / pen tool
 // expanded tree structure for quick access
 
 
@@ -456,17 +456,42 @@ document.onmousedown=function(e){
     }
   }
 }
-
-function markdown(s){ //placeholder
-
-  let lines = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').split("\n")
+function escapeEntities(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+}
+function markdownApply(s){
+  let lines = escapeEntities(s).split("\n")
+  let links=[]
   for (let i in lines){
-    lines[i]=lines[i].replace(/^[#]+(.+)$/,'<h3>$1</h3>');
+    lines[i]=lines[i]
+      .replace(/(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~*+#-]*[\w@?^=%&\/~*+#-])?/gi,function(match){
+        links.push(match)
+        return "&LINK"; //escapeEntities ensures this won't be present
+      })
+      .replace(/^([#]+)(.+)$/,function(m, p1, p2){
+        if (p1=='#') return '<h3>'+p2+'</h3>'
+        if (p1=='##') return '<h2>'+p2+'</h2>'
+        return '<h1>'+p2+'</h1>'
+      });
   }
-// pre tags
-// links (don't format)
-
-  return lines.join("<br>").replace(/_([^_]+)_/g,'<i>$1</i>').replace(/\*([^\*]+)\*/g,'<b>$1</b>')
+  return lines.join("<br>")
+        .replace(/_([^_]+)_/g,'<i>$1</i>')
+        .replace(/\*([^\*]+)\*/g,'<b>$1</b>')
+        .replace(/~([^~]+)~/g,'<s>$1</s>')
+        //.replace(/`([^`]+)`/g,'<code>$1</code>')
+        .replace(/&LINK/g,function(m){
+            let l = links.shift()
+            return "<a href='"+l+"' rel='noreferrer noopener' target=_blank>"+l+"</a>"
+          })
+}
+function markdown(s){
+  //separate out preformatted areas first
+  let pre = s.replace(/[\n]?```[\n]?/g,'```').split('```')
+  for (let i = 0; i<pre.length; i++) {
+    if (i%2) pre[i]="<pre>"+escapeEntities(pre[i])+"</pre>"
+    else pre[i] = markdownApply(pre[i])
+  }
+  return pre.join("\n")
 }
 function autoIndex(n){
   return Math.round(Math.sqrt(n.x*n.x +n.y*n.y))
