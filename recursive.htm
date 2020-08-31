@@ -73,7 +73,7 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 <div id=trail></div>
 <a style='position:fixed;right:0;top:0' href='#' onclick='localStorage.tree="";window.location.reload()'>reset</a>
 
-<div style='position:fixed;bottom:0;left:0'>
+<div id=help style='position:fixed;bottom:0;left:0; user-select:none;'>
 Click and drag to move note<br>
 Double click note body to expand<br>
 Double click text to edit<br>
@@ -407,7 +407,7 @@ function shortTitle(t, last){
   return escapeEntities(t)
 }
 function background(t){
-  return (t.id=="main" || t==mainSvg || t.tagName=="HTML")
+  return (t.id=="main" || t==mainSvg || t.tagName=="HTML" || t.id=="help")
 }
 document.ondblclick=function(e){
   if (!background(e.target))return;
@@ -657,7 +657,7 @@ document.body.addEventListener('drop', function(e){
   e.preventDefault();
 
   let files = e.dataTransfer.files;
-  if (files[0].name.indexOf(".json")==-1) return;
+  if (!files.length || files[0].name.indexOf(".json")==-1) return;
 
   let reader = new FileReader();
   reader.onload = function(e) {
