@@ -64,6 +64,7 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 <div id=menu>
   <p>Change color <input id=notecolor type=color onchange='changeColor()'>
   <p><a href='#' onclick='editNote()'>Edit</a>
+  <p><a href='#' onclick='toggleStrike()'>Toggle strikethrough</a>
   <p><a href='#' onclick='jumpInto()'>Jump Into</a>
   <p><a href='#' onclick='moveUpNote()'>Move up a level</a>
   <p><a href='#' onclick='deleteNote()'>Delete</a>
@@ -92,8 +93,10 @@ Ctrl+Z to undo<br>
 // if easy: drag onto trail at top to jump it to specific note
 // allow locking / pinning
 // back/forward needs to function
+// Undo resets level - should remain on current note
 
 // expanded tree structure for quick access
+// Search
 
 
 // collaborative stuff comes later
@@ -177,6 +180,18 @@ function jumpInto(){
   menu.style.display='none';
   for (let i in level.children)
     if (level.children[i]===menuRef) main.children[i].ondblclick() //super hacky, needs improvement
+}
+function toggleStrike(){
+  menu.style.display='none';
+  let [a, h, b] = menuRef.title.match(/^(#+)?([\s\S]+)$/)
+  if (!h) h="";
+  let m = b.match(/^~([\s\S]+)~$/)
+  if (m){
+    menuRef.title=h+m[1];
+  } else {
+    menuRef.title=h+'~'+b+'~'
+  }
+  populate(level)
 }
 function eraseAllLines(){
   delete level.lines;
