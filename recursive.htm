@@ -1,7 +1,7 @@
 <!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width, initial-scale=1.0">
 <style>
 h3,h2,h1{margin:0;display:inline-block}
-body{font-family:sans-serif; transition: background-color 0.3s}
+body{font-family:sans-serif; transition:background-color 0.3s; user-select:none;}
 textarea{min-width:80%;min-height:100px}
 pre{background:rgba(128,128,128,0.2)}
 .note{
@@ -12,7 +12,6 @@ pre{background:rgba(128,128,128,0.2)}
   min-height:50px; min-width:50px;
   resize:both; overflow:auto;
 }
-.note div{user-select: none;}
 .note svg{z-index:-1}
 .subnote {
   position:absolute;
@@ -21,7 +20,8 @@ pre{background:rgba(128,128,128,0.2)}
   z-index:-1;
 }
 .gear{
-  display:block;float:right;
+  cursor:pointer;
+  float:right;
   width:13px; height:13px;
   background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6+R8AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAOtJREFUeNp8kj0LwkAMhtterau26uCgIPixOIiTf91fIeiiIo6C2joIFj/rG3kPwlE8eOglby6X5Gq88jUCMxCAsysG/PpgABL6OvR3aCfUfRssa0inrBcIVWJtb8Da3pSpoNCpRtupdojxBgbcwYqJYjAGEfVfcsOmJ6DCBAtwYFlXkIM2e+tKnNzUd8q5/LGrEi+nd+CphNg5VFd7idtJeSewBz013pwBLfZk2NMcHEOVzagSpiUPLnpNhmZH3lDixwnWdtNT2TM+9BYsOSXRHiwpZcnyuIU9VPAfu3EfcSDS65H+MzXvK8AAT5g1PwYr5mUAAAAASUVORK5CYII=)
 }
@@ -54,10 +54,11 @@ pre{background:rgba(128,128,128,0.2)}
   left:0;top:0;
 }
 #trail a{
+  cursor:pointer;
   color:#000; text-decoration:none;
   display:inline-block;
   padding:3px;
-  border: 2px solid red;
+  border:2px solid red;
   border-radius:3px;
   margin:2px;
 }
@@ -202,6 +203,7 @@ function eraseAllLines(){
   save()
   populate(level)
 }
+function killEvent(e){e.preventDefault();e.stopPropagation()}
 function createNote(n){
   var d = document.createElement('div');
   d.className='note'
@@ -217,9 +219,8 @@ function createNote(n){
   d.style.left=n.x+'px'
   d.style.top=n.y+'px'
 
-  var a = document.createElement('a');
+  var a = document.createElement('div');
   a.className='gear'
-  a.href="#"
   a.onclick=function(e){
     e.stopPropagation(); e.preventDefault()
     if (e.clientX>window.innerWidth-220){
@@ -241,6 +242,8 @@ function createNote(n){
     document.getElementById('notecolor').value=hsl2rgb(n.color.h,n.color.s,n.color.l)
     menuRef=n;
   }
+  a.ondblclick=killEvent;
+  //a.onmousedown=killEvent;
   d.appendChild(a)
 
   var t = document.createElement('div');
@@ -416,7 +419,7 @@ function regenTrail(){
       c1 = "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l+"%)"
       c2 = "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l*0.8+"%)"
     }
-    s.push("<a href=# onclick='setLevel("+i+")' style='background:"+c1+"; border-color:"+c2+"'>"+shortTitle(n.title, i==trailobj.length-1)+"</a>")
+    s.push("<a onclick='setLevel("+i+")' style='background:"+c1+"; border-color:"+c2+"'>"+shortTitle(n.title, i==trailobj.length-1)+"</a>")
   }
 
   trail.innerHTML = s.join(" &rarr; ")
