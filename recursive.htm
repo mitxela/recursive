@@ -102,7 +102,6 @@ Ctrl+Z to undo<br>
 
 // expanded tree structure for quick access
 // Search
-// double double click causes trailobj problem
 
 // collaborative stuff comes later
 
@@ -279,6 +278,8 @@ function createNote(n){
     mainSvg.style.opacity='0'
     menu.style.display='none'
     document.body.style.backgroundColor='';
+    d.onmousedown=null
+    d.ondblclick=null
 
     setTimeout(()=>{
       main.style.opacity=''
@@ -309,7 +310,6 @@ function createNote(n){
       n.y = e.pageY - offy
       d.style.left = n.x +'px'
       d.style.top  = n.y +'px'
-
       
       let [m, ma] = mostOverlapping(n);
       for (let i of main.children){ i.classList.remove('hl')}
