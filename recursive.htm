@@ -6,7 +6,7 @@ textarea{min-width:80%;min-height:100px}
 pre{background:rgba(128,128,128,0.2)}
 .note{
   position:absolute;
-  border:2px solid red;
+  border:2px solid;
   border-radius:3px;
   opacity:0.9; box-shadow:5px 5px 5px rgba(0,0,0,0.3);
   min-height:50px; min-width:50px;
@@ -16,7 +16,7 @@ pre{background:rgba(128,128,128,0.2)}
 .note svg{z-index:-1}
 .subnote {
   position:absolute;
-  border: 1px solid red;
+  border: 1px solid;
   box-shadow:2px 2px 2px rgba(0,0,0,0.3);
   z-index:-1;
 }
@@ -25,7 +25,11 @@ pre{background:rgba(128,128,128,0.2)}
   width:13px; height:13px;
   background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6+R8AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAOtJREFUeNp8kj0LwkAMhtterau26uCgIPixOIiTf91fIeiiIo6C2joIFj/rG3kPwlE8eOglby6X5Gq88jUCMxCAsysG/PpgABL6OvR3aCfUfRssa0inrBcIVWJtb8Da3pSpoNCpRtupdojxBgbcwYqJYjAGEfVfcsOmJ6DCBAtwYFlXkIM2e+tKnNzUd8q5/LGrEi+nd+CphNg5VFd7idtJeSewBz013pwBLfZk2NMcHEOVzagSpiUPLnpNhmZH3lDixwnWdtNT2TM+9BYsOSXRHiwpZcnyuIU9VPAfu3EfcSDS65H+MzXvK8AAT5g1PwYr5mUAAAAASUVORK5CYII=)
 }
-.hl{box-shadow: inset 0px 0px 50px white, 5px 5px 5px rgba(0,0,0,0.3); opacity:0.5}
+.hl{box-shadow: inset 0px 0px 50px white, 5px 5px 5px rgba(0,0,0,0.3) !important; opacity:0.5}
+.invis{box-shadow:none; border-color:transparent; resize:none;}
+.invis:hover{border-color:rgba(128,128,128,0.2);background:rgba(128,128,128,0.1); resize:both;}
+.invis .gear{display:none;}
+.invis:hover .gear{display:block}
 #menu{
   display:none;
   position:absolute;
@@ -62,7 +66,7 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 </style>
 <svg></svg>
 <div id=menu>
-  <p>Change color <input id=notecolor type=color onchange='changeColor()'>
+  <p>Change color <input id=notecolor type=color onchange='changeColor()'><br>(use black for transparent)
   <p><a href='#' onclick='editNote()'>Edit</a>
   <p><a href='#' onclick='toggleStrike()'>Toggle strikethrough</a>
   <p><a href='#' onclick='jumpInto()'>Jump Into</a>
@@ -97,7 +101,7 @@ Ctrl+Z to undo<br>
 
 // expanded tree structure for quick access
 // Search
-
+// double double click causes trailobj problem
 
 // collaborative stuff comes later
 
@@ -202,9 +206,12 @@ function createNote(n){
   var d = document.createElement('div');
   d.className='note'
   
-  d.style.backgroundColor='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
-  d.style.borderColor='hsl('+n.color.h+','+n.color.s+'%,'+(n.color.l*0.8)+'%)';
-
+  if (n.color.l==0){
+    d.classList.add("invis")
+  } else {
+    d.style.backgroundColor='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
+    d.style.borderColor='hsl('+n.color.h+','+n.color.s+'%,'+(n.color.l*0.8)+'%)';
+  }
   d.style.width=n.width+'px'
   d.style.height=n.height+'px'
   d.style.left=n.x+'px'
@@ -302,9 +309,9 @@ function createNote(n){
 
       
       let [m, ma] = mostOverlapping(n);
-      for (let i of main.children){ i.className='note'}
+      for (let i of main.children){ i.classList.remove('hl')}
       if (ma>0) {
-        if (!suppressJump) main.children[m].className='note hl';
+        if (!suppressJump) main.children[m].classList.add('hl');
       } else suppressJump=false;
     }
     document.onmouseup=function(){
@@ -404,9 +411,11 @@ function setLevel(i){
 function regenTrail(){
   let s=[]
   for (let i in trailobj) {
-    let n=trailobj[i]
-    let c1 = n.color? "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l+"%)" : "#fff"
-    let c2 = n.color? "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l*0.8+"%)" : "#ccc"
+    let n=trailobj[i], c1="#fff", c2="#ccc"
+    if (n.color && n.color.l!=0){
+      c1 = "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l+"%)"
+      c2 = "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l*0.8+"%)"
+    }
     s.push("<a href=# onclick='setLevel("+i+")' style='background:"+c1+"; border-color:"+c2+"'>"+shortTitle(n.title, i==trailobj.length-1)+"</a>")
   }
 
