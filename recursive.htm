@@ -490,14 +490,15 @@ function escapeEntities(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
 }
 function markdownApply(s){
-  let lines = escapeEntities(s).split("\n")
+  let lines = s.replace(/</g,'&lt;').replace(/>/g,'&gt;').split("\n") //ampersand may occur in url
   let links=[]
   for (let i in lines){
     lines[i]=lines[i]
       .replace(/(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~*+#-]*[\w@?^=%&\/~*+#-])?/gi,function(match){
         links.push(match)
-        return "&LINK"; //escapeEntities ensures this won't be present
+        return "<LINK>"; //escapeEntities ensures this won't be present
       })
+      .replace(/&/g,'&amp;')
       .replace(/^([#]+)(.+)$/,function(m, p1, p2){
         if (p1=='#') return '<h3>'+p2+'</h3>'
         if (p1=='##') return '<h2>'+p2+'</h2>'
@@ -509,7 +510,7 @@ function markdownApply(s){
         .replace(/\*([^\*]+)\*/g,'<b>$1</b>')
         .replace(/~([^~]+)~/g,'<s>$1</s>')
         //.replace(/`([^`]+)`/g,'<code>$1</code>')
-        .replace(/&LINK/g,function(m){
+        .replace(/<LINK>/g,function(m){
             let l = links.shift()
             return "<a href='"+l+"' rel='noreferrer noopener' target=_blank>"+l+"</a>"
           })
