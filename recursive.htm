@@ -336,7 +336,7 @@ function createNote(n){
           setTimeout(()=>{populate(level)},300)
         } else {
           suppressJump = true;
-          main.children[m].className='note'
+          main.children[m].classList.remove('hl')
         }
       }
 
