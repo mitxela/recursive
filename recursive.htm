@@ -143,6 +143,7 @@ var trail=document.getElementById('trail')
 var trailobj=[]
 var menuRef=null;
 var zTopIndex = 0;
+var penSmooth = 0.15;
 
 function deleteNote(){
   for (let i in level.children)
@@ -389,7 +390,7 @@ function populate(t){
 
   resetSVG(mainSvg)
   if (t.lines) {
-    for (let line of t.lines) addSVGline(mainSvg, line)
+    for (let line of t.lines) addSVGline(mainSvg, line, penSmooth)
   }
   document.body.style.backgroundColor= t.color? 'hsl('+t.color.h+','+t.color.s+'%,'+(t.color.l*0.3+70)+'%)' : '#fff';
 }
@@ -481,7 +482,7 @@ document.onmousedown=function(e){
     document.onmousemove=null;
     if (drawing){
       line.points.push([e.pageX,e.pageY])
-      updateSVGline(mainSvg,path,line)
+      updateSVGline(mainSvg,path,line, penSmooth)
       save();
     }
   }
@@ -655,17 +656,43 @@ function setSVGsize(svg, w,h){
   svg.setAttribute("height",h)
   svg.setAttribute("viewBox", `0 0 ${w} ${h}`)
 }
-function addSVGline(svg, line){
+function addSVGline(svg, line, smoothing){
   let path=document.createElementNS(svgNS, "path");
   path.setAttributeNS(null, "style", "stroke-width: 3px; fill: none; stroke: "+(line.color||'black'))
   if (!line.points.length) return;
-  updateSVGline(svg,path,line);
+  updateSVGline(svg, path, line, smoothing);
   svg.appendChild(path)
   return path
 }
-function updateSVGline(svg,path,line){
+function updateSVGline(svg, path, line, smoothing){
   let pathstring = "M "+line.points[0].join(',')
-  for (let i=1;i<line.points.length;i++) pathstring += "L "+line.points[i].join(',')
+  if (smoothing) {
+
+    let last = line.points.length -2;
+
+    for (let i=0;i<line.points.length-1;i++) {
+      let x0 = i==0? line.points[0][0] : line.points[i-1][0];
+      let y0 = i==0? line.points[0][1] : line.points[i-1][1];
+
+      let x1 = line.points[i][0];
+      let y1 = line.points[i][1];
+      let x2 = line.points[i+1][0];
+      let y2 = line.points[i+1][1];
+
+      let x3 = i==last? x2 : line.points[i+2][0];
+      let y3 = i==last? y2 : line.points[i+2][1];
+
+      let cp1x = x1 + (x2 - x0) * smoothing;
+      let cp1y = y1 + (y2 - y0) * smoothing;
+      let cp2x = x2 + (x1 - x3) * smoothing;
+      let cp2y = y2 + (y1 - y3) * smoothing;
+
+      pathstring += ` C${cp1x},${cp1y},${cp2x},${cp2y},${x2},${y2}`;
+    }
+
+  } else {
+    for (let i=1;i<line.points.length;i++) pathstring += "L "+line.points[i].join(',')
+  }
   path.setAttributeNS(null, "d", pathstring)
   var ex=0, ey=0, w=svg.getAttribute("width"), h=svg.getAttribute("height");
   for (let i of line.points) {
