@@ -475,7 +475,7 @@ document.onmousedown=function(e){
       drawing = true
     }
     line.points.push([e.pageX,e.pageY])
-    updateSVGline(mainSvg,path,line)
+    updateSVGline(mainSvg,path,line, penSmooth)
   }
   document.onmouseup=function(e){
     document.onmouseup=null;
