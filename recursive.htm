@@ -290,6 +290,7 @@ function createNote(n){
       populate(n)
     },300)
   }
+  d.oncontextmenu = function(e){d.ondblclick(e); return false}
 
   d.onmousedown=function(e){
     if (e.target.tagName=="TEXTAREA" || e.button!=0) return;
