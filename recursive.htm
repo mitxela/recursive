@@ -85,7 +85,18 @@ Double click text to edit<br>
 Double click background to add note<br>
 Drag corners to resize<br>
 <a href=# onclick='downloadJson()'>Download the current state</a>, drag & drop .json file onto this page to load<br>
-Left click drag on background to draw - change pen color:<input id=pencolor type=color oninput='penColor=this.value'> <a href='#' onclick='eraseAllLines()'>erase all lines from this note</a><br>
+Left click drag on background to draw, right click erase<br>
+Pen tool:<select id=pentool oninput='penTool=this.value'>
+<option value='none'>(none)</option>
+<option value='pencil'>Pencil</option>
+<option value='line'>Line</option>
+<option value='arrow'>Arrow</option>
+<option value='erase'>Eraser</option>
+</select>
+ color:<input id=pencolor type=color oninput='penColor=this.value'>
+ thickness:<input id=penwidth type=range oninput='penWidth=this.value+"px"' min=1 max=10 value=3>
+ <!--arrow style: ...-->
+ <a href='#' onclick='eraseAllLines()'>erase all lines from this note</a><br>
 Ctrl+Z to undo<br>
 <br>
 </div>
@@ -453,8 +464,9 @@ document.ondblclick=function(e){
 }
 menu.onmousedown=function(e){e.stopPropagation()}
 
-var penTool = "pencil"; // or arrow|line|erase|none
+var penTool = document.getElementById("pentool").value || "none";
 var penColor = document.getElementById('pencolor').value || "black";
+var penWidth = document.getElementById('penwidth').value || "3px";
 document.onmousedown=function(e){
   menu.style.display='none'
   if (!background(e.target)) return;
@@ -480,10 +492,13 @@ document.onmousedown=function(e){
     }
 
   } else { // draw a line of some sort
-    var line = {color:penColor, points:[[sx,sy]]}, path=null;
+    var line = {points:[[sx,sy]]}, path=null;
     if (!level.lines) level.lines=[]
     level.lines.push(line)
     if (penTool=="arrow") {line.fill=penColor}
+    if (penWidth!="3px") line.width=penWidth;
+    if (penColor!="black") line.color=penColor;
+
     path=addSVGline(mainSvg, line)
 
     document.onmouseup=function(e){
