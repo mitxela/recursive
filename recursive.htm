@@ -95,7 +95,14 @@ Pen tool:<select id=pentool oninput='penTool=this.value'>
 </select>
  color:<input id=pencolor type=color oninput='penColor=this.value'>
  thickness:<input id=penwidth type=range oninput='penWidth=this.value+"px"' min=1 max=10 value=3>
- <!--arrow style: ...-->
+ arrow style:<select id=arrowstyle oninput='arrowStyle=this.value'>
+<option value='1'>⯈</option>
+<option value='2'>➤</option>
+<option value='3'>ᐅ</option>
+<option value='4'>⮚</option>
+<option value='5'>ᐳ</option>
+</select>
+ arrow size:<input id=arrowsize type=range oninput='arrowSize=this.value/50' min=3 max=10 value=6>
  <a href='#' onclick='eraseAllLines()'>erase all lines from this note</a><br>
 Ctrl+Z to undo<br>
 <br>
@@ -155,7 +162,6 @@ var trailobj=[]
 var menuRef=null;
 var zTopIndex = 0;
 var penSmooth = 0.15;
-var arrowSize = 0.15;
 
 function deleteNote(){
   for (let i in level.children)
@@ -467,6 +473,9 @@ menu.onmousedown=function(e){e.stopPropagation()}
 var penTool = document.getElementById("pentool").value || "none";
 var penColor = document.getElementById('pencolor').value || "black";
 var penWidth = document.getElementById('penwidth').value || "3px";
+var arrowStyle = document.getElementById('arrowstyle').value || "1";
+var arrowSize = document.getElementById('arrowsize').value/50 || 0.12;
+
 document.onmousedown=function(e){
   menu.style.display='none'
   if (!background(e.target)) return;
@@ -495,7 +504,7 @@ document.onmousedown=function(e){
     var line = {points:[[sx,sy]]}, path=null;
     if (!level.lines) level.lines=[]
     level.lines.push(line)
-    if (penTool=="arrow") {line.fill=penColor}
+    if (penTool=="arrow" && arrowStyle < 3) {line.fill=penColor}
     if (penWidth!="3px") line.width=penWidth;
     if (penColor!="black") line.color=penColor;
 
@@ -521,23 +530,41 @@ document.onmousedown=function(e){
     } else if (penTool=="arrow") {
       line.smooth=0
       document.onmousemove=function(e){
-        let dx = e.pageX-sx, dy = e.pageY-sy, len = Math.sqrt(dx*dx+dy*dy);
-        let h = Math.min(arrowSize,500*arrowSize*arrowSize/len);
-        dx*=h
-        dy*=h
-        dx2 = dx*1.73205; // 2*cos(30deg)
-        dy2 = dy*1.73205;
-        
-        line.points = [
-          [sx,sy],
-          [e.pageX-dx2,e.pageY-dy2],
-          [e.pageX-dy-dx2,e.pageY+dx-dy2],
-          [e.pageX,e.pageY],
-          [e.pageX+dy-dx2,e.pageY-dx-dy2],
-          [e.pageX-dx2,e.pageY-dy2]]
+        line.points = drawArrow( sx, sy, e.pageX, e.pageY )
         updateSVGline(mainSvg,path,line)
       }
     }
+  }
+}
+function drawArrow(x1,y1,x2,y2){
+  let dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx+dy*dy);
+  let h = Math.min(arrowSize,500*arrowSize*arrowSize/len);
+  dx*=h
+  dy*=h
+  dx2 = dx*1.73205; // 2*cos(30deg)
+  dy2 = dy*1.73205;
+  switch (arrowStyle) {
+  case "1": case "3": return [ // ⯈
+    [x1,y1],
+    [x2    -dx2,y2    -dy2],
+    [x2 -dy-dx2,y2 +dx-dy2],
+    [x2        ,y2 ],
+    [x2 +dy-dx2,y2 -dx-dy2],
+    [x2    -dx2,y2    -dy2]]  
+  case "2": case "4": return [ // ➤
+    [x1,y1],
+    [x2    -dx,y2    -dy],
+    [x2 -dy-dx2,y2 +dx-dy2],
+    [x2        ,y2 ],
+    [x2 +dy-dx2,y2 -dx-dy2],
+    [x2    -dx,y2    -dy]]
+  default: return [            // ᐳ
+    [x1,y1],
+    [x2 -dx*0.3,y2 -dy*0.3],
+    [x2 -dy-dx2,y2 +dx-dy2],
+    [x2        ,y2 ],
+    [x2 +dy-dx2,y2 -dx-dy2],
+    [x2 -dx*0.3,y2 -dy*0.3]]
   }
 }
 function escapeEntities(s){
