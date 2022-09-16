@@ -390,7 +390,7 @@ function populate(t){
 
   resetSVG(mainSvg)
   if (t.lines) {
-    for (let line of t.lines) addSVGline(mainSvg, line, penSmooth)
+    for (let line of t.lines) addSVGline(mainSvg, line)
   }
   document.body.style.backgroundColor= t.color? 'hsl('+t.color.h+','+t.color.s+'%,'+(t.color.l*0.3+70)+'%)' : '#fff';
 }
@@ -479,59 +479,46 @@ document.onmousedown=function(e){
     }
 
   } else { // draw a line of some sort
-      var line = {color:penColor, points:[[sx,sy]]}, path=null;
-      if (!level.lines) level.lines=[]
-      level.lines.push(line)
-      path=addSVGline(mainSvg, line)
+    var line = {color:penColor, points:[[sx,sy]], smooth:penSmooth}, path=null;
+    if (!level.lines) level.lines=[]
+    level.lines.push(line)
+    path=addSVGline(mainSvg, line)
 
-      if (penTool=="pencil") {
-        document.onmousemove=function(e){
-          line.points.push([e.pageX,e.pageY])
-          updateSVGline(mainSvg,path,line, penSmooth)
-        }
-        document.onmouseup=function(e){
-          document.onmouseup=null;
-          document.onmousemove=null;
+    document.onmouseup=function(e){
+      document.onmousemove(e)
+      document.onmouseup=null;
+      document.onmousemove=null;
+      save();
+    }
 
-          line.points.push([e.pageX,e.pageY])
-          updateSVGline(mainSvg,path,line, penSmooth)
-          save();
-        }
-      } else if (penTool=="line") {
-        document.onmousemove=function(e){
-          line.points = [[sx,sy],[e.pageX,e.pageY]]
-          updateSVGline(mainSvg,path,line, penSmooth)
-        }
-        document.onmouseup=function(e){
-          document.onmouseup=null;
-          document.onmousemove=null;
-
-          line.points = [[sx,sy],[e.pageX,e.pageY]]
-          updateSVGline(mainSvg,path,line, penSmooth)
-          save();
-        }
-      } else if (penTool=="arrow") {
-        document.onmousemove=function(e){
-          let dx = e.pageX-sx, dy = e.pageY-sy, len = Math.sqrt(dx*dx+dy*dy);
-          let h = Math.min(0.2,20/len);
-          dx*=h
-          dy*=h
-          
-          line.points = [
-            [sx,sy],
-            [e.pageX,e.pageY],
-            [e.pageX-dy-dx,e.pageY+dx-dy],
-            [e.pageX+dy-dx,e.pageY-dx-dy],
-            [e.pageX,e.pageY]]
-          updateSVGline(mainSvg,path,line, 0)
-        }
-        document.onmouseup=function(e){
-          document.onmousemove(e)
-          document.onmouseup=null;
-          document.onmousemove=null;
-          save();
-        }
+    if (penTool=="pencil") {
+      document.onmousemove=function(e){
+        line.points.push([e.pageX,e.pageY])
+        updateSVGline(mainSvg,path,line)
       }
+    } else if (penTool=="line") {
+      document.onmousemove=function(e){
+        line.points = [[sx,sy],[e.pageX,e.pageY]]
+        updateSVGline(mainSvg,path,line)
+      }
+    } else if (penTool=="arrow") {
+      line.smooth=0
+      document.onmousemove=function(e){
+        let dx = e.pageX-sx, dy = e.pageY-sy, len = Math.sqrt(dx*dx+dy*dy);
+        let h = Math.min(0.15,15/len);
+        dx*=h
+        dy*=h
+        
+        line.points = [
+          [sx,sy],
+          [e.pageX-dx,e.pageY-dy],
+          [e.pageX-dy-dx,e.pageY+dx-dy],
+          [e.pageX+dx*0.5,e.pageY+dy*0.5],
+          [e.pageX+dy-dx,e.pageY-dx-dy],
+          [e.pageX-dx,e.pageY-dy]]
+        updateSVGline(mainSvg,path,line)
+      }
+    }
   }
 }
 function escapeEntities(s){
@@ -703,17 +690,19 @@ function setSVGsize(svg, w,h){
   svg.setAttribute("height",h)
   svg.setAttribute("viewBox", `0 0 ${w} ${h}`)
 }
-function addSVGline(svg, line, smoothing){
+function addSVGline(svg, line){
   let path=document.createElementNS(svgNS, "path");
   path.setAttributeNS(null, "style", "stroke-width: 3px; fill: none; stroke: "+(line.color||'black'))
   path.setAttributeNS(null, "stroke-linecap", "round")
+  if (!line.hasOwnProperty("smooth")) line.smooth=penSmooth;
   if (!line.points.length) return;
-  updateSVGline(svg, path, line, smoothing);
+  updateSVGline(svg, path, line);
   svg.appendChild(path)
   return path
 }
-function updateSVGline(svg, path, line, smoothing){
+function updateSVGline(svg, path, line){
   let pathstring = "M "+line.points[0].join(',')
+  let smoothing = line.smooth;
   if (smoothing) {
 
     let last = line.points.length -2;
