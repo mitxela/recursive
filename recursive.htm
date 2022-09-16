@@ -573,13 +573,18 @@ function escapeEntities(s){
 function markdownApply(s){
   let lines = s.replace(/</g,'&lt;').replace(/>/g,'&gt;').split("\n") //ampersand may occur in url
   let links=[]
+  let codes=[]
   for (let i in lines){
     lines[i]=lines[i]
       .replace(/(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~*+#-]*[\w@?^=%&\/~*+#-])?/gi,function(match){
         links.push(match)
         return "<LINK>"; //escapeEntities ensures this won't be present
       })
-      .replace(/&/g,'&amp;')
+      .replace(/`([^`]+)`/g,function(m, p1){
+        codes.push(p1)
+        return "<PRECODE>";
+      })
+      //.replace(/&/g,'&amp;') // is there any harm in allowing manually typed entities?
       .replace(/^([#]+)(.+)$/,function(m, p1, p2){
         if (p1=='#') return '<h3>'+p2+'</h3>'
         if (p1=='##') return '<h2>'+p2+'</h2>'
@@ -590,7 +595,9 @@ function markdownApply(s){
         .replace(/_([^_]+)_/g,'<i>$1</i>')
         .replace(/\*([^\*]+)\*/g,'<b>$1</b>')
         .replace(/~([^~]+)~/g,'<s>$1</s>')
-        //.replace(/`([^`]+)`/g,'<code>$1</code>')
+        .replace(/<PRECODE>/g,function(m){
+          return "<code>"+codes.shift()+"</code>";
+        })
         .replace(/<LINK>/g,function(m){
             let l = links.shift()
             return "<a href='"+l+"' rel='noreferrer noopener' target=_blank>"+l+"</a>"
@@ -601,15 +608,6 @@ function markdown(s){
   let pre = s.replace(/[\n]?```[\n]?/g,'```').split('```')
   for (let i = 0; i<pre.length; i++) {
     if (i%2) pre[i]="<pre>"+escapeEntities(pre[i])+"</pre>"
-    else pre[i] = markdownPre(pre[i])
-  }
-  return pre.join("\n")
-}
-function markdownPre(s){
-  // separate out single-line preformatted areas
-  let pre = s.split('`')
-  for (let i = 0; i<pre.length; i++) {
-    if (i%2) pre[i]="<code>"+escapeEntities(pre[i])+"</code>"
     else pre[i] = markdownApply(pre[i])
   }
   return pre.join("\n")
