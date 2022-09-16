@@ -578,8 +578,9 @@ function markdownApply(s){
   let namedlinks=[]
   let codes=[]
   let images=[]
-  let list = 0
+  let list = 0;
   for (let i in lines){
+    let indent=0;
     lines[i]=lines[i]
       .replace(/`([^`]+)`/g,function(m, p1){
         codes.push(p1)
@@ -597,8 +598,9 @@ function markdownApply(s){
         links.push(match)
         return "<LINK>";
       })
-      .replace(/^[ ]+- (.+)$/, function(m,p1){
-        return "<li>"+p1
+      .replace(/^([ ]+)- (.+)$/, function(m,p1,p2){
+        indent=p1.length;
+        return "<li>"+p2
       })
       //.replace(/&/g,'&amp;') // is there any harm in allowing manually typed entities?
       .replace(/^([#]+)(.+)$/,function(m, p1, p2){
@@ -606,12 +608,8 @@ function markdownApply(s){
         if (p1=='##') return '<h2>'+p2+'</h2>'
         return '<h1>'+p2+'</h1>'
       });
-
-    if (lines[i].substr(0,4)=="<li>") {
-      if (!list) lines[i]="<ul>"+lines[i],list=1;
-    } else {
-      if (list) lines[i]+="</ul>",list=0;
-    }
+      while (list<indent) lines[i]="<ul>"+lines[i],list++;
+      while (list>indent) lines[i]="</ul>"+lines[i],list--;
   }
   return lines.join("<br>")
         .replace(/_([^_]+)_/g,'<i>$1</i>')
