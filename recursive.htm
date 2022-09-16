@@ -13,12 +13,14 @@ pre{background:rgba(128,128,128,0.2)}
   resize:both; overflow:auto;
 }
 .note svg{z-index:-1}
+.note img{max-width:100%}
 .subnote {
   position:absolute;
   border: 1px solid;
   box-shadow:2px 2px 2px rgba(0,0,0,0.3);
   z-index:-1;
 }
+ul{margin:0}
 .gear{
   cursor:pointer;
   float:right;
@@ -576,6 +578,7 @@ function markdownApply(s){
   let namedlinks=[]
   let codes=[]
   let images=[]
+  let list = 0
   for (let i in lines){
     lines[i]=lines[i]
       .replace(/`([^`]+)`/g,function(m, p1){
@@ -594,12 +597,21 @@ function markdownApply(s){
         links.push(match)
         return "<LINK>";
       })
+      .replace(/^[ ]+- (.+)$/, function(m,p1){
+        return "<li>"+p1
+      })
       //.replace(/&/g,'&amp;') // is there any harm in allowing manually typed entities?
       .replace(/^([#]+)(.+)$/,function(m, p1, p2){
         if (p1=='#') return '<h3>'+p2+'</h3>'
         if (p1=='##') return '<h2>'+p2+'</h2>'
         return '<h1>'+p2+'</h1>'
       });
+
+    if (lines[i].substr(0,4)=="<li>") {
+      if (!list) lines[i]="<ul>"+lines[i],list=1;
+    } else {
+      if (list) lines[i]+="</ul>",list=0;
+    }
   }
   return lines.join("<br>")
         .replace(/_([^_]+)_/g,'<i>$1</i>')
