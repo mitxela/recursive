@@ -452,37 +452,51 @@ document.ondblclick=function(e){
 }
 menu.onmousedown=function(e){e.stopPropagation()}
 
+var penTool = "pencil"; // or arrow, or erase
 var penColor = document.getElementById('pencolor').value || "black";
 document.onmousedown=function(e){
   menu.style.display='none'
   if (!background(e.target)) return;
-  var button = e.button
-  //brace for drawing - but don't start yet
-  var sx = e.pageX, sy = e.pageY, drawing = false;
-  var line = {color:penColor, points:[[sx,sy]]}, path=null;
 
-  document.onmousemove=function(e){
-    if (button!=0) {
-      // erase lines or something
-      return;
+  if (penTool=="erase" || (penTool=="pencil" && e.button==2)) {
+
+    document.onmousemove=function(e){
+      if (e.target.tagName!="path") return;
+      let i;
+      for (i in mainSvg.children)
+        if (mainSvg.children[i] == e.target) break
+      level.lines.splice(i,1)
+      e.target.remove()
+      save()
     }
-    if (!drawing) {
-      if (!level.lines) level.lines=[]
-      level.lines.push(line)
-      path=addSVGline(mainSvg, line)
-      drawing = true
+    document.onmouseup=function(e){
+      document.onmouseup=null;
+      document.onmousemove=null;
     }
-    line.points.push([e.pageX,e.pageY])
-    updateSVGline(mainSvg,path,line, penSmooth)
-  }
-  document.onmouseup=function(e){
-    document.onmouseup=null;
-    document.onmousemove=null;
-    if (drawing){
+
+  } else if (penTool=="pencil") {
+
+    var sx = e.pageX, sy = e.pageY
+    var line = {color:penColor, points:[[sx,sy]]}, path=null;
+
+    if (!level.lines) level.lines=[]
+    level.lines.push(line)
+    path=addSVGline(mainSvg, line)
+
+    document.onmousemove=function(e){
+      line.points.push([e.pageX,e.pageY])
+      updateSVGline(mainSvg,path,line, penSmooth)
+    }
+    document.onmouseup=function(e){
+      document.onmouseup=null;
+      document.onmousemove=null;
+
       line.points.push([e.pageX,e.pageY])
       updateSVGline(mainSvg,path,line, penSmooth)
       save();
     }
+  } else if (pen=="arrow") {
+
   }
 }
 function escapeEntities(s){
@@ -657,6 +671,7 @@ function setSVGsize(svg, w,h){
 function addSVGline(svg, line, smoothing){
   let path=document.createElementNS(svgNS, "path");
   path.setAttributeNS(null, "style", "stroke-width: 3px; fill: none; stroke: "+(line.color||'black'))
+  path.setAttributeNS(null, "stroke-linecap", "round")
   if (!line.points.length) return;
   updateSVGline(svg, path, line, smoothing);
   svg.appendChild(path)
