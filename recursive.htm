@@ -65,7 +65,6 @@ pre{background:rgba(128,128,128,0.2)}
 #trail a:hover{opacity:0.6}
 svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 </style>
-<svg></svg>
 <div id=menu>
   <p>Change color <input id=notecolor type=color onchange='changeColor()'><br>(use black for transparent)
   <p><a href='#' onclick='editNote()'>Edit</a>
@@ -74,7 +73,7 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
   <p><a href='#' onclick='moveUpNote()'>Move up a level</a>
   <p><a href='#' onclick='deleteNote()'>Delete</a>
 </div>
-<div id=main></div>
+<div id=main><svg></svg></div>
 
 <div id=trail></div>
 <a style='position:fixed;right:0;top:0' href='#' onclick='localStorage.tree="";window.location.reload()'>reset</a>
@@ -139,6 +138,7 @@ if (!window.tree){
 
 var level;
 var menu=document.getElementById('menu')
+var main=document.getElementById('main')
 var trail=document.getElementById('trail')
 var trailobj=[]
 var menuRef=null;
@@ -179,12 +179,12 @@ function moveUpNote(){
 function editNote(){
   menu.style.display='none';
   for (let i in level.children)
-    if (level.children[i]===menuRef) main.children[i].children[1].ondblclick() //super hacky, needs improvement
+    if (level.children[i]===menuRef) main.children[1*i+1].children[1].ondblclick() //super hacky, needs improvement
 }
 function jumpInto(){
   menu.style.display='none';
   for (let i in level.children)
-    if (level.children[i]===menuRef) main.children[i].ondblclick() //super hacky, needs improvement
+    if (level.children[i]===menuRef) main.children[1*i+1].ondblclick() //super hacky, needs improvement
 }
 function toggleStrike(){
   menu.style.display='none';
@@ -276,7 +276,6 @@ function createNote(n){
     d.style.transform="scale("+(window.innerWidth/n.width)*1.2+")"
     d.style.zIndex=++zTopIndex;
     main.style.opacity='0'
-    mainSvg.style.opacity='0'
     menu.style.display='none'
     document.body.style.backgroundColor='';
     d.onmousedown=null
@@ -284,7 +283,6 @@ function createNote(n){
 
     setTimeout(()=>{
       main.style.opacity=''
-      mainSvg.style.opacity=''
       trailobj.push(n)
       regenTrail()
       populate(n)
@@ -316,7 +314,7 @@ function createNote(n){
       let [m, ma] = mostOverlapping(n);
       for (let i of main.children){ i.classList.remove('hl')}
       if (ma>0) {
-        if (!suppressJump) main.children[m].classList.add('hl');
+        if (!suppressJump) main.children[1*m+1].classList.add('hl');
       } else suppressJump=false;
     }
     document.onmouseup=function(){
@@ -338,7 +336,7 @@ function createNote(n){
           setTimeout(()=>{populate(level)},300)
         } else {
           suppressJump = true;
-          main.children[m].classList.remove('hl')
+          main.children[1*m+1].classList.remove('hl')
         }
       }
 
@@ -384,7 +382,8 @@ function createNote(n){
 }
 function populate(t){
   zTopIndex=0
-  main.innerHTML="";
+  while (main.lastChild!=mainSvg)
+    main.removeChild(main.lastChild)
   for (let i of t.children)
     createNote(i)
   level = t
@@ -401,13 +400,11 @@ function setLevel(i){
     return
   }
   main.style.opacity='0';
-  mainSvg.style.opacity='0';
   document.body.style.backgroundColor='';
   menu.style.display='none'
 
   setTimeout(()=>{
     main.style.opacity=''
-    mainSvg.style.opacity=''
     trailobj=trailobj.slice(0,i+1)
     regenTrail()
     populate(trailobj[i])
