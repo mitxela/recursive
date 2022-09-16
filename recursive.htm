@@ -144,6 +144,7 @@ var trailobj=[]
 var menuRef=null;
 var zTopIndex = 0;
 var penSmooth = 0.15;
+var arrowSize = 0.15;
 
 function deleteNote(){
   for (let i in level.children)
@@ -505,17 +506,19 @@ document.onmousedown=function(e){
       line.smooth=0
       document.onmousemove=function(e){
         let dx = e.pageX-sx, dy = e.pageY-sy, len = Math.sqrt(dx*dx+dy*dy);
-        let h = Math.min(0.15,15/len);
+        let h = Math.min(arrowSize,500*arrowSize*arrowSize/len);
         dx*=h
         dy*=h
+        dx2 = dx*1.73205; // 2*cos(30deg)
+        dy2 = dy*1.73205;
         
         line.points = [
           [sx,sy],
-          [e.pageX-dx,e.pageY-dy],
-          [e.pageX-dy-dx,e.pageY+dx-dy],
-          [e.pageX+dx*0.5,e.pageY+dy*0.5],
-          [e.pageX+dy-dx,e.pageY-dx-dy],
-          [e.pageX-dx,e.pageY-dy]]
+          [e.pageX-dx2,e.pageY-dy2],
+          [e.pageX-dy-dx2,e.pageY+dx-dy2],
+          [e.pageX,e.pageY],
+          [e.pageX+dy-dx2,e.pageY-dx-dy2],
+          [e.pageX-dx2,e.pageY-dy2]]
         updateSVGline(mainSvg,path,line)
       }
     }
