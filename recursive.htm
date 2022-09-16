@@ -461,6 +461,7 @@ document.onmousedown=function(e){
   if (penTool=="erase" || (penTool=="pencil" && e.button==2)) {
 
     document.onmousemove=function(e){
+      document.oncontextmenu=killEvent
       if (e.target.tagName!="path") return;
       let i;
       for (i in mainSvg.children)
@@ -472,6 +473,7 @@ document.onmousedown=function(e){
     document.onmouseup=function(e){
       document.onmouseup=null;
       document.onmousemove=null;
+      setTimeout(function(){document.oncontextmenu=null;},10)
     }
 
   } else if (penTool=="pencil") {
