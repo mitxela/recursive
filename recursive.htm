@@ -12,6 +12,7 @@ pre{background:rgba(128,128,128,0.2)}
   min-height:50px; min-width:50px;
   resize:both; overflow:auto;
 }
+.note.pinned {box-shadow:1px 1px 2px rgba(0,0,0,0.3)}
 .note svg{z-index:-1}
 .note img{max-width:100%}
 .subnote {
@@ -71,6 +72,7 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
   <p>Change color <input id=notecolor type=color onchange='changeColor()'><br>(use black for transparent)
   <p><a href='#' onclick='editNote()'>Edit</a>
   <p><a href='#' onclick='toggleStrike()'>Toggle strikethrough</a>
+  <p><a href='#' onclick='togglePinned()'>Toggle pinned</a>
   <p><a href='#' onclick='jumpInto()'>Jump Into</a>
   <p><a href='#' onclick='moveUpNote()'>Move up a level</a>
   <p><a href='#' onclick='deleteNote()'>Delete</a>
@@ -111,7 +113,6 @@ Ctrl+Z to undo<br>
 </div>
 
 <script>
-// different default colour for each layer?
 // locally zoomable - infinite canvas on each note - handle dragging off the edge.
 // click to organise?
 // if easy: drag onto trail at top to jump it to specific note
@@ -162,6 +163,7 @@ var main=document.getElementById('main')
 var trail=document.getElementById('trail')
 var trailobj=[]
 var menuRef=null;
+var menuRefObj=null;
 var zTopIndex = 0;
 var penSmooth = 0.15;
 
@@ -198,13 +200,11 @@ function moveUpNote(){
 }
 function editNote(){
   menu.style.display='none';
-  for (let i in level.children)
-    if (level.children[i]===menuRef) main.children[1*i+1].children[1].ondblclick() //super hacky, needs improvement
+  menuRefObj.children[1].ondblclick()
 }
 function jumpInto(){
   menu.style.display='none';
-  for (let i in level.children)
-    if (level.children[i]===menuRef) main.children[1*i+1].ondblclick() //super hacky, needs improvement
+  menuRefObj.ondblclick()
 }
 function toggleStrike(){
   menu.style.display='none';
@@ -216,7 +216,19 @@ function toggleStrike(){
   } else {
     menuRef.title=h+'~'+b+'~'
   }
+  save()
   populate(level)
+}
+function togglePinned(){
+  menu.style.display='none';
+  if (menuRef.pinned) {
+    menuRef.pinned = 0
+    menuRefObj.classList.remove("pinned")
+  } else {
+    menuRef.pinned = 1
+    menuRefObj.classList.add("pinned")
+  }
+  save()
 }
 function eraseAllLines(){
   delete level.lines;
@@ -234,6 +246,8 @@ function createNote(n){
     d.style.backgroundColor='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
     d.style.borderColor='hsl('+n.color.h+','+n.color.s+'%,'+(n.color.l*0.8)+'%)';
   }
+  if (n.pinned) d.classList.add("pinned")
+
   d.style.width=n.width+'px'
   d.style.height=n.height+'px'
   d.style.left=n.x+'px'
@@ -261,6 +275,7 @@ function createNote(n){
     menu.style.display='block'
     document.getElementById('notecolor').value=hsl2rgb(n.color.h,n.color.s,n.color.l)
     menuRef=n;
+    menuRefObj=d;
   }
   a.ondblclick=killEvent;
   //a.onmousedown=killEvent;
@@ -311,7 +326,7 @@ function createNote(n){
   d.oncontextmenu = function(e){d.ondblclick(e); return false}
 
   d.onmousedown=function(e){
-    if (e.target.tagName=="TEXTAREA" || e.button!=0) return;
+    if (e.target.tagName=="TEXTAREA" || e.button!=0 || n.pinned) return;
     var sw = d.style.width, sh = d.style.height;
     d.style.zIndex = ++zTopIndex
 
@@ -628,7 +643,7 @@ function markdownApply(s){
         })
         .replace(/<IMAGES>/g,function(m){
             let [alt, src] = images.shift()
-            return `<img src=${src} alt=${alt}>`
+            return `<img onmousedown='return false' src=${src} alt=${alt}>`
         })
 }
 function markdown(s){
@@ -662,6 +677,7 @@ function mostOverlapping(n){
   let m, ma=0;
   for (let i in level.children){
     if (n==level.children[i]) continue;
+    if (level.children[i].pinned) continue;
     let a=areaOfOverlap(n,level.children[i])
     if (a>ma) {ma=a; m=i}
   }
