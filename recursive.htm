@@ -480,9 +480,10 @@ document.onmousedown=function(e){
     }
 
   } else { // draw a line of some sort
-    var line = {color:penColor, points:[[sx,sy]], smooth:penSmooth}, path=null;
+    var line = {color:penColor, points:[[sx,sy]]}, path=null;
     if (!level.lines) level.lines=[]
     level.lines.push(line)
+    if (penTool=="arrow") {line.fill=penColor}
     path=addSVGline(mainSvg, line)
 
     document.onmouseup=function(e){
@@ -695,9 +696,8 @@ function setSVGsize(svg, w,h){
 }
 function addSVGline(svg, line){
   let path=document.createElementNS(svgNS, "path");
-  path.setAttributeNS(null, "style", "stroke-width: 3px; fill: none; stroke: "+(line.color||'black'))
+  path.setAttributeNS(null, "style", "stroke-width: "+(line.width||'3px')+"; fill: "+(line.fill||'none')+"; stroke: "+(line.color||'black'))
   path.setAttributeNS(null, "stroke-linecap", "round")
-  if (!line.hasOwnProperty("smooth")) line.smooth=penSmooth;
   if (!line.points.length) return;
   updateSVGline(svg, path, line);
   svg.appendChild(path)
@@ -705,7 +705,7 @@ function addSVGline(svg, line){
 }
 function updateSVGline(svg, path, line){
   let pathstring = "M "+line.points[0].join(',')
-  let smoothing = line.smooth;
+  let smoothing = line.hasOwnProperty("smooth") ? line.smooth : penSmooth;
   if (smoothing) {
 
     let last = line.points.length -2;
