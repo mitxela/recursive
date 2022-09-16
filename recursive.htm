@@ -601,6 +601,15 @@ function markdown(s){
   let pre = s.replace(/[\n]?```[\n]?/g,'```').split('```')
   for (let i = 0; i<pre.length; i++) {
     if (i%2) pre[i]="<pre>"+escapeEntities(pre[i])+"</pre>"
+    else pre[i] = markdownPre(pre[i])
+  }
+  return pre.join("\n")
+}
+function markdownPre(s){
+  // separate out single-line preformatted areas
+  let pre = s.split('`')
+  for (let i = 0; i<pre.length; i++) {
+    if (i%2) pre[i]="<code>"+escapeEntities(pre[i])+"</code>"
     else pre[i] = markdownApply(pre[i])
   }
   return pre.join("\n")
