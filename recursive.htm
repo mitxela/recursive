@@ -573,16 +573,26 @@ function escapeEntities(s){
 function markdownApply(s){
   let lines = s.replace(/</g,'&lt;').replace(/>/g,'&gt;').split("\n") //ampersand may occur in url
   let links=[]
+  let namedlinks=[]
   let codes=[]
+  let images=[]
   for (let i in lines){
     lines[i]=lines[i]
-      .replace(/(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~*+#-]*[\w@?^=%&\/~*+#-])?/gi,function(match){
-        links.push(match)
-        return "<LINK>"; //escapeEntities ensures this won't be present
-      })
       .replace(/`([^`]+)`/g,function(m, p1){
         codes.push(p1)
-        return "<PRECODE>";
+        return "<PRECODE>"; //first replace ensures this won't be present
+      })
+      .replace(/!\[([^\]]+)\]\(([^\)]+)\)/g,function(m, p1, p2){
+        images.push([p1,p2])
+        return "<IMAGES>";
+      })
+      .replace(/\[([^\]]+)\]\(([^\)]+)\)/g,function(m, p1, p2){
+        namedlinks.push([p1,p2])
+        return "<NAMEDLINK>";
+      })
+      .replace(/(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~*+#-]*[\w@?^=%&\/~*+#-])?/gi,function(match){
+        links.push(match)
+        return "<LINK>";
       })
       //.replace(/&/g,'&amp;') // is there any harm in allowing manually typed entities?
       .replace(/^([#]+)(.+)$/,function(m, p1, p2){
@@ -601,7 +611,15 @@ function markdownApply(s){
         .replace(/<LINK>/g,function(m){
             let l = links.shift()
             return "<a href='"+l+"' rel='noreferrer noopener' target=_blank>"+l+"</a>"
-          })
+        })
+        .replace(/<NAMEDLINK>/g,function(m){
+            let [t,l] = namedlinks.shift()
+            return "<a href='"+l+"' rel='noreferrer noopener' target=_blank>"+t+"</a>"
+        })
+        .replace(/<IMAGES>/g,function(m){
+            let [alt, src] = images.shift()
+            return `<img src=${src} alt=${alt}>`
+        })
 }
 function markdown(s){
   //separate out preformatted areas first
