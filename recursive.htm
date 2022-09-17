@@ -92,8 +92,9 @@ Double click background to add note<br>
 Drag corners to resize<br>
 <a href=# onclick='downloadJson()'>Download the current state</a>, drag & drop .json file onto this page to load<br>
 Left click drag on background to draw, right click erase<br>
-Pen tool:<select id=pentool oninput='penTool=this.value'>
+Tool:<select id=pentool oninput='penTool=this.value'>
 <option value='none'>(none)</option>
+<option value='addnote' selected>Add note</option>
 <option value='pencil'>Pencil</option>
 <option value='line'>Line</option>
 <option value='arrow'>Arrow</option>
@@ -472,8 +473,8 @@ function shortTitle(t, last){
 function background(t){
   return (t.id=="main" || t==mainSvg || t.tagName=="path" || t.tagName=="HTML" || t.id=="help")
 }
-document.ondblclick=function(e){
-  if (!background(e.target))return;
+document.onclick=function(e){
+  if (penTool!="addnote" || !background(e.target))return;
   var newNote = {
     title: "New note",
     x: e.pageX,
@@ -500,7 +501,7 @@ document.onmousedown=function(e){
   if (!background(e.target)) return;
   var sx = e.pageX, sy = e.pageY;
 
-  if (penTool=="none") return;
+  if (penTool=="none" || penTool=="addnote") return;
   if (penTool=="erase" || e.button==2) {
 
     document.onmousemove=function(e){
