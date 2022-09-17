@@ -620,7 +620,7 @@ function markdownApply(s){
         listtag="ul>";
         return "<li>"+p2
       })
-      .replace(/^([ ]*)[0-9]+\. (.+)$/, function(m,p1,p2){
+      .replace(/^([ ]*)[0-9]{1,2}\. (.+)$/, function(m,p1,p2){
         indent=p1.length+1;
         listtag="ol>";
         return "<li>"+p2
