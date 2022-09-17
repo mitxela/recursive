@@ -783,12 +783,15 @@ function undo(){
 }
 document.onkeydown=function(e){if (e.ctrlKey&&e.keyCode==90) undo()}
 function downloadJson(){
+  let blob = new Blob([JSON.stringify(tree)], {type: "application/json"})
+  let url = URL.createObjectURL(blob)
   let a = document.createElement('a')
-  a.href="data:application/json;base64,"+btoa(JSON.stringify(tree));
+  a.href=url
   a.download="tree.json"
   document.body.appendChild(a);
   a.click()
   document.body.removeChild(a);
+  URL.revokeObjectURL(url)
 }
 
 const mainSvg=document.querySelector('svg')
