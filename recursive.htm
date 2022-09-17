@@ -71,6 +71,7 @@ ul{margin:0}
 #trail a:hover{opacity:0.6}
 svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 </style>
+<svg></svg>
 <div id=menu>
   <p>Change color <input id=notecolor type=color onchange='changeColor()'><br>(use black for transparent)
   <p><a href='#' onclick='editNote()'>Edit</a>
@@ -80,7 +81,7 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
   <p><a href='#' onclick='moveUpNote()'>Move up a level</a>
   <p><a href='#' onclick='deleteNote()'>Delete</a>
 </div>
-<div id=main><svg></svg></div>
+<div id=main></div>
 
 <div id=trail></div>
 <a style='position:fixed;right:0;top:0' href='#' onclick='localStorage.tree="";window.location.reload()'>reset</a>
@@ -355,7 +356,7 @@ function createNote(n){
       let [m, ma] = mostOverlapping(n);
       for (let i of main.children){ i.classList.remove('hl')}
       if (ma>0) {
-        if (!suppressJump) main.children[1*m+1].classList.add('hl');
+        if (!suppressJump) main.children[m].classList.add('hl');
       } else suppressJump=false;
     }
     document.onmouseup=function(){
@@ -377,7 +378,7 @@ function createNote(n){
           setTimeout(()=>{populate(level)},300)
         } else {
           suppressJump = true;
-          main.children[1*m+1].classList.remove('hl')
+          main.children[m].classList.remove('hl')
         }
       }
 
@@ -421,11 +422,8 @@ function createNote(n){
 
   main.appendChild(d)
 }
-function resetView(){
-  level.view={x:0,y:0,s:1}
-}
-function setView(){
-  if (!level.view) resetView()
+function setView( reset ){
+  if (!level.view || reset) level.view={x:0,y:0,s:1}
   main.style.transform=`translate(${level.view.x}px, ${level.view.y}px) scale(${level.view.s})`
 }
 function mousePos(e) {
@@ -435,7 +433,7 @@ function mousePos(e) {
 }
 function populate(t){
   zTopIndex=0
-  while (main.lastChild!=mainSvg)
+  while (main.children.length)
     main.removeChild(main.lastChild)
   for (let i of t.children)
     createNote(i)
@@ -539,6 +537,8 @@ document.onmousedown=function(e){
   if (penTool=="none" || penTool=="addnote") return;
   if (penTool=="erase" || e.button==2) {
 
+    mainSvg.style.zIndex = zTopIndex+1;
+
     document.onmousemove=function(e){
       document.oncontextmenu=killEvent
       if (e.target.tagName!="path") return;
@@ -550,6 +550,7 @@ document.onmousedown=function(e){
       save()
     }
     document.onmouseup=function(e){
+      mainSvg.style.zIndex =null;
       document.onmouseup=null;
       document.onmousemove=null;
       setTimeout(function(){document.oncontextmenu=null;},10)
