@@ -595,7 +595,7 @@ function markdownApply(s){
   let namedlinks=[]
   let codes=[]
   let images=[]
-  let list = [];
+  let list = [], indentstack=[];
   for (let i in lines){
     let indent=0, listtag="ul>";
     lines[i]=lines[i]
@@ -615,13 +615,13 @@ function markdownApply(s){
         links.push(match)
         return "<LINK>";
       })
-      .replace(/^([ ]+)[-\*] (.+)$/, function(m,p1,p2){
-        indent=p1.length;
+      .replace(/^([ ]*)[-\*] (.+)$/, function(m,p1,p2){
+        indent=p1.length+1;
         listtag="ul>";
         return "<li>"+p2
       })
-      .replace(/^([ ]+)[0-9]+\. (.+)$/, function(m,p1,p2){
-        indent=p1.length;
+      .replace(/^([ ]*)[0-9]+\. (.+)$/, function(m,p1,p2){
+        indent=p1.length+1;
         listtag="ol>";
         return "<li>"+p2
       })
@@ -631,8 +631,15 @@ function markdownApply(s){
         if (p1=='##') return '<h2>'+p2+'</h2>'
         return '<h1>'+p2+'</h1>'
       });
-      while (list.length<indent) lines[i]="<"+listtag+lines[i],list.push("</"+listtag);
-      while (list.length>indent) lines[i]=list.pop()+lines[i];
+
+      if (indent && (indentstack.length==0 || indentstack[0]<indent)) { // indent increased, can only increase by one at a time
+        indentstack.unshift(indent)
+      } else while (indentstack.length && indent != indentstack[0]){ // indent must have dropped, by one or more
+        indentstack.shift()
+      }
+
+      while (list.length<indentstack.length) lines[i]="<"+listtag+lines[i],list.push("</"+listtag);
+      while (list.length>indentstack.length) lines[i]=list.pop()+lines[i];
   }
   return lines.join("<br>")
         .replace(/_([^_]+)_/g,'<i>$1</i>')
