@@ -1,7 +1,7 @@
 <!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width, initial-scale=1.0">
 <style>
 h3,h2,h1{margin:0;display:inline-block}
-body{font-family:sans-serif; transition:background-color 0.3s; user-select:none;}
+body{font-family:sans-serif; transition:background-color 0.3s; user-select:none; overflow:hidden;}
 textarea{min-width:80%;min-height:100px}
 pre{background:rgba(128,128,128,0.2)}
 .note{
@@ -47,6 +47,7 @@ ul{margin:0}
 }
 #menu p{margin:7px}
 #main{
+  transform-origin: 0% 0%;
   position:absolute;
   top:0;left:0;width:100%;min-height:100vh;
   margin:0;
@@ -86,6 +87,7 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 
 <div id=help style='position:fixed;bottom:0;left:0; user-select:none;'>
 Click and drag to move note<br>
+Middle-click drag to pan, scroll to zoom<br>
 Double or right click note body to expand<br>
 Double click text to edit<br>
 Drag corners to resize<br>
@@ -333,7 +335,8 @@ function createNote(n){
     d.style.zIndex = ++zTopIndex
 
     var startx=n.x, starty=n.y;
-    var offx = e.pageX - n.x, offy = e.pageY - n.y;
+    var [mx, my] = mousePos(e);
+    var offx = mx - n.x, offy = my - n.y;
     let suppressJump = mostOverlapping(n)[1]>0;
 
     document.onmousemove=function(e){
@@ -343,8 +346,9 @@ function createNote(n){
         return
       }
 
-      n.x = e.pageX - offx
-      n.y = e.pageY - offy
+      let [mx, my] = mousePos(e);
+      n.x = mx - offx
+      n.y = my - offy
       d.style.left = n.x +'px'
       d.style.top  = n.y +'px'
       
@@ -417,6 +421,18 @@ function createNote(n){
 
   main.appendChild(d)
 }
+function resetView(){
+  level.view={x:0,y:0,s:1}
+}
+function setView(){
+  if (!level.view) resetView()
+  main.style.transform=`translate(${level.view.x}px, ${level.view.y}px) scale(${level.view.s})`
+}
+function mousePos(e) {
+  return [
+    (e.pageX-level.view.x)/level.view.s,
+    (e.pageY-level.view.y)/level.view.s ]
+}
 function populate(t){
   zTopIndex=0
   while (main.lastChild!=mainSvg)
@@ -424,6 +440,7 @@ function populate(t){
   for (let i of t.children)
     createNote(i)
   level = t
+  setView()
 
   resetSVG(mainSvg)
   if (t.lines) {
@@ -474,10 +491,11 @@ function background(t){
 }
 document.onclick=function(e){
   if (penTool!="addnote" || !background(e.target))return;
+  let [mx, my] = mousePos(e);
   var newNote = {
     title: "New note",
-    x: e.pageX,
-    y: e.pageY,
+    x: mx,
+    y: my,
     width: 200,
     height: 50,
     color: randomColor(),
@@ -495,10 +513,28 @@ var penWidth = document.getElementById('penwidth').value || "3px";
 var arrowStyle = document.getElementById('arrowstyle').value || "1";
 var arrowSize = document.getElementById('arrowsize').value/50 || 0.12;
 
+lx=0;ly=0;
 document.onmousedown=function(e){
   menu.style.display='none'
+
+  if (e.button==1) { // middle click
+    killEvent(e);
+    let sx = e.pageX, sy = e.pageY;
+    document.onmousemove=function(e){
+      level.view.x+= (e.pageX-sx)
+      level.view.y+= (e.pageY-sy)
+      sx = e.pageX, sy = e.pageY;
+      setView()
+    }
+    document.onmouseup=function(e){
+      document.onmouseup=null;
+      document.onmousemove=null;
+    }
+    return;
+  }
   if (!background(e.target)) return;
-  var sx = e.pageX, sy = e.pageY;
+
+  let [sx, sy] = mousePos(e);
 
   if (penTool=="none" || penTool=="addnote") return;
   if (penTool=="erase" || e.button==2) {
@@ -538,18 +574,19 @@ document.onmousedown=function(e){
 
     if (penTool=="pencil") {
       document.onmousemove=function(e){
-        line.points.push([e.pageX,e.pageY])
+        line.points.push(mousePos(e))
         updateSVGline(mainSvg,path,line)
       }
     } else if (penTool=="line") {
       document.onmousemove=function(e){
-        line.points = [[sx,sy],[e.pageX,e.pageY]]
+        line.points = [[sx,sy],mousePos(e)]
         updateSVGline(mainSvg,path,line)
       }
     } else if (penTool=="arrow") {
       line.smooth=0
       document.onmousemove=function(e){
-        line.points = drawArrow( sx, sy, e.pageX, e.pageY )
+        let [mx, my] = mousePos(e)
+        line.points = drawArrow( sx, sy, mx, my )
         updateSVGline(mainSvg,path,line)
       }
     }
@@ -585,6 +622,20 @@ function drawArrow(x1,y1,x2,y2){
     [x2 +dy-dx2,y2 -dx-dy2],
     [x2 -dx*0.3,y2 -dy*0.3]]
   }
+}
+document.onwheel=function(e){
+  e.preventDefault(); e.stopPropagation()
+  menu.style.display='none'
+
+  let sx= (e.pageX-level.view.x)/level.view.s,
+      sy= (e.pageY-level.view.y)/level.view.s;
+
+  level.view.s*= e.deltaY < 0? 1.2:0.8;
+
+  level.view.x = -sx*level.view.s+e.pageX
+  level.view.y = -sy*level.view.s+e.pageY
+
+  setView()
 }
 function escapeEntities(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -884,8 +935,6 @@ function reloadAll(){
   regenTrail()
   populate(tree)
 }
-
-//document.onscroll
 
 
 reloadAll()
