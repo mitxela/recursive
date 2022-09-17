@@ -71,7 +71,7 @@ ul{margin:0}
 #trail a:hover{opacity:0.6}
 svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 </style>
-<svg></svg>
+<svg><g></g></svg>
 <div id=menu>
   <p>Change color <input id=notecolor type=color onchange='changeColor()'><br>(use black for transparent)
   <p><a href='#' onclick='editNote()'>Edit</a>
@@ -316,6 +316,7 @@ function createNote(n){
     d.style.transform="scale("+(window.innerWidth/n.width)*1.2+")"
     d.style.zIndex=++zTopIndex;
     main.style.opacity='0'
+    mainSvg.style.opacity='0'
     menu.style.display='none'
     document.body.style.backgroundColor='';
     d.onmousedown=null
@@ -323,6 +324,7 @@ function createNote(n){
 
     setTimeout(()=>{
       main.style.opacity=''
+      mainSvg.style.opacity=''
       trailobj.push(n)
       regenTrail()
       populate(n)
@@ -424,6 +426,7 @@ function createNote(n){
 }
 function setView( reset ){
   if (!level.view || reset) level.view={x:0,y:0,s:1}
+  mainSvgG.style.transform = 
   main.style.transform=`translate(${level.view.x}px, ${level.view.y}px) scale(${level.view.s})`
 }
 function mousePos(e) {
@@ -440,9 +443,10 @@ function populate(t){
   level = t
   setView()
 
-  resetSVG(mainSvg)
+  while(mainSvgG.children.length)
+    mainSvgG.removeChild(mainSvgG.lastChild)
   if (t.lines) {
-    for (let line of t.lines) addSVGline(mainSvg, line)
+    for (let line of t.lines) addSVGline(mainSvgG, line)
   }
   document.body.style.backgroundColor= t.color? 'hsl('+t.color.h+','+t.color.s+'%,'+(t.color.l*0.3+70)+'%)' : '#fff';
 }
@@ -543,8 +547,8 @@ document.onmousedown=function(e){
       document.oncontextmenu=killEvent
       if (e.target.tagName!="path") return;
       let i;
-      for (i in mainSvg.children)
-        if (mainSvg.children[i] == e.target) break
+      for (i in mainSvgG.children)
+        if (mainSvgG.children[i] == e.target) break
       level.lines.splice(i,1)
       e.target.remove()
       save()
@@ -564,7 +568,7 @@ document.onmousedown=function(e){
     if (penWidth!="3px") line.width=penWidth;
     if (penColor!="black") line.color=penColor;
 
-    path=addSVGline(mainSvg, line)
+    path=addSVGline(mainSvgG, line)
 
     document.onmouseup=function(e){
       document.onmousemove(e)
@@ -576,19 +580,19 @@ document.onmousedown=function(e){
     if (penTool=="pencil") {
       document.onmousemove=function(e){
         line.points.push(mousePos(e))
-        updateSVGline(mainSvg,path,line)
+        updateSVGline(path,line)
       }
     } else if (penTool=="line") {
       document.onmousemove=function(e){
         line.points = [[sx,sy],mousePos(e)]
-        updateSVGline(mainSvg,path,line)
+        updateSVGline(path,line)
       }
     } else if (penTool=="arrow") {
       line.smooth=0
       document.onmousemove=function(e){
         let [mx, my] = mousePos(e)
         line.points = drawArrow( sx, sy, mx, my )
-        updateSVGline(mainSvg,path,line)
+        updateSVGline(path,line)
       }
     }
   }
@@ -625,7 +629,6 @@ function drawArrow(x1,y1,x2,y2){
   }
 }
 document.onwheel=function(e){
-  e.preventDefault(); e.stopPropagation()
   menu.style.display='none'
 
   let sx= (e.pageX-level.view.x)/level.view.s,
@@ -846,12 +849,8 @@ function downloadJson(){
 }
 
 const mainSvg=document.querySelector('svg')
+const mainSvgG=mainSvg.firstChild
 const svgNS = "http://www.w3.org/2000/svg"
-function resetSVG(svg){
-  // erase existing contents
-  let c; while (c = svg.firstChild) svg.removeChild(c)
-  setSVGsize(svg, window.innerWidth,window.innerHeight);
-}
 function setSVGsize(svg, w,h){
   svg.setAttribute("width",w)
   svg.setAttribute("height",h)
@@ -862,11 +861,11 @@ function addSVGline(svg, line){
   path.setAttributeNS(null, "style", "stroke-width: "+(line.width||'3px')+"; fill: "+(line.fill||'none')+"; stroke: "+(line.color||'black'))
   path.setAttributeNS(null, "stroke-linecap", "round")
   if (!line.points.length) return;
-  updateSVGline(svg, path, line);
+  updateSVGline(path, line);
   svg.appendChild(path)
   return path
 }
-function updateSVGline(svg, path, line){
+function updateSVGline(path, line){
   let pathstring = "M "+line.points[0].join(',')
   let smoothing = line.hasOwnProperty("smooth") ? line.smooth : penSmooth;
   if (smoothing) {
@@ -897,17 +896,10 @@ function updateSVGline(svg, path, line){
     for (let i=1;i<line.points.length;i++) pathstring += "L "+line.points[i].join(',')
   }
   path.setAttributeNS(null, "d", pathstring)
-  var ex=0, ey=0, w=svg.getAttribute("width"), h=svg.getAttribute("height");
-  for (let i of line.points) {
-    if (i[0]>ex) ex=i[0]+2;
-    if (i[1]>ey) ey=i[1]+2;
-  }
-  if (ex>w || ey>h)
-    setSVGsize(svg,Math.max(ex,w),Math.max(ey,h))
 }
-window.onresize=function(){
-  console.log('resize')
-}
+;(window.onresize=function(){
+  setSVGsize(mainSvg, window.innerWidth,window.innerHeight);
+})();
 
 document.body.addEventListener('dragover', function(e){e.preventDefault();e.stopPropagation()},false);
 document.body.addEventListener('drop', function(e){
