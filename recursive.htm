@@ -12,7 +12,7 @@ pre{background:rgba(128,128,128,0.2)}
   min-height:50px; min-width:50px;
   resize:both; overflow:auto;
 }
-.note.pinned {box-shadow:1px 1px 2px rgba(0,0,0,0.3)}
+.note.pinned {box-shadow:1px 1px 2px rgba(0,0,0,0.3);resize:none;}
 .note svg{z-index:-1}
 .note img{max-width:100%}
 .subnote {
@@ -33,6 +33,8 @@ ul{margin:0}
 .invis:hover{border-color:rgba(128,128,128,0.2);background:rgba(128,128,128,0.1); resize:both;}
 .invis .gear{display:none;}
 .invis:hover .gear{display:block}
+.invis.pinned{box-shadow:none}
+.invis.pinned:hover{border-color:transparent;resize:none;}
 #menu{
   display:none;
   position:absolute;
