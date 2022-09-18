@@ -1,7 +1,13 @@
-<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width, initial-scale=1.0">
+<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width, initial-scale=1.0, user-scalable=no">
 <style>
 h3,h2,h1{margin:0;display:inline-block}
-body{font-family:sans-serif; transition:background-color 0.3s; user-select:none; overflow:hidden;}
+body{
+  font-family:sans-serif;
+  transition:background-color 0.3s;
+  user-select:none;
+  overflow:hidden;
+  touch-action:none;
+}
 textarea{min-width:80%;min-height:100px}
 pre{background:rgba(128,128,128,0.2)}
 .note{
@@ -685,6 +691,59 @@ document.onwheel=function(e){
 
   setView()
 }
+
+;(function(){ // touch support
+  var tsx={}, tsy={}, td=0, tcx=0,tcy=0;
+  document.addEventListener("touchstart", function(e){
+    var t=e.changedTouches[0], id=t.identifier;
+    tsx[id]=t.clientX;
+    tsy[id]=t.clientY;
+    
+    if (e.touches.length>1) {
+      td = touchdistance(e.touches[0],e.touches[1]);
+      tcx = (e.touches[0].clientX+e.touches[1].clientX)/2;
+      tcy = (e.touches[0].clientY+e.touches[1].clientY)/2;
+    }
+  }, true);
+  document.addEventListener("touchmove", function(e){
+    e.preventDefault()
+    e.stopPropagation()
+  
+    if (e.touches.length==1){
+      var t=e.touches[0];
+  
+      level.view.x +=(t.clientX-tsx[t.identifier])
+      level.view.y +=(t.clientY-tsy[t.identifier])
+    
+    } else {
+      let ntcx = (e.touches[0].clientX+e.touches[1].clientX)/2;
+      let ntcy = (e.touches[0].clientY+e.touches[1].clientY)/2;
+      let ntd = touchdistance(e.touches[0],e.touches[1])
+  
+      let sx= (ntcx -level.view.x)/level.view.s;
+      let sy= (ntcy -level.view.y)/level.view.s;
+      
+      level.view.s *= ntd/td
+      
+      level.view.x = -sx*level.view.s + ntcx + (ntcx-tcx)
+      level.view.y = -sy*level.view.s + ntcy + (ntcy-tcy)
+  
+      td = ntd
+      tcx = ntcx
+      tcy = ntcy
+    }
+  
+    for (var i=0;i< e.changedTouches.length;i++) {
+      tsx[e.changedTouches[i].identifier]=e.changedTouches[i].clientX;
+      tsy[e.changedTouches[i].identifier]=e.changedTouches[i].clientY;
+    }
+    setView()
+  }, true);
+  function touchdistance(t1,t2){
+    return Math.sqrt((t1.clientX-t2.clientX)*(t1.clientX-t2.clientX) + (t1.clientY-t2.clientY)*(t1.clientY-t2.clientY))
+  }
+})();
+
 function escapeEntities(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
 }
