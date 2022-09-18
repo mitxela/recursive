@@ -176,10 +176,6 @@ var menuRefObj=null;
 var zTopIndex = 0;
 var penSmooth = 0.15;
 
-window.onhashchange = function(){
-  console.log(location.hash)
-}
-
 function deleteNote(){
   for (let i in level.children)
     if (level.children[i]===menuRef) level.children.splice(i,1);
@@ -486,6 +482,9 @@ function mousePos(e) {
     (e.pageY-level.view.y)/level.view.s ]
 }
 function populate(t){
+  if (window.location.hash!='#'+t.id)
+    window.history.pushState({},'','#'+t.id) //or maybe replaceState
+
   zTopIndex=0
   while (main.children.length)
     main.removeChild(main.lastChild)
@@ -500,6 +499,16 @@ function populate(t){
     for (let line of t.lines) addSVGline(mainSvgG, line)
   }
   document.body.style.backgroundColor= t.color? 'hsl('+t.color.h+','+t.color.s+'%,'+(t.color.l*0.3+70)+'%)' : '#fff';
+}
+function showNote(id){
+  trailobj=[]
+  let p=noteById[id];
+  while (p) {
+    trailobj.unshift(p)
+    p=noteParentById[p.id]
+  }
+  regenTrail()
+  populate(trailobj[trailobj.length-1])
 }
 function setLevel(i){
   if (trailobj[i]==level) {
@@ -695,6 +704,13 @@ document.onwheel=function(e){
 
   setView()
   saveWithoutHistory()
+}
+window.onhashchange = function(){
+  let i = location.hash.substr(1);
+  if ( i && noteById.hasOwnProperty(i) )
+    showNote(i)
+  else
+    showNote(tree.id) //load root
 }
 
 ;(function(){ // touch support
@@ -1074,9 +1090,7 @@ function reloadAll(){
   genLookups(tree)
   // should we set noteParentById[tree.id] to something?
 
-  trailobj=[tree]
-  regenTrail()
-  populate(tree)
+  window.onhashchange()
 }
 
 
