@@ -431,7 +431,7 @@ function createNote(n){
 function zoomReset(){
   level.view={x:0,y:0,s:1}
   setView()
-  save()
+  saveWithoutHistory()
 }
 function zoomFit(){
   if (level.children.length==0 && (!level.lines || level.lines.length==0) ) return;
@@ -469,7 +469,7 @@ function zoomFit(){
     level.view.x = -minx*s2 + (window.innerWidth-(maxx-minx)*s2)/2
   }
   setView()
-  save()
+  saveWithoutHistory()
 }
 function setView(){
   if (!level.view) level.view={x:0,y:0,s:1}
@@ -580,7 +580,7 @@ document.onmousedown=function(e){
     document.onmouseup=function(e){
       document.onmouseup=null;
       document.onmousemove=null;
-      save()
+      saveWithoutHistory()
     }
     return;
   }
@@ -690,6 +690,7 @@ document.onwheel=function(e){
   level.view.y = -sy*level.view.s+e.pageY
 
   setView()
+  saveWithoutHistory()
 }
 
 ;(function(){ // touch support
@@ -738,6 +739,9 @@ document.onwheel=function(e){
       tsy[e.changedTouches[i].identifier]=e.changedTouches[i].clientY;
     }
     setView()
+  }, true);
+  document.addEventListener("touchend", function(e){
+    if (e.touches.length==0) saveWithoutHistory()
   }, true);
   function touchdistance(t1,t2){
     return Math.sqrt((t1.clientX-t2.clientX)*(t1.clientX-t2.clientX) + (t1.clientY-t2.clientY)*(t1.clientY-t2.clientY))
@@ -930,6 +934,9 @@ var undoHistory=[], maxUndoHistory=10;
 function save(){
   undoHistory.push(localStorage.tree)
   undoHistory=undoHistory.slice(-maxUndoHistory)
+  localStorage.tree=JSON.stringify(tree)
+}
+function saveWithoutHistory(){
   localStorage.tree=JSON.stringify(tree)
 }
 function undo(){
