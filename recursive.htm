@@ -8,7 +8,6 @@ body{
   overflow:hidden;
   touch-action:none;
 }
-textarea{min-width:80%;min-height:100px}
 pre{background:rgba(128,128,128,0.2)}
 .note{
   position:absolute;
@@ -48,7 +47,6 @@ ul{margin:0}
   border:3px solid #ccc;
   border-radius:3px;
   box-shadow:5px 5px 5px rgba(0,0,0,0.3);
-  z-index:99999999;
   min-width:200px
 }
 #menu p{margin:7px}
@@ -78,6 +76,8 @@ ul{margin:0}
 svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 </style>
 <svg><g></g></svg>
+<div id=main></div>
+
 <div id=menu>
   <p>Change color <input id=notecolor type=color onchange='changeColor()'><br>(use black for transparent)
   <p><a href='#' onclick='editNote(); return false'>Edit</a>
@@ -87,7 +87,6 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
   <p><a href='#' onclick='moveUpNote(); return false'>Move up a level</a>
   <p><a href='#' onclick='deleteNote(); return false'>Delete</a>
 </div>
-<div id=main></div>
 
 <div id=trail></div>
 <a style='position:fixed;right:0;top:0' href='#' onclick='localStorage.tree="";window.location.reload()'>reset</a>
@@ -297,7 +296,10 @@ function createNote(n){
     var e = document.createElement('textarea')
     function saveText(){ n.title = e.value; t.innerHTML = markdown(n.title); d.style.overflow='auto'; save() }
 
-    e.innerHTML = n.title
+    e.textContent = n.title
+    e.style.width = (n.width-8)+'px'
+    e.style.height = (n.height-21)+'px'
+    e.style.background = n.color.l==0?'transparent':'hsl('+n.color.h+','+n.color.s+'%,'+n.color.l*1.2+'%)';
     t.innerHTML = "";
     d.style.overflow='visible'
     t.appendChild(e);
@@ -809,7 +811,7 @@ function markdownApply(s){
         listtag="ol>";
         return "<li>"+p2
       })
-      //.replace(/&/g,'&amp;') // is there any harm in allowing manually typed entities?
+      //.replace(/&(?!lt;|gt;)/g,'&amp;')
       .replace(/^([#]+)(.+)$/,function(m, p1, p2){
         if (p1=='#') return '<h3>'+p2+'</h3>'
         if (p1=='##') return '<h2>'+p2+'</h2>'
