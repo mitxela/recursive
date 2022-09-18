@@ -122,18 +122,6 @@ Ctrl+Z to undo<br>
 </div>
 
 <script>
-// click to organise?
-// if easy: drag onto trail at top to jump it to specific note
-// back/forward needs to function
-// Undo resets level - should remain on current note
-
-// expanded tree structure for quick access
-// Search
-
-// collaborative stuff comes later
-
-
-
 testtree = {title:"Root", children:[
   {
     title: "Test note one",
@@ -395,7 +383,6 @@ function createNote(n){
     }
   }
 
-  //let bound = childSize(n.children)
   let bound = {w:window.innerWidth,h:window.innerHeight}
   let scale = Math.min(0.9*n.width/bound.w, 0.9*n.height/bound.h) || 0.1;
   
@@ -419,7 +406,6 @@ function createNote(n){
     sn.style.backgroundColor='hsl('+i.color.h+','+i.color.s+'%,'+lighter+'%)';
     sn.style.borderColor='hsl('+i.color.h+','+i.color.s+'%,'+(lighter*0.8)+'%)';
 
-    
     sn.style.width=i.width*scale+'px'
     sn.style.height=i.height*scale+'px'
     sn.style.left=i.x*scale+'px'
@@ -427,7 +413,6 @@ function createNote(n){
 
     d.appendChild(sn)
   }
-
 
   main.appendChild(d)
 }
@@ -859,16 +844,6 @@ function markdown(s){
 }
 function autoIndex(n){
   return Math.round(Math.sqrt(n.x*n.x +n.y*n.y))
-}
-function childSize(ch){
-  let minx=1e6, miny=1e6, maxx=-1e6, maxy=-1e6;
-  for (let i of ch){
-    if (i.x<minx) minx=i.x;
-    if (i.y<miny) miny=i.y;
-    if (i.x+i.width >maxx) maxx=i.x+i.width;
-    if (i.y+i.height >maxy) maxy=i.y+i.height;
-  }
-  return {x:minx,y:miny,w:maxx,h:maxy}
 }
 function areaOfOverlap(a,b){
   let h = Math.min(Math.max(0,Math.min(a.x+a.width-b.x, b.x+b.width-a.x)),a.width,b.width);
