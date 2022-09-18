@@ -74,12 +74,12 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 <svg><g></g></svg>
 <div id=menu>
   <p>Change color <input id=notecolor type=color onchange='changeColor()'><br>(use black for transparent)
-  <p><a href='#' onclick='editNote()'>Edit</a>
-  <p><a href='#' onclick='toggleStrike()'>Toggle strikethrough</a>
-  <p><a href='#' onclick='togglePinned()'>Toggle pinned</a>
-  <p><a href='#' onclick='jumpInto()'>Jump Into</a>
-  <p><a href='#' onclick='moveUpNote()'>Move up a level</a>
-  <p><a href='#' onclick='deleteNote()'>Delete</a>
+  <p><a href='#' onclick='editNote(); return false'>Edit</a>
+  <p><a href='#' onclick='toggleStrike(); return false'>Toggle strikethrough</a>
+  <p><a href='#' onclick='togglePinned(); return false'>Toggle pinned</a>
+  <p><a href='#' onclick='jumpInto(); return false'>Jump Into</a>
+  <p><a href='#' onclick='moveUpNote(); return false'>Move up a level</a>
+  <p><a href='#' onclick='deleteNote(); return false'>Delete</a>
 </div>
 <div id=main></div>
 
@@ -88,11 +88,11 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 
 <div id=help style='position:fixed;bottom:0;left:0; user-select:none;'>
 Click and drag to move note<br>
-Middle-click drag to pan, scroll to zoom [ <a href=# onclick='zoomReset()'>100%</a> &bull; <a href=# onclick='zoomFit()'>fit</a> ]<br>
+Middle-click drag to pan, scroll to zoom [ <a href=# onclick='zoomReset(); return false'>100%</a> &bull; <a href=# onclick='zoomFit(); return false'>fit</a> ]<br>
 Double or right click note body to expand<br>
 Double click text to edit<br>
 Drag corners to resize<br>
-<a href=# onclick='downloadJson()'>Download the current state</a>, drag & drop .json file onto this page to load<br>
+<a href=# onclick='downloadJson(); return false'>Download the current state</a>, drag & drop .json file onto this page to load<br>
 Left click drag on background to draw, right click erase<br>
 Tool:<select id=pentool oninput='penTool=this.value'>
 <option value='none'>(none)</option>
@@ -112,16 +112,14 @@ Tool:<select id=pentool oninput='penTool=this.value'>
 <option value='5'>ᐳ</option>
 </select>
  arrow size:<input id=arrowsize type=range oninput='arrowSize=this.value/50' min=3 max=10 value=6>
- <a href='#' onclick='eraseAllLines()'>erase all lines from this note</a><br>
+ <a href='#' onclick='eraseAllLines(); return false'>erase all lines from this note</a><br>
 Ctrl+Z to undo<br>
 <br>
 </div>
 
 <script>
-// locally zoomable - infinite canvas on each note - handle dragging off the edge.
 // click to organise?
 // if easy: drag onto trail at top to jump it to specific note
-// allow locking / pinning
 // back/forward needs to function
 // Undo resets level - should remain on current note
 
