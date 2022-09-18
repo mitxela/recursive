@@ -89,12 +89,17 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 #outline a{
   color:black;
   text-decoration:none;
-  display:inline-block;
   white-space: nowrap;
-  pading:2px;
-  opacity:0.7;
+  padding:2px;
+  opacity:0.8;
 }
 #outline a:hover{opacity:1}
+details p{
+  white-space:nowrap;
+  line-height:23px;
+  margin:0 0 0 15px;
+}
+details>p{display:inline-block;}
 </style>
 <svg><g></g></svg>
 <div id=main></div>
@@ -1081,18 +1086,31 @@ function genLookups(n) {
     noteParentById[c.id]=n
   }
 }
-function populateOutline(n,indent){
+function populateOutline(n,parent){
 
   let a=document.createElement('a')
   a.textContent=shortTitle(n.title,1,1)
   a.href='#'+n.id
   if (n.color && n.color.l) a.style.background='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
-  a.style.marginLeft=20*indent+'px'
-  outline.append(a)
-  outline.append(document.createElement('br'))
+
+  let p=document.createElement('p')
+
+  if (n.children.length==0) {
+    p.append(a)
+    parent.append(p)
+    return
+  }
+
+  let d=document.createElement('details')
+  let s=document.createElement('summary')
+
+  s.append(a)
+  d.append(s)
+  d.append(p)
+  parent.append(d)
 
   for (c of n.children)
-    populateOutline(c,indent+1)
+    populateOutline(c,p)
 }
 
 
@@ -1109,7 +1127,8 @@ function reloadAll(){
   // should we set noteParentById[tree.id] to something?
 
   outline.innerHTML=""
-  populateOutline(tree,0)
+  populateOutline(tree,outline)
+  outline.children[0].setAttribute('open','')
 
   window.onhashchange()
 }
