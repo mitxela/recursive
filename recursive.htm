@@ -58,9 +58,10 @@ ul{margin:0}
   transition:opacity 0.3s;
 }
 #trail{
-  position:fixed;
+  position:absolute;
   background:rgba(128,128,128,0.3);
   width:100%;
+  height:32px;
   left:0;top:0;
 }
 #trail a{
@@ -74,6 +75,26 @@ ul{margin:0}
 }
 #trail a:hover{opacity:0.6}
 svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
+#outline {
+  position:fixed;
+  left:0;
+  top:32px;
+  padding:10px;
+  width:200px;
+  height:60%;
+  background:rgba(255,255,255,0.9);
+  overflow:auto;
+  resize:both;
+}
+#outline a{
+  color:black;
+  text-decoration:none;
+  display:inline-block;
+  white-space: nowrap;
+  pading:2px;
+  opacity:0.7;
+}
+#outline a:hover{opacity:1}
 </style>
 <svg><g></g></svg>
 <div id=main></div>
@@ -89,8 +110,9 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 </div>
 
 <div id=trail></div>
-<a style='position:fixed;right:0;top:0' href='#' onclick='if (confirm("reset?")){localStorage.tree="";location.hash="";location.reload()} else return false'>reset</a>
+<div id=outline></div>
 
+<a style='position:fixed;right:0;top:0' href='#' onclick='if (confirm("reset?")){localStorage.tree="";location.hash="";location.reload()} else return false'>reset</a>
 <div id=help style='position:fixed;bottom:0;left:0; user-select:none;'>
 Click and drag to move note<br>
 Middle-click drag to pan, scroll to zoom [ <a href=# onclick='zoomReset(); return false'>100%</a> &bull; <a href=# onclick='zoomFit(); return false'>fit</a> ]<br>
@@ -156,6 +178,7 @@ var level;
 var menu=document.getElementById('menu')
 var main=document.getElementById('main')
 var trail=document.getElementById('trail')
+var outline=document.getElementById('outline')
 var trailobj=[]
 var menuRef=null;
 var menuRefObj=null;
@@ -498,7 +521,7 @@ function showNote(id){
     p=noteParentById[p.id]
   }
   regenTrail()
-  populate(trailobj[trailobj.length-1])
+  populate(noteById[id])
 }
 function setLevel(i){
   if (trailobj[i]==level) {
@@ -682,6 +705,7 @@ function drawArrow(x1,y1,x2,y2){
   }
 }
 document.onwheel=function(e){
+  if (e.target==outline || outline.contains(e.target)) return;
   menu.style.display='none'
 
   let sx= (e.pageX-level.view.x)/level.view.s,
@@ -1057,6 +1081,20 @@ function genLookups(n) {
     noteParentById[c.id]=n
   }
 }
+function populateOutline(n,indent){
+
+  let a=document.createElement('a')
+  a.textContent=shortTitle(n.title,1,1)
+  a.href='#'+n.id
+  if (n.color && n.color.l) a.style.background='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
+  a.style.marginLeft=20*indent+'px'
+  outline.append(a)
+  outline.append(document.createElement('br'))
+
+  for (c of n.children)
+    populateOutline(c,indent+1)
+}
+
 
 function reloadAll(){
   // Some notes may not have an id, but others further down the tree potentially could
@@ -1069,6 +1107,9 @@ function reloadAll(){
   noteParentById={}
   genLookups(tree)
   // should we set noteParentById[tree.id] to something?
+
+  outline.innerHTML=""
+  populateOutline(tree,0)
 
   window.onhashchange()
 }
