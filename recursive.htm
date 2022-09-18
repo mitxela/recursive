@@ -437,7 +437,7 @@ function zoomFit(){
     if (c.x+c.width > maxx) maxx=c.x+c.width;
     if (c.y+c.height > maxy) maxy=c.y+c.height;
   }
-  for (let line of level.lines) {
+  if (level.lines) for (let line of level.lines) {
     for (let p of line.points) {
     if (p[0]<minx) minx=p[0];
     if (p[1]<miny) miny=p[1];
