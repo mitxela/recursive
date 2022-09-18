@@ -88,7 +88,7 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 
 <div id=help style='position:fixed;bottom:0;left:0; user-select:none;'>
 Click and drag to move note<br>
-Middle-click drag to pan, scroll to zoom<br>
+Middle-click drag to pan, scroll to zoom [ <a href=# onclick='zoomReset()'>100%</a> &bull; <a href=# onclick='zoomFit()'>fit</a> ]<br>
 Double or right click note body to expand<br>
 Double click text to edit<br>
 Drag corners to resize<br>
@@ -424,8 +424,51 @@ function createNote(n){
 
   main.appendChild(d)
 }
-function setView( reset ){
-  if (!level.view || reset) level.view={x:0,y:0,s:1}
+function zoomReset(){
+  level.view={x:0,y:0,s:1}
+  setView()
+  save()
+}
+function zoomFit(){
+  if (level.children.length==0 && (!level.lines || level.lines.length==0) ) return;
+
+  let maxx=-Infinity, maxy=-Infinity, minx=Infinity, miny=Infinity;
+  for (let c of level.children) {
+    if (c.x<minx) minx=c.x;
+    if (c.y<miny) miny=c.y;
+    if (c.x+c.width > maxx) maxx=c.x+c.width;
+    if (c.y+c.height > maxy) maxy=c.y+c.height;
+  }
+  for (let line of level.lines) {
+    for (let p of line.points) {
+    if (p[0]<minx) minx=p[0];
+    if (p[1]<miny) miny=p[1];
+    if (p[0]>maxx) maxx=p[0];
+    if (p[1]>maxy) maxy=p[1];
+    }
+  }
+  let margin = 10;
+  maxx += margin
+  maxy += margin
+  minx -= margin
+  miny -= margin
+
+  let s1= window.innerWidth/(maxx-minx),
+      s2= window.innerHeight/(maxy-miny);
+  if (s1<s2){
+    level.view.s = s1
+    level.view.x = -minx*s1
+    level.view.y = -miny*s1 + (window.innerHeight-(maxy-miny)*s1)/2
+  } else {
+    level.view.s = s2
+    level.view.y = -miny*s2
+    level.view.x = -minx*s2 + (window.innerWidth-(maxx-minx)*s2)/2
+  }
+  setView()
+  save()
+}
+function setView(){
+  if (!level.view) level.view={x:0,y:0,s:1}
   mainSvgG.style.transform = 
   main.style.transform=`translate(${level.view.x}px, ${level.view.y}px) scale(${level.view.s})`
 }
@@ -456,11 +499,13 @@ function setLevel(i){
     return
   }
   main.style.opacity='0';
+  mainSvg.style.opacity='0';
   document.body.style.backgroundColor='';
   menu.style.display='none'
 
   setTimeout(()=>{
     main.style.opacity=''
+    mainSvg.style.opacity=''
     trailobj=trailobj.slice(0,i+1)
     regenTrail()
     populate(trailobj[i])
@@ -531,6 +576,7 @@ document.onmousedown=function(e){
     document.onmouseup=function(e){
       document.onmouseup=null;
       document.onmousemove=null;
+      save()
     }
     return;
   }
@@ -634,7 +680,7 @@ document.onwheel=function(e){
   let sx= (e.pageX-level.view.x)/level.view.s,
       sy= (e.pageY-level.view.y)/level.view.s;
 
-  level.view.s*= e.deltaY < 0? 1.2:0.8;
+  level.view.s*= e.deltaY < 0? 1.25:0.8;
 
   level.view.x = -sx*level.view.s+e.pageX
   level.view.y = -sy*level.view.s+e.pageY
