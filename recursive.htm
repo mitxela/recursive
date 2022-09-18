@@ -176,6 +176,10 @@ var menuRefObj=null;
 var zTopIndex = 0;
 var penSmooth = 0.15;
 
+window.onhashchange = function(){
+  console.log(location.hash)
+}
+
 function deleteNote(){
   for (let i in level.children)
     if (level.children[i]===menuRef) level.children.splice(i,1);
@@ -1033,7 +1037,43 @@ document.body.addEventListener('drop', function(e){
 
 },false);
 
+var nextId = 0;
+var allIds=[], noteById={}, noteParentById={};
+
+function findIds(ids, n) {
+  if (n.id) ids.push(n.id)
+  for (let c of n.children)
+    findIds(ids,c)
+}
+function idInUse(id) {
+  return (allIds.indexOf(id)!=-1)
+}
+function newId(){
+  while (idInUse(nextId)) nextId++;
+  allIds.push(nextId)
+  return nextId
+}
+function genLookups(n) {
+  if (!n.id) n.id = newId();
+  noteById[n.id]=n;
+  for (let c of n.children) {
+    genLookups(c)
+    noteParentById[c.id]=n
+  }
+}
+
 function reloadAll(){
+  // Some notes may not have an id, but others further down the tree potentially could
+  // Do two passes to make sure we don't assign an in-use id
+  allIds=[]
+  findIds(allIds,tree)
+  nextId=Math.max(0,...allIds) +1;
+
+  noteById={}
+  noteParentById={}
+  genLookups(tree)
+  // should we set noteParentById[tree.id] to something?
+
   trailobj=[tree]
   regenTrail()
   populate(tree)
