@@ -485,6 +485,8 @@ function populate(t){
   if (window.location.hash!='#'+t.id)
     window.history.pushState({},'','#'+t.id) //or maybe replaceState
 
+  document.title = shortTitle(t.title,1,1) +` [${t.id}] - recursive`;
+
   zTopIndex=0
   while (main.children.length)
     main.removeChild(main.lastChild)
@@ -541,14 +543,14 @@ function regenTrail(){
 
   trail.innerHTML = s.join(" &rarr; ")
 }
-function shortTitle(t, last){
+function shortTitle(t, last, noescape){
   let maxlength = last ? 50:20;
 
   if (!t) return "(no name)"
   t = t.split("\n")[0].replace(/^[#]+/,"");
   
   if (t.length>maxlength+3) t=t.slice(0,maxlength)+"..."
-  return escapeEntities(t)
+  return noescape?t:escapeEntities(t);
 }
 function background(t){
   return (t.id=="main" || t==mainSvg || t.tagName=="path" || t.tagName=="HTML" || t.id=="help")
