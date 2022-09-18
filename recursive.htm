@@ -563,7 +563,7 @@ function shortTitle(t, last, noescape){
   let maxlength = last ? 50:20;
 
   if (!t) return "(no name)"
-  t = t.split("\n")[0].replace(/^[#]+/,"");
+  t = t.split("\n")[0].replace(/^[#]+/,"").replace(/~/g,"");
   
   if (t.length>maxlength+3) t=t.slice(0,maxlength)+"..."
   return noescape?t:escapeEntities(t);
@@ -1092,6 +1092,7 @@ function populateOutline(n,parent){
   a.textContent=shortTitle(n.title,1,1)
   a.href='#'+n.id
   if (n.color && n.color.l) a.style.background='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
+  if (n.title.match(/^[#]*~[^~]+~/)) a.style.textDecoration='line-through';
 
   let p=document.createElement('p')
 
