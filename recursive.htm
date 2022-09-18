@@ -29,7 +29,7 @@ pre{background:rgba(128,128,128,0.2)}
 ul{margin:0}
 .gear{
   cursor:pointer;
-  float:right;
+  position:absolute; right:0;
   width:13px; height:13px;
   background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6+R8AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAOtJREFUeNp8kj0LwkAMhtterau26uCgIPixOIiTf91fIeiiIo6C2joIFj/rG3kPwlE8eOglby6X5Gq88jUCMxCAsysG/PpgABL6OvR3aCfUfRssa0inrBcIVWJtb8Da3pSpoNCpRtupdojxBgbcwYqJYjAGEfVfcsOmJ6DCBAtwYFlXkIM2e+tKnNzUd8q5/LGrEi+nd+CphNg5VFd7idtJeSewBz013pwBLfZk2NMcHEOVzagSpiUPLnpNhmZH3lDixwnWdtNT2TM+9BYsOSXRHiwpZcnyuIU9VPAfu3EfcSDS65H+MzXvK8AAT5g1PwYr5mUAAAAASUVORK5CYII=)
 }
@@ -89,13 +89,12 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 </div>
 
 <div id=trail></div>
-<a style='position:fixed;right:0;top:0' href='#' onclick='localStorage.tree="";window.location.reload()'>reset</a>
+<a style='position:fixed;right:0;top:0' href='#' onclick='if (confirm("reset?")){localStorage.tree="";location.hash="";location.reload()} else return false'>reset</a>
 
 <div id=help style='position:fixed;bottom:0;left:0; user-select:none;'>
 Click and drag to move note<br>
 Middle-click drag to pan, scroll to zoom [ <a href=# onclick='zoomReset(); return false'>100%</a> &bull; <a href=# onclick='zoomFit(); return false'>fit</a> ]<br>
-Double or right click note body to expand<br>
-Double click text to edit<br>
+Right click note body to expand, double click to edit text<br>
 Drag corners to resize<br>
 <a href=# onclick='downloadJson(); return false'>Download the current state</a>, drag & drop .json file onto this page to load<br>
 Left click drag on background to draw, right click erase<br>
@@ -208,11 +207,11 @@ function moveUpNote(){
 }
 function editNote(){
   menu.style.display='none';
-  menuRefObj.children[1].ondblclick()
+  menuRefObj.ondblclick()
 }
 function jumpInto(){
   menu.style.display='none';
-  menuRefObj.ondblclick()
+  menuRefObj.oncontextmenu()
 }
 function toggleStrike(){
   menu.style.display='none';
@@ -286,19 +285,20 @@ function createNote(n){
     menuRefObj=d;
   }
   a.ondblclick=killEvent;
-  //a.onmousedown=killEvent;
   d.appendChild(a)
 
   var t = document.createElement('div');
   t.innerHTML=markdown(n.title)
-  t.ondblclick=function(e){
+  d.appendChild(t)
+
+  d.ondblclick=function(e){
     if (e) e.stopPropagation()
     var e = document.createElement('textarea')
     function saveText(){ n.title = e.value; t.innerHTML = markdown(n.title); d.style.overflow='auto'; save() }
 
     e.textContent = n.title
     e.style.width = (n.width-8)+'px'
-    e.style.height = (n.height-21)+'px'
+    e.style.height = (n.height-8)+'px'
     e.style.background = n.color.l==0?'transparent':'hsl('+n.color.h+','+n.color.s+'%,'+n.color.l*1.2+'%)';
     t.innerHTML = "";
     d.style.overflow='visible'
@@ -313,8 +313,7 @@ function createNote(n){
     }
   }
 
-  d.appendChild(t)
-  d.ondblclick=function(e){
+  d.oncontextmenu = function(e){
     d.style.transition="0.3s linear"
     
     d.style.left=(window.innerWidth -n.width )/2 + 'px'
@@ -327,6 +326,7 @@ function createNote(n){
     document.body.style.backgroundColor='';
     d.onmousedown=null
     d.ondblclick=null
+    d.oncontextmenu=null
 
     setTimeout(()=>{
       main.style.opacity=''
@@ -335,8 +335,9 @@ function createNote(n){
       regenTrail()
       populate(n)
     },300)
+
+    return false;
   }
-  d.oncontextmenu = function(e){d.ondblclick(e); return false}
 
   d.onmousedown=function(e){
     if (e.target.tagName=="TEXTAREA" || e.button!=0 || n.pinned) return;
