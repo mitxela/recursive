@@ -221,7 +221,7 @@ function moveUpNote(){
 
   reGenLookups()
   save()
-  setLevel(trailobj.length-2)
+  delayedShowNote(trailobj[trailobj.length-2].id)
   rePopulateOutline()
 }
 function editNote(){
@@ -539,8 +539,8 @@ function showNote(id){
   regenTrail()
   populate(noteById[id])
 }
-function setLevel(i){
-  if (trailobj[i]==level) {
+function delayedShowNote(id){
+  if (id==level.id) {
     populate(level) //redraw anyway
     return
   }
@@ -552,9 +552,7 @@ function setLevel(i){
   setTimeout(()=>{
     main.style.opacity=''
     mainSvg.style.opacity=''
-    trailobj=trailobj.slice(0,i+1)
-    regenTrail()
-    populate(trailobj[i])
+    showNote(id)
   },300);
 }
 function regenTrail(){
@@ -565,7 +563,7 @@ function regenTrail(){
       c1 = "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l+"%)"
       c2 = "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l*0.8+"%)"
     }
-    s.push("<a href='#"+n.id+"' onclick='setLevel("+i+");return false' style='background:"+c1+"; border-color:"+c2+"'>"+shortTitle(n.title, i==trailobj.length-1)+"</a>")
+    s.push("<a href='#"+n.id+"' onclick='delayedShowNote("+n.id+");return false' style='background:"+c1+"; border-color:"+c2+"'>"+shortTitle(n.title, i==trailobj.length-1)+"</a>")
   }
 
   trail.innerHTML = s.join(" &rarr; ")
@@ -1117,6 +1115,7 @@ function updateOutlineLink(n){
   a.href='#'+n.id
   if (n.color && n.color.l) a.style.background='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
   a.style.textDecoration= (n.title.match(/^[#]*~[^~]+~/))?'line-through':'';
+  a.onclick=function(){delayedShowNote(n.id);return false};
 }
 function populateOutline(n,parent){
 
