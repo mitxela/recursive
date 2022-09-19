@@ -569,6 +569,7 @@ document.onclick=function(e){
   if (penTool!="addnote" || !background(e.target))return;
   let [mx, my] = mousePos(e);
   var newNote = {
+    id: newId(),
     title: "New note",
     x: mx,
     y: my,
@@ -577,9 +578,13 @@ document.onclick=function(e){
     color: randomColor(),
     children: []
   }
+  if (level.children.length==0) level.open=true;
   createNote(newNote)
   level.children.push(newNote)
   save()
+  noteById[newNote.id]=newNote;
+  noteParentById[newNote.id]=level;
+  rePopulateOutline()
 }
 menu.onmousedown=function(e){e.stopPropagation()}
 
