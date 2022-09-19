@@ -1103,6 +1103,12 @@ function reGenLookups(){
   genLookups(tree)
   // should we set noteParentById[tree.id] to something?
 }
+function noteContains(haystack,needle){
+  if (haystack==needle/* || haystack.children.indexOf(needle)!=-1*/) return true;
+  for (c of haystack.children)
+    if (noteContains(c,needle)) return true
+  return false
+}
 
 var outlineLinksById=[];
 function updateOutlineLink(n){
@@ -1127,7 +1133,7 @@ function populateOutline(n,parent){
           if (s[0] != location.href.split('#')[0]) return;
           let moved = noteById[parseInt(s[1])];
 
-          if (moved && moved!=n && confirm('Move "'+shortTitle(moved.title)+'" into "'+shortTitle(n.title)+'"?')){
+          if (moved && !noteContains(moved, n) && confirm('Move "'+shortTitle(moved.title)+'" into "'+shortTitle(n.title)+'"?')){
             n.children.push(moved)
             let from = noteParentById[moved.id].children
             from.splice( from.indexOf(moved), 1 )
