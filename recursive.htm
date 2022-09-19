@@ -239,8 +239,9 @@ function toggleStrike(){
   } else {
     menuRef.title=h+'~'+b+'~'
   }
+  updateOutlineLink(menuRef)
   save()
-  populate(level)
+  menuRefObj.children[1].innerHTML = markdown(menuRef.title)
 }
 function togglePinned(){
   menu.style.display='none';
@@ -310,7 +311,13 @@ function createNote(n){
   d.ondblclick=function(e){
     if (e) e.stopPropagation()
     var e = document.createElement('textarea')
-    function saveText(){ n.title = e.value; t.innerHTML = markdown(n.title); d.style.overflow='auto'; save() }
+    function saveText(){
+      n.title = e.value;
+      t.innerHTML = markdown(n.title);
+      d.style.overflow='auto';
+      save();
+      updateOutlineLink(n)
+    }
 
     e.textContent = n.title
     e.style.width = (n.width-8)+'px'
@@ -1086,13 +1093,23 @@ function genLookups(n) {
     noteParentById[c.id]=n
   }
 }
-function populateOutline(n,parent){
 
-  let a=document.createElement('a')
+var outlineLinksById=[];
+function updateOutlineLink(n){
+  let a = outlineLinksById[n.id];
   a.textContent=shortTitle(n.title,1,1)
   a.href='#'+n.id
   if (n.color && n.color.l) a.style.background='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
-  if (n.title.match(/^[#]*~[^~]+~/)) a.style.textDecoration='line-through';
+  a.style.textDecoration= (n.title.match(/^[#]*~[^~]+~/))?'line-through':'';
+}
+function populateOutline(n,parent){
+
+  let a=document.createElement('a');
+  outlineLinksById[n.id]=a;
+  updateOutlineLink(n)
+
+  a.ondrop=function(e){console.log(e)}
+
 
   let p=document.createElement('p')
 
