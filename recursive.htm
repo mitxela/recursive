@@ -220,6 +220,7 @@ function moveUpNote(){
     if (level.children[i]===menuRef) level.children.splice(i,1);
   save()
   setLevel(trailobj.length-2)
+  rePopulateOutline()
 }
 function editNote(){
   menu.style.display='none';
@@ -407,7 +408,7 @@ function createNote(n){
 
           d.style.transition="0.3s linear"
           d.style.transform="scale(0)"
-          setTimeout(()=>{populate(level)},300)
+          setTimeout(()=>{populate(level); rePopulateOutline()},300)
         } else {
           suppressJump = true;
           main.children[m].classList.remove('hl')
@@ -1110,7 +1111,6 @@ function populateOutline(n,parent){
 
   a.ondrop=function(e){console.log(e)}
 
-
   let p=document.createElement('p')
 
   if (n.children.length==0) {
@@ -1130,7 +1130,13 @@ function populateOutline(n,parent){
   for (c of n.children)
     populateOutline(c,p)
 }
-
+function rePopulateOutline(){
+  // Todo - don't reset open/closed state
+  outline.innerHTML=""
+  outlineLinksById=[];
+  populateOutline(tree,outline)
+  outline.children[0].setAttribute('open','')
+}
 
 function reloadAll(){
   // Some notes may not have an id, but others further down the tree potentially could
@@ -1144,9 +1150,7 @@ function reloadAll(){
   genLookups(tree)
   // should we set noteParentById[tree.id] to something?
 
-  outline.innerHTML=""
-  populateOutline(tree,outline)
-  outline.children[0].setAttribute('open','')
+  rePopulateOutline()
 
   window.onhashchange()
 }
