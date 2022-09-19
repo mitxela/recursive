@@ -110,7 +110,7 @@ details>p{display:inline-block;}
   <p><a href='#' onclick='editNote(); return false'>Edit</a>
   <p><a href='#' onclick='toggleStrike(); return false'>Toggle strikethrough</a>
   <p><a href='#' onclick='togglePinned(); return false'>Toggle pinned</a>
-  <p><a href='#' onclick='jumpInto(); return false'>Jump Into</a>
+  <p><a href='#' onclick='jumpInto(); return false' id=jumpInto>Jump Into</a>
   <p><a href='#' onclick='moveUpNote(); return false'>Move up a level</a>
   <p><a href='#' onclick='deleteNote(); return false'>Delete</a>
 </div>
@@ -302,6 +302,7 @@ function createNote(n){
     
     menu.style.display='block'
     document.getElementById('notecolor').value=hsl2rgb(n.color.h,n.color.s,n.color.l)
+    document.getElementById('jumpInto').href='#'+n.id;
     menuRef=n;
     menuRefObj=d;
   }
