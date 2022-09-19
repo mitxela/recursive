@@ -1122,6 +1122,9 @@ function populateOutline(n,parent){
   let d=document.createElement('details')
   let s=document.createElement('summary')
 
+  d.ontoggle=function(){n.open=d.open;saveWithoutHistory()}
+  if (n.open) {d.setAttribute('open','')}
+
   s.append(a)
   d.append(s)
   d.append(p)
@@ -1131,11 +1134,10 @@ function populateOutline(n,parent){
     populateOutline(c,p)
 }
 function rePopulateOutline(){
-  // Todo - don't reset open/closed state
   outline.innerHTML=""
   outlineLinksById=[];
+  if (!tree.hasOwnProperty('open')) tree.open=true;
   populateOutline(tree,outline)
-  outline.children[0].setAttribute('open','')
 }
 
 function reloadAll(){
