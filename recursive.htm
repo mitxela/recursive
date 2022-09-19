@@ -403,6 +403,7 @@ function createNote(n){
       let [m, ma] = mostOverlapping(n);
       if (ma>0 && !suppressJump) {
         if (confirm('Move "'+shortTitle(n.title)+'" into "'+shortTitle(level.children[m].title)+'"?')) {
+          if (level.children[m].children.length==0) level.children[m].open=true
           level.children[m].children.push(n)
           level.children.splice(level.children.indexOf(n), 1)
           n.x = startx
@@ -1116,6 +1117,7 @@ function populateOutline(n,parent){
           let moved = noteById[parseInt(s[1])];
 
           if (moved && !noteContains(moved, n) && confirm('Move "'+shortTitle(moved.title)+'" into "'+shortTitle(n.title)+'"?')){
+            if (n.children.length==0) n.open=true
             n.children.push(moved)
             let from = noteParentById[moved.id].children
             from.splice( from.indexOf(moved), 1 )
