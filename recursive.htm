@@ -94,6 +94,7 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
   opacity:0.8;
 }
 #outline a:hover{opacity:1}
+#outline a.drop {outline:1px dashed black;opacity:0.5}
 details p{
   white-space:nowrap;
   line-height:23px;
@@ -1142,10 +1143,13 @@ function populateOutline(n,parent){
             showNote(level.id)
             rePopulateOutline()
           }
+          a.className=''
         })
       }
     }
   }
+  a.ondragenter=function(e){a.className='drop'}
+  a.ondragleave=function(e){a.className=''}
 
   let p=document.createElement('p')
 
