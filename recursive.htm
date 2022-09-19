@@ -218,6 +218,8 @@ function moveUpNote(){
   trailobj[trailobj.length-2].children.push(menuRef);
   for (let i in level.children)
     if (level.children[i]===menuRef) level.children.splice(i,1);
+
+  reGenLookups()
   save()
   setLevel(trailobj.length-2)
   rePopulateOutline()
@@ -405,6 +407,7 @@ function createNote(n){
           level.children.splice(level.children.indexOf(n), 1)
           n.x = startx
           n.y = starty
+          reGenLookups()
 
           d.style.transition="0.3s linear"
           d.style.transform="scale(0)"
@@ -1094,6 +1097,12 @@ function genLookups(n) {
     noteParentById[c.id]=n
   }
 }
+function reGenLookups(){
+  noteById={}
+  noteParentById={}
+  genLookups(tree)
+  // should we set noteParentById[tree.id] to something?
+}
 
 var outlineLinksById=[];
 function updateOutlineLink(n){
@@ -1109,7 +1118,28 @@ function populateOutline(n,parent){
   outlineLinksById[n.id]=a;
   updateOutlineLink(n)
 
-  a.ondrop=function(e){console.log(e)}
+  a.ondrop=function(e){
+    let data = e.dataTransfer.items;
+    for (let i=0;i<data.length;i++) {
+      if (data[i].kind === 'string' && data[i].type.match('^text/uri-list')) {
+        data[i].getAsString(function(s) {
+          s = s.split('#')
+          if (s[0] != location.href.split('#')[0]) return;
+          let moved = noteById[parseInt(s[1])];
+
+          if (moved && moved!=n && confirm('Move "'+shortTitle(moved.title)+'" into "'+shortTitle(n.title)+'"?')){
+            n.children.push(moved)
+            let from = noteParentById[moved.id].children
+            from.splice( from.indexOf(moved), 1 )
+            reGenLookups()
+            save()
+            showNote(level.id)
+            rePopulateOutline()
+          }
+        })
+      }
+    }
+  }
 
   let p=document.createElement('p')
 
@@ -1147,10 +1177,7 @@ function reloadAll(){
   findIds(allIds,tree)
   nextId=Math.max(0,...allIds) +1;
 
-  noteById={}
-  noteParentById={}
-  genLookups(tree)
-  // should we set noteParentById[tree.id] to something?
+  reGenLookups()
 
   rePopulateOutline()
 
