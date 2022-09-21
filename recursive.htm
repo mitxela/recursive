@@ -1170,6 +1170,8 @@ function rePopulateOutline(){
   outlineLinksById=[];
   if (!tree.hasOwnProperty('open')) tree.open=true;
   populateOutline(tree,outline)
+
+  search(document.querySelector('input[type=search]'))
 }
 function searchCheck(n,t){
   let el = outlineLinksById[n.id].parentNode;
