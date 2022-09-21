@@ -101,6 +101,7 @@ details p{
   margin:0 0 0 15px;
 }
 details>p{display:inline-block;}
+.sresult{opacity:0.1 !important;}
 </style>
 <svg><g></g></svg>
 <div id=main></div>
@@ -120,6 +121,7 @@ details>p{display:inline-block;}
 
 <a style='position:fixed;right:0;top:0' href='#' onclick='if (confirm("reset?")){localStorage.tree="";location.hash="";location.reload()} else return false'>reset</a>
 <div id=help style='position:fixed;bottom:0;left:0; user-select:none;'>
+<input type=search placeholder=Search oninput="search(this)"><br>
 Click and drag to move note<br>
 Middle-click drag to pan, scroll to zoom [ <a href=# onclick='zoomReset(); return false'>100%</a> &bull; <a href=# onclick='zoomFit(); return false'>fit</a> ]<br>
 Right click note body to expand, double click to edit text<br>
@@ -1168,6 +1170,21 @@ function rePopulateOutline(){
   outlineLinksById=[];
   if (!tree.hasOwnProperty('open')) tree.open=true;
   populateOutline(tree,outline)
+}
+function searchCheck(n,t){
+  let el = outlineLinksById[n.id].parentNode;
+  let match = !!n.title.match(t);
+
+  for (let c of n.children)
+    if (searchCheck(c,t)) match=1;
+
+  el.className = match?"":"sresult";
+  return match
+}
+function search(o){
+  let t=o.value;
+  //todo: make async
+  searchCheck(tree, t)
 }
 
 function reloadAll(){
