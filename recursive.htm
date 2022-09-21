@@ -1173,7 +1173,7 @@ function rePopulateOutline(){
 }
 function searchCheck(n,t){
   let el = outlineLinksById[n.id].parentNode;
-  let match = !!n.title.match(t);
+  let match = new RegExp(t,'i').test(n.title);
 
   for (let c of n.children)
     if (searchCheck(c,t)) match=1;
