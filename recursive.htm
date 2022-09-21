@@ -1173,20 +1173,20 @@ function rePopulateOutline(){
 
   search(document.querySelector('input[type=search]'))
 }
-function searchCheck(n,t){
+function searchCheck(n,r){
   let el = outlineLinksById[n.id].parentNode;
-  let match = new RegExp(t,'i').test(n.title);
+  let match = r.test(n.title);
 
   for (let c of n.children)
-    if (searchCheck(c,t)) match=1;
+    if (searchCheck(c,r)) match=true;
 
   el.className = match?"":"sresult";
   return match
 }
 function search(o){
-  let t=o.value;
+  let r = new RegExp(o.value,'i');
   //todo: make async
-  searchCheck(tree, t)
+  searchCheck(tree, r)
 }
 
 function reloadAll(){
