@@ -76,15 +76,7 @@ ul{margin:0}
 #trail a:hover{opacity:0.6}
 svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 #outline {
-  position:fixed;
-  left:0;
-  top:32px;
   padding:10px;
-  width:200px;
-  height:60%;
-  background:rgba(255,255,255,0.9);
-  overflow:auto;
-  resize:both;
 }
 #outline a{
   color:black;
@@ -102,6 +94,15 @@ details p{
 }
 details>p{display:inline-block;}
 .sresult{opacity:0.1 !important;}
+#sidebarLeft{
+  background:rgba(255,255,255,0.9);
+  position:absolute;
+  left:0;
+  top:32px;
+  width:0;
+  height:calc(100% - 32px);
+  overflow:auto;
+}
 </style>
 <svg><g></g></svg>
 <div id=main></div>
@@ -117,7 +118,9 @@ details>p{display:inline-block;}
 </div>
 
 <div id=trail></div>
+<div id=sidebarLeft>
 <div id=outline></div>
+</div>
 
 <a style='position:fixed;right:0;top:0' href='#' onclick='if (confirm("reset?")){localStorage.tree="";location.hash="";location.reload()} else return false'>reset</a>
 <div id=help style='position:fixed;bottom:0;left:0; user-select:none;'>
@@ -187,11 +190,22 @@ var menu=document.getElementById('menu')
 var main=document.getElementById('main')
 var trail=document.getElementById('trail')
 var outline=document.getElementById('outline')
+var sidebarLeft=document.getElementById('sidebarLeft')
 var trailobj=[]
 var menuRef=null;
 var menuRefObj=null;
 var zTopIndex = 0;
 var penSmooth = 0.15;
+var offsetLeft = 0;
+
+function setOffset(ol){
+  offsetLeft=ol;
+  ol+='px';
+  main.style.left=ol;
+  mainSvg.style.left=ol
+  sidebarLeft.style.width=ol
+  document.getElementById('help').style.left=ol
+}
 
 function deleteNote(){
   for (let i in level.children)
@@ -489,16 +503,19 @@ function zoomFit(){
   minx -= margin
   miny -= margin
 
-  let s1= window.innerWidth/(maxx-minx),
-      s2= window.innerHeight/(maxy-miny);
+  let ww= window.innerWidth-offsetLeft,
+      wh= window.innerHeight;
+
+  let s1= ww/(maxx-minx),
+      s2= wh/(maxy-miny);
   if (s1<s2){
     level.view.s = s1
     level.view.x = -minx*s1
-    level.view.y = -miny*s1 + (window.innerHeight-(maxy-miny)*s1)/2
+    level.view.y = -miny*s1 + (wh-(maxy-miny)*s1)/2
   } else {
     level.view.s = s2
     level.view.y = -miny*s2
-    level.view.x = -minx*s2 + (window.innerWidth-(maxx-minx)*s2)/2
+    level.view.x = -minx*s2 + (ww-(maxx-minx)*s2)/2
   }
   setView()
   saveWithoutHistory()
@@ -510,8 +527,8 @@ function setView(){
 }
 function mousePos(e) {
   return [
-    (e.pageX-level.view.x)/level.view.s,
-    (e.pageY-level.view.y)/level.view.s ]
+    (e.pageX-level.view.x-offsetLeft)/level.view.s,
+    (e.pageY-level.view.y           )/level.view.s ]
 }
 function populate(t){
   if (window.location.hash!='#'+t.id)
@@ -716,12 +733,12 @@ document.onwheel=function(e){
   if (e.target==outline || outline.contains(e.target)) return;
   menu.style.display='none'
 
-  let sx= (e.pageX-level.view.x)/level.view.s,
-      sy= (e.pageY-level.view.y)/level.view.s;
+  let sx= (e.pageX-level.view.x-offsetLeft)/level.view.s,
+      sy= (e.pageY-level.view.y           )/level.view.s;
 
   level.view.s*= e.deltaY < 0? 1.25:0.8;
 
-  level.view.x = -sx*level.view.s+e.pageX
+  level.view.x = -sx*level.view.s+e.pageX-offsetLeft
   level.view.y = -sy*level.view.s+e.pageY
 
   setView()
@@ -763,12 +780,12 @@ window.onhashchange = function(){
       let ntcy = (e.touches[0].clientY+e.touches[1].clientY)/2;
       let ntd = touchdistance(e.touches[0],e.touches[1])
   
-      let sx= (ntcx -level.view.x)/level.view.s;
-      let sy= (ntcy -level.view.y)/level.view.s;
+      let sx= (ntcx -level.view.x -offsetLeft)/level.view.s;
+      let sy= (ntcy -level.view.y            )/level.view.s;
       
       level.view.s *= ntd/td
       
-      level.view.x = -sx*level.view.s + ntcx + (ntcx-tcx)
+      level.view.x = -sx*level.view.s + ntcx + (ntcx-tcx) -offsetLeft
       level.view.y = -sy*level.view.s + ntcy + (ntcy-tcy)
   
       td = ntd
