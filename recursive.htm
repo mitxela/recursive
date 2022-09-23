@@ -77,6 +77,12 @@ ul{margin:0}
 svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 #outline {
   padding:10px;
+  position:absolute;
+  left:0;
+  top:0px;
+  width:calc(100% - 28px);
+  height:calc(100% - 42px);
+  overflow:auto;
 }
 #outline a{
   color:black;
@@ -101,7 +107,23 @@ details>p{display:inline-block;}
   top:32px;
   width:0;
   height:calc(100% - 32px);
-  overflow:auto;
+  display:none;
+}
+#sidebarLeftAdj{
+  cursor:ew-resize;
+  width:8px;
+  height:100%;
+  background:#999;
+  position:absolute;
+  right:0;
+  top:0;
+}
+input[type=Search]{
+  position:absolute;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:22px;
 }
 </style>
 <svg><g></g></svg>
@@ -119,13 +141,15 @@ details>p{display:inline-block;}
 
 <div id=trail></div>
 <div id=sidebarLeft>
-<div id=outline></div>
+ <div id=outline></div>
+ <input type=search placeholder=Search oninput="search(this)"><br>
+ <div id=sidebarLeftAdj></div>
 </div>
 
 <a style='position:fixed;right:0;top:0' href='#' onclick='if (confirm("reset?")){localStorage.tree="";location.hash="";location.reload()} else return false'>reset</a>
 <div id=help style='position:fixed;bottom:0;left:0; user-select:none;'>
-<input type=search placeholder=Search oninput="search(this)"><br>
 Click and drag to move note<br>
+<a href=# onclick='toggleSidebarLeft();return false'>Toggle sidebar</a><br>
 Middle-click drag to pan, scroll to zoom [ <a href=# onclick='zoomReset(); return false'>100%</a> &bull; <a href=# onclick='zoomFit(); return false'>fit</a> ]<br>
 Right click note body to expand, double click to edit text<br>
 Drag corners to resize<br>
@@ -191,6 +215,7 @@ var main=document.getElementById('main')
 var trail=document.getElementById('trail')
 var outline=document.getElementById('outline')
 var sidebarLeft=document.getElementById('sidebarLeft')
+var sidebarLeftAdj=document.getElementById('sidebarLeftAdj')
 var trailobj=[]
 var menuRef=null;
 var menuRefObj=null;
@@ -205,6 +230,15 @@ function setOffset(ol){
   mainSvg.style.left=ol
   sidebarLeft.style.width=ol
   document.getElementById('help').style.left=ol
+}
+function toggleSidebarLeft(){
+  if (offsetLeft) {
+    setOffset(0)
+    sidebarLeft.style.display='none'
+  } else {
+    sidebarLeft.style.display='block'
+    setOffset(200);
+  }
 }
 
 function deleteNote(){
@@ -618,6 +652,17 @@ var arrowSize = document.getElementById('arrowsize').value/50 || 0.12;
 lx=0;ly=0;
 document.onmousedown=function(e){
   menu.style.display='none'
+
+  if (e.target==sidebarLeftAdj){
+    setOffset(e.clientX+4)
+    document.onmousemove=function(e){
+      setOffset(e.clientX+4)
+      document.onmouseup=function(e){
+        document.onmouseup=null;
+        document.onmousemove=null;
+      }
+    }
+  }
 
   if (e.button==1) { // middle click
     killEvent(e);
