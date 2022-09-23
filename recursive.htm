@@ -777,13 +777,13 @@ function drawArrow(x1,y1,x2,y2){
   }
 }
 document.onwheel=function(e){
-  if (e.target==outline || outline.contains(e.target)) return;
+  if (e.target==sidebarLeft || sidebarLeft.contains(e.target)) return;
   menu.style.display='none'
 
   let sx= (e.pageX-level.view.x-offsetLeft)/level.view.s,
       sy= (e.pageY-level.view.y           )/level.view.s;
 
-  level.view.s*= e.deltaY < 0? 1.25:0.8;
+  level.view.s*= Math.pow(10,e.deltaY*-0.001);
 
   level.view.x = -sx*level.view.s+e.pageX-offsetLeft
   level.view.y = -sy*level.view.s+e.pageY
