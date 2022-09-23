@@ -231,13 +231,15 @@ function setOffset(ol){
   sidebarLeft.style.width=ol
   document.getElementById('help').style.left=ol
 }
+var oldOffsetLeft=Math.min(window.innerWidth*0.2,300);
 function toggleSidebarLeft(){
   if (offsetLeft) {
+    oldOffsetLeft=offsetLeft;
     setOffset(0)
     sidebarLeft.style.display='none'
   } else {
     sidebarLeft.style.display='block'
-    setOffset(200);
+    setOffset(oldOffsetLeft);
   }
 }
 
