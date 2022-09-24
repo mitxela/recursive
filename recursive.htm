@@ -935,7 +935,7 @@ function markdownApply(s){
         })
         .replace(/<IMAGES>/g,function(m){
             let [alt, src] = images.shift()
-            return `<img onmousedown='return false' src=${src} alt=${alt}>`
+            return `<img onmousedown='return false' src="${src}" alt="${alt}">`
         })
 }
 function markdown(s){
