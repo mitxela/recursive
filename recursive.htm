@@ -670,6 +670,7 @@ document.onmousedown=function(e){
   }
 
   if (e.button==1) { // middle click
+    if (sidebarLeft.contains(e.target)) return
     killEvent(e);
     let sx = e.pageX, sy = e.pageY;
     document.onmousemove=function(e){
