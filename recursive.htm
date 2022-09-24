@@ -1051,6 +1051,7 @@ function undo(){
   reloadAll()
 }
 function pan(dx,dy) {
+  menu.style.display='none'
   level.view.x += dx;
   level.view.y += dy;
   setView()
@@ -1059,7 +1060,7 @@ function pan(dx,dy) {
 function fakeZoom(s){
   let e={
     deltaY:s,
-    pageX:(window.innerWidth-offsetLeft)/2,
+    pageX:(window.innerWidth+offsetLeft)/2,
     pageY:window.innerHeight/2
   }
   document.onwheel(e);
@@ -1074,7 +1075,7 @@ document.onkeydown=function(e){
     case 'ArrowRight':pan(-100,0); return;
     case 'ArrowDown': pan(0,-100); return;
     case 'PageDown': case '-': fakeZoom(100); return;
-    case 'PageUp': case '+': fakeZoom(-100); return;
+    case 'PageUp':   case '+': fakeZoom(-100); return;
   }
 }
 function downloadJson(){
