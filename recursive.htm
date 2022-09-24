@@ -64,8 +64,13 @@ ul{margin:0}
   width:100%;
   height:32px;
   left:0;top:0;
+  overflow:hidden;
+  white-space:nowrap;
+  direction:rtl;
+  text-align:left;
 }
 #trail a{
+  direction:ltr;
   color:#000; text-decoration:none;
   display:inline-block;
   padding:3px;
@@ -608,7 +613,7 @@ function regenTrail(){
       c1 = "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l+"%)"
       c2 = "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l*0.8+"%)"
     }
-    s.push("<a href='#"+n.id+"' style='background:"+c1+"; border-color:"+c2+"'>"+shortTitle(n.title, i==trailobj.length-1)+"</a>")
+    s.unshift("<a href='#"+n.id+"' style='background:"+c1+"; border-color:"+c2+"'>"+shortTitle(n.title, i==trailobj.length-1)+"</a>")
   }
 
   trail.innerHTML = s.join(" &rarr; ")
