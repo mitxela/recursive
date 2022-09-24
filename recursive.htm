@@ -122,7 +122,7 @@ input[type=Search]{
   position:absolute;
   bottom:0;
   left:0;
-  width:100%;
+  width:calc(100% - 8px);
   height:22px;
 }
 </style>
@@ -142,7 +142,9 @@ input[type=Search]{
 <div id=trail></div>
 <div id=sidebarLeft>
  <div id=outline></div>
- <input type=search placeholder=Search oninput="search(this)"><br>
+ <form onsubmit="jumpFirstSearch(); return false">
+  <input type=search placeholder=Search oninput="search(this)">
+ </form><br>
  <div id=sidebarLeftAdj></div>
 </div>
 
@@ -1237,9 +1239,11 @@ function rePopulateOutline(){
 
   search(document.querySelector('input[type=search]'))
 }
+var firstSearchResult=false;
 function searchCheck(n,r){
   let el = outlineLinksById[n.id].parentNode;
   let match = r.test(n.title);
+  if (match && !firstSearchResult) firstSearchResult=n.id;
 
   for (let c of n.children)
     if (searchCheck(c,r)) match=true;
@@ -1249,8 +1253,13 @@ function searchCheck(n,r){
 }
 function search(o){
   let r = new RegExp(o.value,'i');
+  firstSearchResult=false;
+
   //todo: make async
   searchCheck(tree, r)
+}
+function jumpFirstSearch(o,e){
+  if (firstSearchResult) showNote(firstSearchResult);
 }
 
 function reloadAll(){
