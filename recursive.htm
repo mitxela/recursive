@@ -1064,8 +1064,8 @@ function fakeZoom(s){
   }
   document.onwheel(e);
 }
+sidebarLeft.onkeydown=function(e){e.stopPropagation()}
 document.onkeydown=function(e){
-  if (e.target==searchInput) return;
   if (e.ctrlKey && e.keyCode==90) {undo(); return}
 
   switch(e.key) {
