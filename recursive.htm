@@ -1248,11 +1248,11 @@ function rePopulateOutline(){
 
   search(searchInput)
 }
-var firstSearchResult=false;
+var searchResults=[];
 function searchCheck(n,r){
   let el = outlineLinksById[n.id].parentNode;
   let match = r.test(n.title);
-  if (match && !firstSearchResult) firstSearchResult=n.id;
+  if (match) searchResults.push(n.id);
 
   for (let c of n.children)
     if (searchCheck(c,r)) match=true;
@@ -1262,13 +1262,16 @@ function searchCheck(n,r){
 }
 function search(o){
   let r = new RegExp(o.value,'i');
-  firstSearchResult=false;
+  searchResults=[];
 
   //todo: make async
   searchCheck(tree, r)
 }
-function jumpFirstSearch(o,e){
-  if (firstSearchResult) showNote(firstSearchResult);
+function jumpFirstSearch(){
+  if (searchResults.length) {
+    let p = searchResults.indexOf(level.id)
+    showNote(searchResults[ (p+1)%searchResults.length ]);
+  }
 }
 
 function reloadAll(){
