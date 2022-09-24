@@ -1050,8 +1050,32 @@ function undo(){
   tree=JSON.parse(localStorage.tree)
   reloadAll()
 }
+function pan(dx,dy) {
+  level.view.x += dx;
+  level.view.y += dy;
+  setView()
+  saveWithoutHistory()
+}
+function fakeZoom(s){
+  let e={
+    deltaY:s,
+    pageX:(window.innerWidth-offsetLeft)/2,
+    pageY:window.innerHeight/2
+  }
+  document.onwheel(e);
+}
 document.onkeydown=function(e){
-  if (e.ctrlKey && e.keyCode==90 && e.target!=searchInput) undo()
+  if (e.target==searchInput) return;
+  if (e.ctrlKey && e.keyCode==90) {undo(); return}
+
+  switch(e.key) {
+    case 'ArrowLeft': pan(100,0); return;
+    case 'ArrowUp':   pan(0,100); return;
+    case 'ArrowRight':pan(-100,0); return;
+    case 'ArrowDown': pan(0,-100); return;
+    case 'PageDown': case '-': fakeZoom(100); return;
+    case 'PageUp': case '+': fakeZoom(-100); return;
+  }
 }
 function downloadJson(){
   let blob = new Blob([JSON.stringify(tree)], {type: "application/json"})
