@@ -143,7 +143,7 @@ input[type=Search]{
 <div id=sidebarLeft>
  <div id=outline></div>
  <form onsubmit="jumpFirstSearch(); return false">
-  <input type=search placeholder=Search oninput="search(this)">
+  <input id=searchInput type=search placeholder=Search oninput="search(this)">
  </form><br>
  <div id=sidebarLeftAdj></div>
 </div>
@@ -218,6 +218,7 @@ var trail=document.getElementById('trail')
 var outline=document.getElementById('outline')
 var sidebarLeft=document.getElementById('sidebarLeft')
 var sidebarLeftAdj=document.getElementById('sidebarLeftAdj')
+var searchInput=document.getElementById('searchInput')
 var trailobj=[]
 var menuRef=null;
 var menuRefObj=null;
@@ -1043,7 +1044,9 @@ function undo(){
   tree=JSON.parse(localStorage.tree)
   reloadAll()
 }
-document.onkeydown=function(e){if (e.ctrlKey&&e.keyCode==90) undo()}
+document.onkeydown=function(e){
+  if (e.ctrlKey && e.keyCode==90 && e.target!=searchInput) undo()
+}
 function downloadJson(){
   let blob = new Blob([JSON.stringify(tree)], {type: "application/json"})
   let url = URL.createObjectURL(blob)
@@ -1237,7 +1240,7 @@ function rePopulateOutline(){
   if (!tree.hasOwnProperty('open')) tree.open=true;
   populateOutline(tree,outline)
 
-  search(document.querySelector('input[type=search]'))
+  search(searchInput)
 }
 var firstSearchResult=false;
 function searchCheck(n,r){
