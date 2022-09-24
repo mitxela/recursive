@@ -659,10 +659,10 @@ document.onmousedown=function(e){
     setOffset(e.clientX+4)
     document.onmousemove=function(e){
       setOffset(e.clientX+4)
-      document.onmouseup=function(e){
-        document.onmouseup=null;
-        document.onmousemove=null;
-      }
+    }
+    document.onmouseup=function(e){
+      document.onmouseup=null;
+      document.onmousemove=null;
     }
   }
 
