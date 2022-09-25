@@ -402,6 +402,7 @@ function createNote(n){
   }
 
   d.oncontextmenu = function(e){
+    if (document.oncontextmenu!=null) return
     d.style.transition="0.3s linear"
     
     d.style.left=(window.innerWidth -n.width )/2 + 'px'
