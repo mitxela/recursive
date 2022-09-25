@@ -164,11 +164,11 @@ Drag corners to resize<br>
 Left click drag on background to draw, right click erase<br>
 Tool:<select id=pentool oninput='penTool=this.value'>
 <option value='none'>(none)</option>
-<option value='addnote' selected>Add note</option>
-<option value='pencil'>Pencil</option>
-<option value='line'>Line</option>
-<option value='arrow'>Arrow</option>
-<option value='erase'>Eraser</option>
+<option value='addnote' selected>Add note [t]</option>
+<option value='pencil'>Pencil [b]</option>
+<option value='line'>Line [l]</option>
+<option value='arrow'>Arrow [a]</option>
+<option value='erase'>Eraser [e]</option>
 </select>
  color:<input id=pencolor type=color oninput='penColor=this.value'>
  thickness:<input id=penwidth type=range oninput='penWidth=this.value+"px"' min=1 max=10 value=3>
@@ -663,7 +663,6 @@ var penWidth = document.getElementById('penwidth').value || "3px";
 var arrowStyle = document.getElementById('arrowstyle').value || "1";
 var arrowSize = document.getElementById('arrowsize').value/50 || 0.12;
 
-lx=0;ly=0;
 document.onmousedown=function(e){
   menu.style.display='none'
 
@@ -1080,7 +1079,22 @@ document.onkeydown=function(e){
     case 'ArrowDown': pan(0,-100); return;
     case 'PageDown': case '-': fakeZoom(100); return;
     case 'PageUp':   case '+': fakeZoom(-100); return;
+    case 't': setPenTool('addnote'); return;
+    case 'b': setPenTool('pencil'); return;
+    case 'l': setPenTool('line'); return;
+    case 'a': setPenTool('arrow'); return;
+    case 'e': setPenTool('erase'); return;
+    case 'Escape': setPenTool('none'); return;
   }
+}
+function setPenTool(t){
+  if (document.onmouseup!=null) return;
+  //penTool = t
+  let sel = document.getElementById("pentool")
+  for (let i=0;i<sel.options.length;i++) {
+    if (sel.options[i].value==t) sel.selectedIndex=i;
+  }
+  sel.oninput()
 }
 function downloadJson(){
   let blob = new Blob([JSON.stringify(tree)], {type: "application/json"})
