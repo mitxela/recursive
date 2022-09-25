@@ -230,6 +230,7 @@ var menuRefObj=null;
 var zTopIndex = 0;
 var penSmooth = 0.15;
 var offsetLeft = 0;
+var textEditing=false;
 
 function setOffset(ol){
   offsetLeft=ol;
@@ -382,6 +383,7 @@ function createNote(n){
       d.style.overflow='auto';
       save();
       updateOutlineLink(n)
+      setTimeout(()=>textEditing=false,100)
     }
 
     e.textContent = n.title
@@ -391,6 +393,7 @@ function createNote(n){
     t.innerHTML = "";
     d.style.overflow='visible'
     t.appendChild(e);
+    textEditing=true;
 
     e.focus()
     e.onblur=saveText;
@@ -632,7 +635,7 @@ function background(t){
   return (t.id=="main" || t==mainSvg || t.tagName=="path" || t.tagName=="HTML" || t.id=="help")
 }
 document.onclick=function(e){
-  if (penTool!="addnote" || !background(e.target))return;
+  if (textEditing || penTool!="addnote" || !background(e.target))return;
   let [mx, my] = mousePos(e);
   var newNote = {
     id: newId(),
@@ -692,7 +695,7 @@ document.onmousedown=function(e){
     }
     return;
   }
-  if (!background(e.target)) return;
+  if (textEditing || !background(e.target)) return;
 
   let [sx, sy] = mousePos(e);
 
