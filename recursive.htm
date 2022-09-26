@@ -155,13 +155,11 @@ input[type=Search]{
 
 <a style='position:fixed;right:0;top:0' href='#' onclick='if (confirm("reset?")){localStorage.tree="";location.hash="";location.reload()} else return false'>reset</a>
 <div id=help style='position:fixed;bottom:0;left:0; user-select:none;'>
-Click and drag to move note<br>
+Click and drag to move note, drag corners to resize, right click note body to expand, double click to edit text, Ctrl+Z to undo<br>
 <a href=# onclick='toggleSidebarLeft();return false'>Toggle sidebar</a><br>
 Middle-click drag to pan, scroll to zoom [ <a href=# onclick='zoomReset(); return false'>100%</a> &bull; <a href=# onclick='zoomFit(); return false'>fit</a> ]<br>
-Right click note body to expand, double click to edit text<br>
-Drag corners to resize<br>
 <a href=# onclick='downloadJson(); return false'>Download the current state</a>, drag & drop .json file onto this page to load<br>
-Left click drag on background to draw, right click erase<br>
+<!--Left click drag on background to draw, right click erase<br>-->
 Tool:<select id=pentool oninput='setPenTool(this.value,1)'>
 <option value='none'>(none)</option>
 <option value='addnote' selected>Add note [T]</option>
@@ -173,16 +171,15 @@ Tool:<select id=pentool oninput='setPenTool(this.value,1)'>
 </select>
  color:<input id=pencolor type=color oninput='penColor=this.value'>
  thickness:<input id=penwidth type=range oninput='penWidth=this.value+"px"' min=1 max=10 value=3>
- arrow style:<select id=arrowstyle oninput='arrowStyle=this.value'>
+ arrow style:<select id=arrowstyle oninput='arrowStyle=this.value; setPenTool("arrow")'>
 <option value='1'>⯈</option>
 <option value='2'>➤</option>
 <option value='3'>ᐅ</option>
 <option value='4'>⮚</option>
 <option value='5'>ᐳ</option>
 </select>
- arrow size:<input id=arrowsize type=range oninput='arrowSize=this.value/50' min=3 max=10 value=6>
+ arrow size:<input id=arrowsize type=range oninput='arrowSize=this.value/50; setPenTool("arrow")' min=3 max=10 value=6>
  <a href='#' onclick='eraseAllLines(); return false'>erase all lines from this note</a><br>
-Ctrl+Z to undo<br>
 <br>
 </div>
 
@@ -1094,6 +1091,8 @@ document.onkeydown=function(e){
     case 'ArrowDown': pan(0,-100); return;
     case 'PageDown': case '-': fakeZoom(100); return;
     case 'PageUp':   case '+': fakeZoom(-100); return;
+    case 'Home': zoomReset(); return;
+    case 'End': zoomFit(); return;
     case 't': setPenTool('addnote'); return;
     case 'b': setPenTool('pencil'); return;
     case 'l': setPenTool('line'); return;
