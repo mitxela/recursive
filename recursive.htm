@@ -1098,7 +1098,7 @@ function fakeZoom(s){
   }
   document.onwheel(e);
 }
-sidebarLeft.onkeydown=function(e){e.stopPropagation()}
+sidebarLeft.onkeydown=function(e){if (e.key!='/') e.stopPropagation()}
 document.onkeydown=function(e){
   if (e.ctrlKey && e.keyCode==90) {undo(); return}
 
@@ -1120,8 +1120,7 @@ document.onkeydown=function(e){
     case 'Escape': setPenTool('none'); return;
     case 's': toggleSidebarLeft(); return;
     case '/':
-      e.preventDefault();
-      e.stopPropagation();
+      killEvent(e);
       if (!offsetLeft) toggleSidebarLeft();
       searchInput.focus();
       return;
@@ -1364,7 +1363,12 @@ function searchCheck(n,r){
   return match
 }
 function search(o){
-  let r = new RegExp(o.value,'i');
+  let r;
+  try {
+    r = new RegExp(o.value,'i');
+  } catch(e) {
+    r = new RegExp( escapeRegExp(o.value) ,'i');
+  }
   searchResults=[];
 
   //todo: make async
@@ -1377,6 +1381,9 @@ function jumpFirstSearch(){
     let p = searchResults.indexOf(level.id);
     showNote(searchResults[ (p+1)%searchResults.length ] );
   }
+}
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
 function reloadAll(){
