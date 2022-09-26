@@ -1319,7 +1319,10 @@ var searchResults=[];
 function searchCheck(n,r){
   let el = outlineLinksById[n.id].parentNode;
   let match = r.test(n.title);
-  if (match) searchResults.push(n.id);
+  if (match) {
+    if (n.children.length) searchResults.push(n.id);
+    else searchResults.push(noteParentById[n.id].id);
+  }
 
   for (let c of n.children)
     if (searchCheck(c,r)) match=true;
@@ -1337,9 +1340,7 @@ function search(o){
 function jumpFirstSearch(){
   if (searchResults.length) {
     let p = searchResults.indexOf(level.id);
-    let r = searchResults[ (p+1)%searchResults.length ];
-    if (noteById[r].children.length) showNote(r);
-    else showNote( noteParentById[r].id )
+    showNote(searchResults[ (p+1)%searchResults.length ] );
   }
 }
 
