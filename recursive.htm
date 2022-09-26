@@ -162,7 +162,7 @@ Middle-click drag to pan, scroll to zoom [ <a href=# onclick='zoomReset(); retur
 <!--Left click drag on background to draw, right click erase<br>-->
 Tool:<select id=pentool oninput='setPenTool(this.value,1)'>
 <option value='none'>(none)</option>
-<option value='addnote' selected>Add note [T]</option>
+<option value='addnote'>Add note [T]</option>
 <option value='pencil'>Pencil [B]</option>
 <option value='line'>Line [L]</option>
 <option value='arrow'>Arrow [A]</option>
@@ -655,12 +655,6 @@ document.onclick=function(e){
 }
 menu.onmousedown=function(e){e.stopPropagation()}
 
-var penTool = document.getElementById("pentool").value || "none";
-var penColor = document.getElementById('pencolor').value || "black";
-var penWidth = document.getElementById('penwidth').value || "3px";
-var arrowStyle = document.getElementById('arrowstyle').value || "1";
-var arrowSize = document.getElementById('arrowsize').value/50 || 0.12;
-
 var cursorStack=[];
 function pushCursor(c){
   cursorStack.push(c)
@@ -1102,22 +1096,27 @@ document.onkeydown=function(e){
     case 'Escape': setPenTool('none'); return;
   }
 }
-function setPenTool(t, temp){
+var cursors={
+  'hand':'grab',
+  'pencil': 'crosshair',
+  'addnote': 'cell'
+}
+function setPenTool(newTool, temp){
   if (document.onmouseup!=null) return;
 
   // shortly we will get rid of the dropdown list and have buttons
   if (!temp) {
     let sel = document.getElementById("pentool")
     for (let i=0;i<sel.options.length;i++) {
-      if (sel.options[i].value==t) sel.selectedIndex=i;
+      if (sel.options[i].value==newTool) sel.selectedIndex=i;
     }
   }
 
-  if (penTool!=t) {
-    if (t=="hand") pushCursor('grab')
-    if (penTool=="hand") popCursor()
+  if (penTool!=newTool) {
+    if (cursors[penTool]) popCursor()
+    if (cursors[newTool]) pushCursor(cursors[newTool])
   }
-  penTool = t
+  penTool = newTool
 }
 function downloadJson(){
   let blob = new Blob([JSON.stringify(tree)], {type: "application/json"})
@@ -1354,6 +1353,11 @@ function reloadAll(){
   window.onhashchange()
 }
 
+var penTool = "none"; document.getElementById("pentool").oninput();
+var penColor = document.getElementById('pencolor').value || "black";
+var penWidth = document.getElementById('penwidth').value || "3px";
+var arrowStyle = document.getElementById('arrowstyle').value || "1";
+var arrowSize = document.getElementById('arrowsize').value/50 || 0.12;
 
 reloadAll()
 </script>
