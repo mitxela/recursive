@@ -141,7 +141,7 @@ input[type=Search]{
   <p><a href='#' onclick='togglePinned(); return false'>Toggle pinned</a>
   <p><a href='#' onclick='jumpInto(); return false' id=jumpInto>Jump Into</a>
   <p><a href='#' onclick='moveUpNote(); return false'>Move up a level</a>
-  <p><a href='#' onclick='deleteNote(); return false'>Delete</a>
+  <p><a href='#' onclick='deleteNote(menuRef); return false'>Delete</a>
 </div>
 
 <div id=trail></div>
@@ -250,12 +250,22 @@ function toggleSidebarLeft(){
   }
 }
 
-function deleteNote(){
-  for (let i in level.children)
-    if (level.children[i]===menuRef) level.children.splice(i,1);
+function recursiveDelete(n){
+  for (let c of n.children) {
+    recursiveDelete(c)
+  }
+  delete noteById[n.id];
+  delete noteParentById[n.id];
+}
+function deleteNote(n){
+  menu.style.display='none'
+
+  noteParentById[n.id].children.splice( noteParentById[n.id].children.indexOf(n) , 1 )
+  recursiveDelete(n)
+
   save()
   populate(level)
-  menu.style.display='none'
+  rePopulateOutline()
 }
 function changeColor(){
   menuRef.color = hex2hsl(document.getElementById('notecolor').value)
