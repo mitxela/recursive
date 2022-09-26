@@ -249,21 +249,13 @@ function toggleSidebarLeft(){
     setOffset(oldOffsetLeft);
   }
 }
-
-function recursiveDelete(n){
-  for (let c of n.children) {
-    recursiveDelete(c)
-  }
-  delete noteById[n.id];
-  delete noteParentById[n.id];
-}
 function deleteNote(n){
   menu.style.display='none'
 
-  noteParentById[n.id].children.splice( noteParentById[n.id].children.indexOf(n) , 1 )
-  recursiveDelete(n)
+  noteParentById[n.id].children.splice( noteParentById[n.id].children.indexOf(n), 1 )
 
   save()
+  reGenLookups()
   populate(level)
   rePopulateOutline()
 }
