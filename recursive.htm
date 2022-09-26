@@ -83,6 +83,7 @@ ul{margin:0}
   margin:2px;
 }
 #trail a:hover{opacity:0.6}
+#trail a.drop {border:2px dashed;opacity:0.5}
 svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 #outline {
   padding:10px;
@@ -582,6 +583,10 @@ function mousePos(e) {
     (e.pageX-level.view.x-offsetLeft)/level.view.s,
     (e.pageY-level.view.y           )/level.view.s ]
 }
+function removeAllChildNodes(a){
+  while (a.children.length)
+    a.removeChild(a.lastChild)
+}
 function populate(t){
   if (window.location.hash!='#'+t.id)
     window.history.pushState({},'','#'+t.id) //or maybe replaceState
@@ -589,8 +594,7 @@ function populate(t){
   document.title = shortTitle(t.title,1,1) +` [${t.id}] - recursive`;
 
   zTopIndex=0
-  while (main.children.length)
-    main.removeChild(main.lastChild)
+  removeAllChildNodes(main)
   for (let i of t.children)
     createNote(i)
   level = t
@@ -621,10 +625,20 @@ function regenTrail(){
       c1 = "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l+"%)"
       c2 = "hsl("+n.color.h+','+n.color.s+'%,'+n.color.l*0.8+"%)"
     }
-    s.unshift("<a href='#"+n.id+"' style='background:"+c1+"; border-color:"+c2+"'>"+shortTitle(n.title, i==trailobj.length-1)+"</a>")
+    let a=document.createElement('a')
+    a.textContent=shortTitle(n.title, i==trailobj.length-1,1)
+    a.href='#'+n.id
+    a.style.background=c1;
+    a.style.borderColor=c2;
+    makeDropTarget(a, n)
+    s.push(a)
   }
 
-  trail.innerHTML = s.join(" &rarr; ")
+  removeAllChildNodes(trail)
+  for (let i=s.length;i--;) {
+    trail.append(s[i])
+    if (i) trail.append(document.createTextNode(" 🡒 "))
+  }
 }
 function shortTitle(t, last, noescape){
   let maxlength = last ? 50:20;
@@ -1253,21 +1267,7 @@ function noteContains(haystack,needle){
     if (noteContains(c,needle)) return true
   return false
 }
-
-var outlineLinksById=[];
-function updateOutlineLink(n){
-  let a = outlineLinksById[n.id];
-  a.textContent=shortTitle(n.title,1,1)
-  a.href='#'+n.id
-  if (n.color && n.color.l) a.style.background='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
-  a.style.textDecoration= (n.title.match(/^[#]*~[^~]+~/))?'line-through':'';
-}
-function populateOutline(n,parent){
-
-  let a=document.createElement('a');
-  outlineLinksById[n.id]=a;
-  updateOutlineLink(n)
-
+function makeDropTarget(a, n) {
   a.ondrop=function(e){
     let data = e.dataTransfer.items;
     for (let i=0;i<data.length;i++) {
@@ -1294,6 +1294,22 @@ function populateOutline(n,parent){
   }
   a.ondragenter=function(e){a.className='drop'}
   a.ondragleave=function(e){a.className=''}
+}
+var outlineLinksById=[];
+function updateOutlineLink(n){
+  let a = outlineLinksById[n.id];
+  a.textContent=shortTitle(n.title,1,1)
+  a.href='#'+n.id
+  if (n.color && n.color.l) a.style.background='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
+  a.style.textDecoration= (n.title.match(/^[#]*~[^~]+~/))?'line-through':'';
+}
+function populateOutline(n,parent){
+
+  let a=document.createElement('a');
+  outlineLinksById[n.id]=a;
+  updateOutlineLink(n)
+
+  makeDropTarget(a, n)
 
   let p=document.createElement('p')
 
@@ -1318,7 +1334,7 @@ function populateOutline(n,parent){
     populateOutline(c,p)
 }
 function rePopulateOutline(){
-  outline.innerHTML=""
+  removeAllChildNodes(outline)
   outlineLinksById=[];
   if (!tree.hasOwnProperty('open')) tree.open=true;
   populateOutline(tree,outline)
