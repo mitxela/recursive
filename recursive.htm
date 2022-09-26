@@ -813,10 +813,13 @@ document.onwheel=function(e){
 }
 window.onhashchange = function(){
   let i = location.hash.substr(1);
-  if ( i && noteById.hasOwnProperty(i) )
+  if ( i && noteById.hasOwnProperty(i) ) {
     showNote(i)
-  else
-    showNote(tree.id) //load root
+  } else {
+    // load root
+    window.history.replaceState({},'','#'+tree.id)
+    showNote(tree.id)
+  }
 }
 
 ;(function(){ // touch support
