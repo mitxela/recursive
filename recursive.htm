@@ -55,7 +55,7 @@ ul{margin:0}
 #main{
   transform-origin: 0% 0%;
   position:absolute;
-  top:0;left:0;width:100%;min-height:100vh;
+  top:0;left:0;
   margin:0;
   transition:opacity 0.3s;
 }
@@ -717,8 +717,6 @@ document.onmousedown=function(e){
   if (penTool=="none" || penTool=="addnote") return;
   if (penTool=="erase" || e.button==2) {
 
-    mainSvg.style.zIndex = zTopIndex+1;
-
     document.onmousemove=function(e){
       document.oncontextmenu=killEvent
       if (e.target.tagName!="path") return;
@@ -730,7 +728,6 @@ document.onmousedown=function(e){
       save()
     }
     document.onmouseup=function(e){
-      mainSvg.style.zIndex =null;
       document.onmouseup=null;
       document.onmousemove=null;
       setTimeout(function(){document.oncontextmenu=null;},10)
