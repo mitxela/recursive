@@ -1336,8 +1336,10 @@ function search(o){
 }
 function jumpFirstSearch(){
   if (searchResults.length) {
-    let p = searchResults.indexOf(level.id)
-    showNote(searchResults[ (p+1)%searchResults.length ]);
+    let p = searchResults.indexOf(level.id);
+    let r = searchResults[ (p+1)%searchResults.length ];
+    if (noteById[r].children.length) showNote(r);
+    else showNote( noteParentById[r].id )
   }
 }
 
