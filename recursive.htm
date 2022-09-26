@@ -135,6 +135,30 @@ details>p{display:inline-block;}
   width:calc(100% - 8px);
   height:22px;
 }
+#toolbar {position:fixed;bottom:0;left:0;background:rgba(0,0,0,0.2)}
+#help {
+  display:none;
+  position:fixed;
+  z-index:99;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.7);
+}
+#help div{
+  position:fixed;
+  left:50%;
+  margin-left:-32vw;
+  top:10vh;
+  width:56vw;
+  height:76vh;
+  background:white;
+  padding:2vw;
+}
+#help table{margin:auto}
+#help tr:hover{background:#eee}
+#help td{padding:2px 15px}
 </style>
 <svg><g></g></svg>
 <div id=main></div>
@@ -158,13 +182,48 @@ details>p{display:inline-block;}
  <div id=sidebarLeftAdj></div>
 </div>
 
-<a style='position:fixed;right:0;top:0' href='#' onclick='if (confirm("reset?")){localStorage.tree="";location.hash="";location.reload()} else return false'>reset</a>
-<div id=help style='position:fixed;bottom:0;left:0; user-select:none;'>
-Click and drag to move note, drag corners to resize, right click note body to expand, double click to edit text, Ctrl+Z to undo<br>
-<a href=# onclick='toggleSidebarLeft();return false'>Toggle sidebar</a><br>
-Middle-click drag to pan, scroll to zoom [ <a href=# onclick='zoomReset(); return false'>100%</a> &bull; <a href=# onclick='zoomFit(); return false'>fit</a> ]<br>
-<a href=# onclick='downloadJson(); return false'>Download the current state</a>, drag & drop .json file onto this page to load<br>
-<!--Left click drag on background to draw, right click erase<br>-->
+<div id=help onclick='if (event.target==this) closeHelp();'>
+<div>
+<p>Click and drag to move note
+<p>Drag corners to resize
+<p>Right click note body to expand, double click to edit text
+<p>Middle-click drag to pan, scroll to zoom
+<p>Drawing tools: Left click drag on background to draw, right click erase
+<p>Sidebar: drag &amp; drop a note onto another to move it
+<p><a href=# onclick='downloadJson(); return false'>Download the current state</a>, drag & drop .json file onto this page to load
+<p><a href='#' onclick='if (confirm("reset?")){localStorage.tree="";location.hash="";location.reload()} else return false'>Delete everything and reset</a>
+
+<p>Keyboard shortcuts:
+<table>
+<tr><td>Arrow keys</td><td>pan</td></tr>
+<tr><td>- or PageDown</td><td>zoom out</td></tr>
+<tr><td>+ or PageUp</td><td>zoom in</td></tr>
+<tr><td>Home</td><td>zoom 100%</td></tr>
+<tr><td>End</td><td>zoom to fit</td></tr>
+<tr><td>T</td><td>Add-Note tool</td></tr>
+<tr><td>B</td><td>Pencil tool</td></tr>
+<tr><td>L</td><td>Draw Line tool</td></tr>
+<tr><td>A</td><td>Draw Arrow tool</td></tr>
+<tr><td>E</td><td>Eraser tool</td></tr>
+<tr><td>H</td><td>Hand tool</td></tr>
+<tr><td>S</td><td>Toggle sidebar</td></tr>
+<tr><td>/</td><td>Focus Search</td></tr>
+<tr><td>Escape</td><td>Unequip tool</td></tr>
+<tr><td>Ctrl + Z</td><td>undo</td></tr>
+</table>
+<p><a href=# onclick='closeHelp(); return false'>Close</a>
+</div>
+</div>
+
+
+<div id=toolbar>
+<a href=# onclick='toggleSidebarLeft();return false'>Toggle sidebar</a>
+ &bull; 
+[ <a href=# onclick='zoomReset(); return false'>100%</a> &bull; <a href=# onclick='zoomFit(); return false'>fit</a> ]
+ &bull; 
+ <a href='#' onclick='eraseAllLines(); return false'>erase all lines</a>
+ &bull; <a href=# onclick='openHelp(); return false'>Help</a>
+<br>
 Tool:<select id=pentool oninput='setPenTool(this.value,1)'>
 <option value='none'>(none)</option>
 <option value='addnote'>Add note [T]</option>
@@ -184,8 +243,6 @@ Tool:<select id=pentool oninput='setPenTool(this.value,1)'>
 <option value='5'>ᐳ</option>
 </select>
  arrow size:<input id=arrowsize type=range oninput='arrowSize=this.value/50; setPenTool("arrow")' min=3 max=10 value=6>
- <a href='#' onclick='eraseAllLines(); return false'>erase all lines from this note</a><br>
-<br>
 </div>
 
 <script>
@@ -227,6 +284,7 @@ var outline=document.getElementById('outline')
 var sidebarLeft=document.getElementById('sidebarLeft')
 var sidebarLeftAdj=document.getElementById('sidebarLeftAdj')
 var searchInput=document.getElementById('searchInput')
+var help=document.getElementById('help')
 var trailobj=[]
 var menuRef=null;
 var menuRefObj=null;
@@ -235,13 +293,19 @@ var penSmooth = 0.15;
 var offsetLeft = 0;
 var textEditing=false;
 
+function openHelp(){
+  help.style.display='block'
+}
+function closeHelp(){
+  help.style.display='none'
+}
 function setOffset(ol){
   offsetLeft=ol;
   ol+='px';
   main.style.left=ol;
   mainSvg.style.left=ol
   sidebarLeft.style.width=ol
-  document.getElementById('help').style.left=ol
+  document.getElementById('toolbar').style.left=ol
 }
 var oldOffsetLeft=Math.min(window.innerWidth*0.2,300);
 function toggleSidebarLeft(){
@@ -650,7 +714,7 @@ function shortTitle(t, last, noescape){
   return noescape?t:escapeEntities(t);
 }
 function background(t){
-  return (t.id=="main" || t==mainSvg || t.tagName=="path" || t.tagName=="HTML" || t.id=="help")
+  return mainSvg.contains(t)
 }
 document.onclick=function(e){
   if (textEditing || penTool!="addnote" || !background(e.target))return;
@@ -706,7 +770,7 @@ document.onmousedown=function(e){
   }
 
   if (penTool=="hand" || e.button==1) { // middle click
-    if (sidebarLeft.contains(e.target) || e.target.tagName=="INPUT" || e.target.tagName=="SELECT") return
+    if (!main.contains(e.target) && !background(e.target)) return
     killEvent(e);
     let sx = e.pageX, sy = e.pageY;
     document.onmousemove=function(e){
@@ -816,7 +880,7 @@ function drawArrow(x1,y1,x2,y2){
   }
 }
 document.onwheel=function(e){
-  if (e.target==sidebarLeft || sidebarLeft.contains(e.target)) return;
+  if (sidebarLeft.contains(e.target) || help.contains(e.target)) return;
   menu.style.display='none'
 
   let sx= (e.pageX-level.view.x-offsetLeft)/level.view.s,
@@ -1117,12 +1181,15 @@ document.onkeydown=function(e){
     case 'a': setPenTool('arrow'); return;
     case 'e': setPenTool('erase'); return;
     case 'h': setPenTool('hand'); return;
-    case 'Escape': setPenTool('none'); return;
     case 's': toggleSidebarLeft(); return;
     case '/':
       killEvent(e);
       if (!offsetLeft) toggleSidebarLeft();
       searchInput.focus();
+      return;
+    case 'Escape':
+      setPenTool('none');
+      menu.style.display='none';
       return;
   }
 }
