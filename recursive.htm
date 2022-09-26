@@ -128,7 +128,7 @@ details>p{display:inline-block;}
   right:0;
   top:0;
 }
-input[type=Search]{
+#searchInput{
   position:absolute;
   bottom:0;
   left:0;
@@ -1118,6 +1118,13 @@ document.onkeydown=function(e){
     case 'e': setPenTool('erase'); return;
     case 'h': setPenTool('hand'); return;
     case 'Escape': setPenTool('none'); return;
+    case 's': toggleSidebarLeft(); return;
+    case '/':
+      e.preventDefault();
+      e.stopPropagation();
+      if (!offsetLeft) toggleSidebarLeft();
+      searchInput.focus();
+      return;
   }
 }
 var cursors={
@@ -1362,6 +1369,8 @@ function search(o){
 
   //todo: make async
   searchCheck(tree, r)
+
+  searchResults=[...new Set(searchResults)] // remove duplicates
 }
 function jumpFirstSearch(){
   if (searchResults.length) {
