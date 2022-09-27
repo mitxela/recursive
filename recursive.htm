@@ -474,7 +474,7 @@ function createNote(n){
   }
 
   d.oncontextmenu = function(e){
-    if (document.oncontextmenu!=null) return
+    if (document.oncontextmenu!=null || document.onmouseup!=null) return
     d.style.transition="0.3s linear"
     
     d.style.left=(window.innerWidth -n.width )/2 + 'px'
@@ -758,6 +758,7 @@ function setCursor(c){
 document.onmousedown=function(e){
   menu.style.display='none'
   if (document.onmouseup) return;
+  var b = e.button;
 
   if (e.target==sidebarLeftAdj){
     setOffset(e.clientX+4)
@@ -781,6 +782,7 @@ document.onmousedown=function(e){
       setView()
     }
     document.onmouseup=function(e){
+      if (e.button !=b) return;
       document.onmouseup=null;
       document.onmousemove=null;
       saveWithoutHistory()
@@ -807,6 +809,7 @@ document.onmousedown=function(e){
       save()
     }
     document.onmouseup=function(e){
+      if (e.button !=b) return;
       popCursor()
       document.onmouseup=null;
       document.onmousemove=null;
@@ -825,6 +828,7 @@ document.onmousedown=function(e){
     path=addSVGline(mainSvgG, line)
 
     document.onmouseup=function(e){
+      if (e.button !=b) return;
       document.onmousemove(e)
       document.onmouseup=null;
       document.onmousemove=null;
