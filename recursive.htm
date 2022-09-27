@@ -155,6 +155,7 @@ details>p{display:inline-block;}
   height:76vh;
   background:white;
   padding:2vw;
+  overflow:auto;
 }
 #help table{margin:auto}
 #help tr:hover{background:#eee}
@@ -701,7 +702,7 @@ function regenTrail(){
   removeAllChildNodes(trail)
   for (let i=s.length;i--;) {
     trail.append(s[i])
-    if (i) trail.append(document.createTextNode(" 🡒 "))
+    if (i) trail.append(document.createTextNode(" \u2794 "))
   }
 }
 function shortTitle(t, last, noescape){
