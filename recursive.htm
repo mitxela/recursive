@@ -880,8 +880,8 @@ function drawArrow(x1,y1,x2,y2){
   let h = Math.min(arrowSize,500*arrowSize*arrowSize/len);
   dx*=h
   dy*=h
-  dx2 = dx*1.73205; // 2*cos(30deg)
-  dy2 = dy*1.73205;
+  let dx2 = dx*1.73205; // 2*cos(30deg)
+  let dy2 = dy*1.73205;
   switch (arrowStyle) {
   case "1": case "3": return [ // ⯈
     [x1,y1],
@@ -893,19 +893,19 @@ function drawArrow(x1,y1,x2,y2){
   case "2": case "4": return [ // ➤
     [x1,y1],
     [x2-dx*0.99,y2-dy*0.99],
-    [x2    -dx,y2    -dy],
+    [x2     -dx,y2    -dy],
     [x2 -dy-dx2,y2 +dx-dy2],
     [x2        ,y2 ],
     [x2 +dy-dx2,y2 -dx-dy2],
-    [x2    -dx,y2    -dy]]
+    [x2     -dx,y2    -dy]]
   default: return [            // ᐳ
     [x1,y1],
     [x2 -dx*0.0099,y2 -dy*0.0099],
-    [x2 -dx*0.01,y2 -dy*0.01],
-    [x2 -dy-dx2,y2 +dx-dy2],
-    [x2        ,y2 ],
-    [x2 +dy-dx2,y2 -dx-dy2],
-    [x2 -dx*0.01,y2 -dy*0.01]]
+    [x2 -dx*0.01,  y2 -dy*0.01],
+    [x2 -dy-dx*1.2,y2 +dx-dy*1.2],
+    [x2           ,y2 ],
+    [x2 +dy-dx*1.2,y2 -dx-dy*1.2],
+    [x2 -dx*0.01,  y2 -dy*0.01]]
   }
 }
 document.onwheel=function(e){
