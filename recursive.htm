@@ -806,10 +806,12 @@ document.onmousedown=function(e){
       save()
     }
     document.onmouseup=function(e){
+      popCursor()
       document.onmouseup=null;
       document.onmousemove=null;
       setTimeout(function(){document.oncontextmenu=null;},10)
     }
+    pushCursor(cursors['erase'])
 
   } else { // draw a line of some sort
     var line = {points:[[sx,sy]]}, path=null;
@@ -1195,7 +1197,8 @@ document.onkeydown=function(e){
 }
 var cursors={
   'hand':'grab',
-  'pencil': 'crosshair',
+  'pencil': 'url(pencil.png) 2 21, crosshair',
+  'erase': 'url(eraser.png) 5 20, crosshair',
   'line': 'crosshair',
   'arrow': 'crosshair',
   'addnote': 'copy'
