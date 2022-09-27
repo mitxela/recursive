@@ -892,6 +892,7 @@ function drawArrow(x1,y1,x2,y2){
     [x2    -dx2,y2    -dy2]]  
   case "2": case "4": return [ // ➤
     [x1,y1],
+    [x2-dx*0.99,y2-dy*0.99],
     [x2    -dx,y2    -dy],
     [x2 -dy-dx2,y2 +dx-dy2],
     [x2        ,y2 ],
@@ -899,12 +900,12 @@ function drawArrow(x1,y1,x2,y2){
     [x2    -dx,y2    -dy]]
   default: return [            // ᐳ
     [x1,y1],
-    [x2 -dx*0.1,y2 -dy*0.1],
-    [x2 -dx*0.2,y2 -dy*0.2],
+    [x2 -dx*0.0099,y2 -dy*0.0099],
+    [x2 -dx*0.01,y2 -dy*0.01],
     [x2 -dy-dx2,y2 +dx-dy2],
     [x2        ,y2 ],
     [x2 +dy-dx2,y2 -dx-dy2],
-    [x2 -dx*0.2,y2 -dy*0.2]]
+    [x2 -dx*0.01,y2 -dy*0.01]]
   }
 }
 document.onwheel=function(e){
