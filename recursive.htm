@@ -136,13 +136,15 @@ details>p{display:inline-block;}
   height:22px;
 }
 #toolbar {position:fixed;bottom:0;left:0;background:rgba(0,0,0,0.2)}
+#toolbar input, #toolbar button{vertical-align: middle;}
 .tool {
   width:28px;
   height:28px;
   background-color: #ccc;
   background-repeat: no-repeat;
-  background-position:-1px -1px;
+  background-position:0 0;
   border: 2px outset;
+  margin:2px;
 }
 .tool.active, .tool:active{
   border: 2px inset;
@@ -232,32 +234,17 @@ details>p{display:inline-block;}
 
 <div id=toolbar>
 <div id=toolbox></div>
-<a href=# onclick='toggleSidebarLeft();return false'>Toggle sidebar</a>
- &bull; 
-[ <a href=# onclick='zoomReset(); return false'>100%</a> &bull; <a href=# onclick='zoomFit(); return false'>fit</a> ]
- &bull; 
- <a href='#' onclick='eraseAllLines(); return false'>erase all lines</a>
- &bull; <a href=# onclick='openHelp(); return false'>Help</a>
-<br>
-Tool:<select id=pentool oninput='setPenTool(this.value,1)'>
-<option value='none'>(none)</option>
-<option value='addnote'>Add note [T]</option>
-<option value='pencil'>Pencil [B]</option>
-<option value='line'>Line [L]</option>
-<option value='arrow'>Arrow [A]</option>
-<option value='erase'>Eraser [E]</option>
-<option value='hand'>Hand [H]</option>
-</select>
  color:<input id=pencolor type=color oninput='penColor=this.value'>
  thickness:<input id=penwidth type=range oninput='penWidth=this.value+"px"' min=1 max=10 value=3>
  arrow style:<select id=arrowstyle oninput='arrowStyle=this.value; setPenTool("arrow")'>
 <option value='1'>⯈</option>
 <option value='2'>➤</option>
-<option value='3'>ᐅ</option>
+<option value='3' selected>ᐅ</option>
 <option value='4'>⮚</option>
 <option value='5'>ᐳ</option>
 </select>
  arrow size:<input id=arrowsize type=range oninput='arrowSize=this.value/50; setPenTool("arrow")' min=3 max=10 value=6>
+ <a href='#' onclick='eraseAllLines(); return false'>erase all lines</a>
 </div>
 
 <script>
@@ -1233,20 +1220,11 @@ document.onkeydown=function(e){
       return;
   }
 }
-function setPenTool(newTool, temp){
+function setPenTool(newTool){
   if (document.onmouseup!=null) return;
 
-/*
-  // shortly we will get rid of the dropdown list and have buttons
-  if (!temp) {
-    let sel = document.getElementById("pentool")
-    for (let i=0;i<sel.options.length;i++) {
-      if (sel.options[i].value==newTool) sel.selectedIndex=i;
-    }
-  }
-*/
   for (let t in toolButtons) toolButtons[t].classList.remove("active")
-  toolButtons[newTool].classList.add("active");
+  if (toolButtons[newTool]) toolButtons[newTool].classList.add("active");
 
   if (penTool!=newTool) {
     if (cursors[penTool]) popCursor()
@@ -1514,7 +1492,7 @@ function reloadAll(){
 var penTool = "none";
 var penColor = document.getElementById('pencolor').value || "black";
 var penWidth = document.getElementById('penwidth').value || "3px";
-var arrowStyle = document.getElementById('arrowstyle').value || "1";
+var arrowStyle = document.getElementById('arrowstyle').value || "3";
 var arrowSize = document.getElementById('arrowsize').value/50 || 0.12;
 
 var cursors={
@@ -1534,17 +1512,37 @@ var toolTips={
   "hand":"Hand [H]"
 }
 var toolButtons={}
-for (let i of ["addnote","pencil","line","arrow","erase","hand"]) {
+function toolButton(name, title){
   let b = document.createElement('button')
   b.className="tool"
-  b.style.backgroundImage=`url(${i}.png)`
-  if (toolTips[i]) b.title=toolTips[i]
-  b.onclick=function(){
-    setPenTool(i)
-  }
-  toolButtons[i]=b
+  b.style.backgroundImage=`url(${name}.png)`
+  b.title=title||"";
+  toolButtons[name]=b
   toolbox.append(b)
+  return b
 }
+function toolButtonSpacer(){
+  toolbox.append(document.createTextNode(' - '))
+}
+
+toolButton("sidebar", "Toggle Sidebar").onclick=toggleSidebarLeft
+toolButtonSpacer()
+
+for (let i of ["addnote","pencil","line","arrow","erase","hand"]) {
+  let b = toolButton(i, toolTips[i])
+  b.onclick=function(){
+    if (penTool==i)
+      setPenTool("none")
+    else
+      setPenTool(i)
+  }
+}
+
+toolButtonSpacer()
+toolButton("zoom100", "Zoom to 100%").onclick = zoomReset
+toolButton("zoomfit", "Zoom fit").onclick = zoomFit
+toolButtonSpacer()
+toolButton("help", "Help").onclick = openHelp
 
 reloadAll()
 </script>
