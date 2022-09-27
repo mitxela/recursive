@@ -136,6 +136,19 @@ details>p{display:inline-block;}
   height:22px;
 }
 #toolbar {position:fixed;bottom:0;left:0;background:rgba(0,0,0,0.2)}
+.tool {
+  width:28px;
+  height:28px;
+  background-color: #ccc;
+  background-repeat: no-repeat;
+  background-position:-1px -1px;
+  border: 2px outset;
+}
+.tool.active, .tool:active{
+  border: 2px inset;
+  background-color: #bbb;
+  background-position:1px 1px;
+}
 #help {
   display:none;
   position:fixed;
@@ -218,6 +231,7 @@ details>p{display:inline-block;}
 
 
 <div id=toolbar>
+<div id=toolbox></div>
 <a href=# onclick='toggleSidebarLeft();return false'>Toggle sidebar</a>
  &bull; 
 [ <a href=# onclick='zoomReset(); return false'>100%</a> &bull; <a href=# onclick='zoomFit(); return false'>fit</a> ]
@@ -286,6 +300,7 @@ var sidebarLeft=document.getElementById('sidebarLeft')
 var sidebarLeftAdj=document.getElementById('sidebarLeftAdj')
 var searchInput=document.getElementById('searchInput')
 var help=document.getElementById('help')
+var toolbox=document.getElementById('toolbox')
 var trailobj=[]
 var menuRef=null;
 var menuRefObj=null;
@@ -1218,17 +1233,10 @@ document.onkeydown=function(e){
       return;
   }
 }
-var cursors={
-  'hand':'grab',
-  'pencil': 'url(pencil.png) 2 21, crosshair',
-  'erase': 'url(eraser.png) 5 20, crosshair',
-  'line': 'crosshair',
-  'arrow': 'crosshair',
-  'addnote': 'copy'
-}
 function setPenTool(newTool, temp){
   if (document.onmouseup!=null) return;
 
+/*
   // shortly we will get rid of the dropdown list and have buttons
   if (!temp) {
     let sel = document.getElementById("pentool")
@@ -1236,6 +1244,9 @@ function setPenTool(newTool, temp){
       if (sel.options[i].value==newTool) sel.selectedIndex=i;
     }
   }
+*/
+  for (let t in toolButtons) toolButtons[t].classList.remove("active")
+  toolButtons[newTool].classList.add("active");
 
   if (penTool!=newTool) {
     if (cursors[penTool]) popCursor()
@@ -1500,11 +1511,40 @@ function reloadAll(){
   window.onhashchange()
 }
 
-var penTool = "none"; document.getElementById("pentool").oninput();
+var penTool = "none";
 var penColor = document.getElementById('pencolor').value || "black";
 var penWidth = document.getElementById('penwidth').value || "3px";
 var arrowStyle = document.getElementById('arrowstyle').value || "1";
 var arrowSize = document.getElementById('arrowsize').value/50 || 0.12;
+
+var cursors={
+  'hand':'grab',
+  'pencil': 'url(pencil.png) 2 21, crosshair',
+  'erase': 'url(erase.png) 5 20, crosshair',
+  'line': 'crosshair',
+  'arrow': 'crosshair',
+  'addnote': 'copy'
+}
+var toolTips={
+  "addnote":"Add note [T]",
+  "pencil":"Pencil [B]",
+  "line":"Line [L]",
+  "arrow":"Arrow [A]",
+  "erase":"Erase [E]",
+  "hand":"Hand [H]"
+}
+var toolButtons={}
+for (let i of ["addnote","pencil","line","arrow","erase","hand"]) {
+  let b = document.createElement('button')
+  b.className="tool"
+  b.style.backgroundImage=`url(${i}.png)`
+  if (toolTips[i]) b.title=toolTips[i]
+  b.onclick=function(){
+    setPenTool(i)
+  }
+  toolButtons[i]=b
+  toolbox.append(b)
+}
 
 reloadAll()
 </script>
