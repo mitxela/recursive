@@ -757,6 +757,7 @@ function setCursor(c){
 }
 document.onmousedown=function(e){
   menu.style.display='none'
+  if (document.onmouseup) return;
 
   if (e.target==sidebarLeftAdj){
     setOffset(e.clientX+4)
