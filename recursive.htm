@@ -757,7 +757,8 @@ function setCursor(c){
 }
 document.onmousedown=function(e){
   menu.style.display='none'
-  if (document.onmouseup) return;
+  if (document.onmouseup && penTool!="hand") return;
+  if (e.target.tagName=="TEXTAREA" && e.button!=1) return;
   var b = e.button;
 
   if (e.target==sidebarLeftAdj){
@@ -773,7 +774,7 @@ document.onmousedown=function(e){
 
   if (penTool=="hand" || e.button==1) { // middle click
     if (!main.contains(e.target) && !background(e.target)) return
-    killEvent(e);
+    if (e.button==1) killEvent(e);
     let sx = e.pageX, sy = e.pageY;
     document.onmousemove=function(e){
       level.view.x+= (e.pageX-sx)
