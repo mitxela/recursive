@@ -1414,7 +1414,13 @@ function rePopulateOutline(){
 
   search(searchInput)
 }
-var searchResults=[];
+var searchResults=[], reverseSearchDirection=false;
+searchInput.onkeydown=function(e){
+  reverseSearchDirection=e.shiftKey
+}
+searchInput.onkeyup=function(e){
+  if (e.key=='Shift') reverseSearchDirection=false;
+}
 function searchCheck(n,r){
   let el = outlineLinksById[n.id].parentNode;
   let match = r.test(n.title);
@@ -1446,6 +1452,7 @@ function search(o){
 function jumpFirstSearch(){
   if (searchResults.length) {
     let p = searchResults.indexOf(level.id);
+    if (reverseSearchDirection) p+=searchResults.length-2;
     showNote(searchResults[ (p+1)%searchResults.length ] );
   }
 }
