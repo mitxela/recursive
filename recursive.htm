@@ -310,14 +310,30 @@ function setOffset(ol){
 }
 var oldOffsetLeft=Math.min(window.innerWidth*0.2,300);
 function toggleSidebarLeft(){
+  main.style.transition='0.2s'
+  mainSvg.style.transition='0.2s'
+  sidebarLeft.style.transition='0.2s'
+  document.getElementById('toolbar').style.transition='0.2s'
+
   if (offsetLeft) {
-    oldOffsetLeft=offsetLeft;
-    setOffset(0)
-    sidebarLeft.style.display='none'
+    setTimeout(function(){
+      oldOffsetLeft=offsetLeft;
+      setOffset(0)
+    },1)
   } else {
     sidebarLeft.style.display='block'
-    setOffset(oldOffsetLeft);
+    setTimeout(function(){
+      setOffset(oldOffsetLeft);
+    },1)
   }
+
+  setTimeout(function(){
+    sidebarLeft.style.display= offsetLeft?'block':'none'
+    main.style.transition=''
+    mainSvg.style.transition=''
+    sidebarLeft.style.transition=''
+    document.getElementById('toolbar').style.transition=''
+  },200)
 }
 function deleteNote(n){
   menu.style.display='none'
