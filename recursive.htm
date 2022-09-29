@@ -197,8 +197,8 @@ details>p{display:inline-block;}
 <div id=menu>
   <p>Change color <input id=notecolor type=color onchange='changeColor()'><br>(use black for transparent)
   <p><a href='#' onclick='editNote(); return false'>Edit</a>
-  <p><a href='#' onclick='toggleStrike(); return false'>Toggle strikethrough</a>
-  <p><a href='#' onclick='togglePinned(); return false'>Toggle pinned</a>
+  <p><a href='#' onclick='menuToggleStrike(); return false'>Toggle strikethrough</a>
+  <p><a href='#' onclick='menuTogglePinned(); return false'>Toggle pinned</a>
   <p><a href='#' onclick='jumpInto(); return false' id=jumpInto>Jump Into</a>
   <p><a href='#' onclick='moveUpNote(); return false'>Move up a level</a>
   <p><a href='#' onclick='deleteNote(menuRef); return false'>Delete</a>
@@ -404,30 +404,48 @@ function jumpInto(){
   menu.style.display='none';
   menuRefObj.oncontextmenu()
 }
-function toggleStrike(){
+function menuToggleStrike(){
   menu.style.display='none';
-  let [a, h, b] = menuRef.title.match(/^(#+)?([\s\S]+)$/)
+  if (selection.elements.length) {
+    for (let i=0; i<selection.elements.length; i++) {
+      toggleStrike(selection.objects[i], selection.elements[i])
+    }
+  } else {
+    toggleStrike(menuRef, menuRefObj)
+  }
+  save()
+}
+function toggleStrike(el, obj){
+  let [a, h, b] = el.title.match(/^(#+)?([\s\S]+)$/)
   if (!h) h="";
   let m = b.match(/^~([\s\S]+)~$/)
   if (m){
-    menuRef.title=h+m[1];
+    el.title=h+m[1];
   } else {
-    menuRef.title=h+'~'+b+'~'
+    el.title=h+'~'+b+'~'
   }
-  updateOutlineLink(menuRef)
-  save()
-  menuRefObj.children[1].innerHTML = markdown(menuRef.title)
+  updateOutlineLink(el)
+  obj.children[1].innerHTML = markdown(el.title)
 }
-function togglePinned(){
+function menuTogglePinned(){
   menu.style.display='none';
-  if (menuRef.pinned) {
-    menuRef.pinned = 0
-    menuRefObj.classList.remove("pinned")
+  if (selection.elements.length) {
+    for (let i=0; i<selection.elements.length; i++) {
+      togglePinned(selection.objects[i], selection.elements[i])
+    }
   } else {
-    menuRef.pinned = 1
-    menuRefObj.classList.add("pinned")
+    togglePinned(menuRef, menuRefObj)
   }
   save()
+}
+function togglePinned(el, obj){
+  if (el.pinned) {
+    el.pinned = 0
+    obj.classList.remove("pinned")
+  } else {
+    el.pinned = 1
+    obj.classList.add("pinned")
+  }
 }
 function eraseAllLines(){
   delete level.lines;
