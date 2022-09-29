@@ -19,6 +19,7 @@ pre{background:rgba(128,128,128,0.2)}
   resize:both; overflow:auto;
 }
 .note.pinned {box-shadow:1px 1px 2px rgba(0,0,0,0.3);resize:none;}
+.note.selected {outline:2px dashed;}
 .note svg{z-index:-1}
 .note img{max-width:100%}
 .subnote {
@@ -181,9 +182,17 @@ details>p{display:inline-block;}
 #help table{margin:auto}
 #help tr:hover{background:#eee}
 #help td{padding:2px 15px}
+#marquee{
+  display:none;
+  position:absolute;
+  border:2px dashed;
+  cursor:crosshair;
+}
 </style>
 <svg><g></g></svg>
 <div id=main></div>
+
+<div id=marquee></div>
 
 <div id=menu>
   <p>Change color <input id=notecolor type=color onchange='changeColor()'><br>(use black for transparent)
@@ -223,6 +232,7 @@ details>p{display:inline-block;}
 <tr><td>Home</td><td>zoom 100%</td></tr>
 <tr><td>End</td><td>zoom to fit</td></tr>
 <tr><td>T</td><td>Add-Note tool</td></tr>
+<tr><td>M</td><td>Marquee tool</td></tr>
 <tr><td>B</td><td>Pencil tool</td></tr>
 <tr><td>L</td><td>Draw Line tool</td></tr>
 <tr><td>A</td><td>Draw Arrow tool</td></tr>
@@ -297,6 +307,7 @@ var sidebarLeftAdj=document.getElementById('sidebarLeftAdj')
 var searchInput=document.getElementById('searchInput')
 var help=document.getElementById('help')
 var toolbox=document.getElementById('toolbox')
+var marquee=document.getElementById('marquee')
 var trailobj=[]
 var menuRef=null;
 var menuRefObj=null;
@@ -783,6 +794,31 @@ function setCursor(c){
   main.style.cursor=c;
   mainSvg.style.cursor=c;
 }
+function drawMarquee(x1,y1,x2,y2) {
+  let x,y,w,h, partial=true;
+  if (x2<x1) {x=x2; w=x1-x2} else {x=x1; w=x2-x1}
+  if (y2<y1) {y=y2; h=y1-y2} else {y=y1; h=y2-y1}
+
+  let lx = (x-level.view.x-offsetLeft)/level.view.s,
+      ly = (y-level.view.y)/level.view.s,
+      lw = w/level.view.s,
+      lh = h/level.view.s;
+
+  for (let i=0;i<level.children.length;i++) {
+    let c=level.children[i];
+    if ( c.x>lx
+      && c.y>ly
+      && c.x+c.width<lx+lw
+      && c.y+c.height<ly+lh) {
+        main.children[i].classList.add('selected')
+    } else main.children[i].classList.remove('selected')
+  }
+
+  marquee.style.left=x+'px'
+  marquee.style.top=y+'px'
+  marquee.style.width=w+'px';
+  marquee.style.height=h+'px';
+}
 document.onmousedown=function(e){
   menu.style.display='none'
   if (document.onmouseup && penTool!="hand") return;
@@ -821,6 +857,21 @@ document.onmousedown=function(e){
     return;
   }
   if (textEditing || !background(e.target)) return;
+
+  if (penTool=="marquee"){
+    let sx = e.pageX, sy=e.pageY;
+    drawMarquee(sx,sy,sx,sy)
+    marquee.style.display='block'
+    document.onmousemove=function(e){
+      drawMarquee(sx,sy,e.pageX,e.pageY)
+    }
+    document.onmouseup=function(e){
+      marquee.style.display='none';
+      document.onmouseup=null;
+      document.onmousemove=null;
+    }
+    return;
+  }
 
   let [sx, sy] = mousePos(e);
 
@@ -1228,6 +1279,7 @@ document.onkeydown=function(e){
     case 'Home': zoomReset(); return;
     case 'End': zoomFit(); return;
     case 't': setPenTool('addnote'); return;
+    case 'm': setPenTool('marquee'); return;
     case 'b': setPenTool('pencil'); return;
     case 'l': setPenTool('line'); return;
     case 'a': setPenTool('arrow'); return;
@@ -1526,6 +1578,7 @@ var cursors={
   'hand':'grab',
   'pencil': 'url(icons/pencil.png) 2 21, crosshair',
   'erase': 'url(icons/erase.png) 5 20, crosshair',
+  'marquee': 'crosshair',
   'line': 'crosshair',
   'arrow': 'crosshair',
   'rect': 'crosshair',
@@ -1533,6 +1586,7 @@ var cursors={
 }
 var toolTips={
   "addnote":"Add note [T]",
+  "marquee":"Marquee [M]",
   "pencil":"Pencil [B]",
   "line":"Line [L]",
   "arrow":"Arrow [A]",
@@ -1557,7 +1611,7 @@ function toolButtonSpacer(){
 toolButton("sidebar", "Toggle Sidebar").onclick=toggleSidebarLeft
 toolButtonSpacer()
 
-for (let i of ["addnote","pencil","line","arrow","rect","erase","hand"]) {
+for (let i of ["addnote","marquee","pencil","line","arrow","rect","erase","hand"]) {
   let b = toolButton(i, toolTips[i])
   b.onclick=function(){
     if (penTool==i)
