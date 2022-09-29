@@ -239,6 +239,7 @@ details>p{display:inline-block;}
 <tr><td>R</td><td>Draw Rectangle tool</td></tr>
 <tr><td>E</td><td>Eraser tool</td></tr>
 <tr><td>H</td><td>Hand tool</td></tr>
+<tr><td>Z</td><td>Zoom tool</td></tr>
 <tr><td>S</td><td>Toggle sidebar</td></tr>
 <tr><td>/</td><td>Focus Search</td></tr>
 <tr><td>Delete</td><td>Delete marquee selection</td></tr>
@@ -556,7 +557,7 @@ function createNote(n){
   }
 
   d.onmousedown=function(e){
-    if (e.target.tagName=="TEXTAREA" || e.button!=0 || n.pinned) return;
+    if (e.target.tagName=="TEXTAREA" || e.button!=0 || n.pinned || penTool=="zoom" || penTool=="hand") return;
     var sw = d.style.width, sh = d.style.height;
     d.style.zIndex = ++zTopIndex
 
@@ -834,7 +835,7 @@ function popCursor(){
   setCursor(c)
 }
 function setCursor(c){
-  if (c=="grab" || c=="grabbing") main.classList.add("panning")
+  if (c=="grab" || c=="grabbing" || c=="zoom-in") main.classList.add("panning")
   else main.classList.remove("panning")
   main.style.cursor=c;
   mainSvg.style.cursor=c;
@@ -925,6 +926,21 @@ document.onmousedown=function(e){
       popCursor()
     }
     pushCursor('grabbing')
+    return;
+  }
+  if (penTool=="zoom"){
+    if (!main.contains(e.target) && !background(e.target)) return
+    let sx = e.pageX, sy = e.pageY, cx=sx, cy=sy;
+    document.onmousemove=function(e){
+      doZoom( (e.pageX-sx) + (e.pageY-sy), cx, cy)
+      sx = e.pageX, sy = e.pageY;
+    }
+    document.onmouseup=function(e){
+      if (e.button !=b) return;
+      document.onmouseup=null;
+      document.onmousemove=null;
+      saveWithoutHistory()
+    }
     return;
   }
   if (textEditing || !background(e.target)) return;
@@ -1057,15 +1073,8 @@ document.onwheel=function(e){
   if (sidebarLeft.contains(e.target) || help.contains(e.target)) return;
   menu.style.display='none'
 
-  let sx= (e.pageX-level.view.x-offsetLeft)/level.view.s,
-      sy= (e.pageY-level.view.y           )/level.view.s;
+  doZoom(e.deltaY, e.pageX, e.pageY)
 
-  level.view.s*= Math.pow(10,e.deltaY*-0.001);
-
-  level.view.x = -sx*level.view.s+e.pageX-offsetLeft
-  level.view.y = -sy*level.view.s+e.pageY
-
-  setView()
   saveWithoutHistory()
 }
 window.onhashchange = function(){
@@ -1329,13 +1338,20 @@ function pan(dx,dy) {
   setView()
   saveWithoutHistory()
 }
-function fakeZoom(s){
-  let e={
-    deltaY:s,
-    pageX:(window.innerWidth+offsetLeft)/2,
-    pageY:window.innerHeight/2
-  }
-  document.onwheel(e);
+function zoomCentred(s){
+  doZoom(s, (window.innerWidth+offsetLeft)/2, window.innerHeight/2)
+  saveWithoutHistory();
+}
+function doZoom(delta, cx, cy){
+  let sx= (cx-level.view.x-offsetLeft)/level.view.s,
+      sy= (cy-level.view.y           )/level.view.s;
+
+  level.view.s*= Math.pow(10,delta*-0.001);
+
+  level.view.x = -sx*level.view.s+cx-offsetLeft
+  level.view.y = -sy*level.view.s+cy
+
+  setView()
 }
 sidebarLeft.onkeydown=function(e){if (e.key!='/') e.stopPropagation()}
 document.onkeydown=function(e){
@@ -1346,8 +1362,8 @@ document.onkeydown=function(e){
     case 'ArrowUp':   pan(0,100); return;
     case 'ArrowRight':pan(-100,0); return;
     case 'ArrowDown': pan(0,-100); return;
-    case 'PageDown': case '-': fakeZoom(100); return;
-    case 'PageUp':   case '+': fakeZoom(-100); return;
+    case 'PageDown': case '-': zoomCentred(100); return;
+    case 'PageUp':   case '+': zoomCentred(-100); return;
     case 'Home': zoomReset(); return;
     case 'End': zoomFit(); return;
     case 't': setPenTool('addnote'); return;
@@ -1358,6 +1374,7 @@ document.onkeydown=function(e){
     case 'r': setPenTool('rect'); return;
     case 'e': setPenTool('erase'); return;
     case 'h': setPenTool('hand'); return;
+    case 'z': setPenTool('zoom'); return;
     case 's': toggleSidebarLeft(); return;
     case '/':
       if (document.activeElement==searchInput) return;
@@ -1664,7 +1681,8 @@ var cursors={
   'line': 'crosshair',
   'arrow': 'crosshair',
   'rect': 'crosshair',
-  'addnote': 'copy'
+  'addnote': 'copy',
+  'zoom':'zoom-in'
 }
 var toolTips={
   "addnote":"Add note [T]",
@@ -1674,7 +1692,8 @@ var toolTips={
   "arrow":"Arrow [A]",
   "rect":"Rectangle [R]",
   "erase":"Erase [E]",
-  "hand":"Hand [H]"
+  "hand":"Hand [H]",
+  "zoom":"Zoom [Z]"
 }
 var toolButtons={}
 function toolButton(name, title){
@@ -1693,7 +1712,7 @@ function toolButtonSpacer(){
 toolButton("sidebar", "Toggle Sidebar").onclick=toggleSidebarLeft
 toolButtonSpacer()
 
-for (let i of ["addnote","marquee","pencil","line","arrow","rect","erase","hand"]) {
+for (let i of ["addnote","marquee","pencil","line","arrow","rect","erase","hand","zoom"]) {
   let b = toolButton(i, toolTips[i])
   b.onclick=function(){
     if (penTool==i)
