@@ -828,7 +828,7 @@ function clearSelection(){
   selection.elements=[];
   selection.objects=[];
 }
-function drawMarquee(x1,y1,x2,y2) {
+function drawMarquee(x1,y1,x2,y2, existing) {
   let x,y,w,h;
   if (x2<x1) {x=x2; w=x1-x2} else {x=x1; w=x2-x1}
   if (y2<y1) {y=y2; h=y1-y2} else {y=y1; h=y2-y1}
@@ -841,14 +841,18 @@ function drawMarquee(x1,y1,x2,y2) {
   selection.elements=[];
   selection.objects=[];
 
+  function withinMarquee(c) {
+    return c.x>lx
+        && c.y>ly
+        && c.x+c.width<lx+lw
+        && c.y+c.height<ly+lh;
+  }
+
   for (let i=0;i<level.children.length;i++) {
     let c=level.children[i];
     if (c.pinned) continue;
-    if ( c.x>lx
-      && c.y>ly
-      && c.x+c.width<lx+lw
-      && c.y+c.height<ly+lh) {
-        selection.objects.push(level.children[i])
+    if (withinMarquee(c) || existing.indexOf(c)!=-1) {
+        selection.objects.push(c)
         selection.elements.push(main.children[i])
         main.children[i].classList.add('selected')
     } else main.children[i].classList.remove('selected')
@@ -900,10 +904,11 @@ document.onmousedown=function(e){
 
   if (penTool=="marquee"){
     let sx = e.pageX, sy=e.pageY;
-    drawMarquee(sx,sy,sx,sy)
+    let existing = e.shiftKey?selection.objects:[];
+    drawMarquee(sx,sy,sx,sy, existing)
     marquee.style.display='block'
     document.onmousemove=function(e){
-      drawMarquee(sx,sy,e.pageX,e.pageY)
+      drawMarquee(sx,sy,e.pageX,e.pageY, existing)
     }
     document.onmouseup=function(e){
       marquee.style.display='none';
