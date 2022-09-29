@@ -1513,8 +1513,8 @@ var arrowSize = document.getElementById('arrowsize').value/50 || 0.12;
 
 var cursors={
   'hand':'grab',
-  'pencil': 'url(pencil.png) 2 21, crosshair',
-  'erase': 'url(erase.png) 5 20, crosshair',
+  'pencil': 'url(icons/pencil.png) 2 21, crosshair',
+  'erase': 'url(icons/erase.png) 5 20, crosshair',
   'line': 'crosshair',
   'arrow': 'crosshair',
   'rect': 'crosshair',
@@ -1533,7 +1533,7 @@ var toolButtons={}
 function toolButton(name, title){
   let b = document.createElement('button')
   b.className="tool"
-  b.style.backgroundImage=`url(${name}.png)`
+  b.style.backgroundImage=`url(icons/${name}.png)`
   b.title=title||"";
   toolButtons[name]=b
   toolbox.append(b)
