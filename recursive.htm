@@ -565,17 +565,10 @@ function createNote(n){
 
       if (selection.elements.length) {
         for (let i=0; i<selection.elements.length; i++) {
-          let e = selection.elements[i], o = selection.objects[i];
-          o.x += dx
-          o.y += dy
-          e.style.left = o.x +'px'
-          e.style.top  = o.y +'px'
+          moveNote(selection.objects[i], selection.elements[i],dx,dy)
         }
       } else {
-        n.x += dx
-        n.y += dy
-        d.style.left = n.x +'px'
-        d.style.top  = n.y +'px'
+        moveNote(n,d,dx,dy)
       }
       let [m, ma] = mostOverlapping(n);
       for (let i of main.children){ i.classList.remove('hl')}
@@ -591,16 +584,21 @@ function createNote(n){
       
       let [m, ma] = mostOverlapping(n);
       if (ma>0 && !suppressJump) {
-        if (confirm('Move "'+shortTitle(n.title)+'" into "'+shortTitle(level.children[m].title)+'"?')) {
+        let p = selection.elements.length>1?"group":'"'+shortTitle(n.title)+'"';
+        if (confirm('Move '+p+' into "'+shortTitle(level.children[m].title)+'"?')) {
           if (level.children[m].children.length==0) level.children[m].open=true
-          level.children[m].children.push(n)
-          level.children.splice(level.children.indexOf(n), 1)
-          n.x = startx
-          n.y = starty
+
+          let dx = n.x-startx, dy = n.y-starty;
+
+          if (selection.elements.length) {
+            for (let i=0; i<selection.elements.length; i++) {
+              sendNoteInto(selection.objects[i], selection.elements[i], m,dx,dy)
+            }
+          } else {
+            sendNoteInto(n,d,m,dx,dy)
+          }
           reGenLookups()
 
-          d.style.transition="0.3s linear"
-          d.style.transform="scale(0)"
           setTimeout(()=>{populate(level); rePopulateOutline()},300)
         } else {
           suppressJump = true;
@@ -644,6 +642,20 @@ function createNote(n){
   }
 
   main.appendChild(d)
+}
+function moveNote(n,d,dx,dy) {
+  n.x += dx
+  n.y += dy
+  d.style.left = n.x +'px'
+  d.style.top  = n.y +'px'
+}
+function sendNoteInto(n,d,m,dx,dy) {
+  level.children[m].children.push(n)
+  level.children.splice(level.children.indexOf(n), 1)
+  n.x -= dx
+  n.y -= dy
+  d.style.transition="0.3s linear"
+  d.style.transform="scale(0)"
 }
 function zoomReset(){
   level.view={x:0,y:0,s:1}
