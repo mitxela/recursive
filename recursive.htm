@@ -308,6 +308,7 @@ var searchInput=document.getElementById('searchInput')
 var help=document.getElementById('help')
 var toolbox=document.getElementById('toolbox')
 var marquee=document.getElementById('marquee')
+var selection={elements:[],objects:[]};
 var trailobj=[]
 var menuRef=null;
 var menuRefObj=null;
@@ -544,9 +545,10 @@ function createNote(n){
     var sw = d.style.width, sh = d.style.height;
     d.style.zIndex = ++zTopIndex
 
+    if (selection.elements.indexOf(d)==-1) clearSelection();
+
     var startx=n.x, starty=n.y;
-    var [mx, my] = mousePos(e);
-    var offx = mx - n.x, offy = my - n.y;
+    var [sx, sy] = mousePos(e);
     let suppressJump = mostOverlapping(n)[1]>0;
 
     document.onmousemove=function(e){
@@ -557,11 +559,23 @@ function createNote(n){
       }
 
       let [mx, my] = mousePos(e);
-      n.x = mx - offx
-      n.y = my - offy
-      d.style.left = n.x +'px'
-      d.style.top  = n.y +'px'
-      
+      let dx = mx - sx, dy = my - sy;
+      sx=mx; sy=my;
+
+      if (selection.elements.length) {
+        for (let i=0; i<selection.elements.length; i++) {
+          let e = selection.elements[i], o = selection.objects[i];
+          o.x += dx
+          o.y += dy
+          e.style.left = o.x +'px'
+          e.style.top  = o.y +'px'
+        }
+      } else {
+        n.x += dx
+        n.y += dy
+        d.style.left = n.x +'px'
+        d.style.top  = n.y +'px'
+      }
       let [m, ma] = mostOverlapping(n);
       for (let i of main.children){ i.classList.remove('hl')}
       if (ma>0) {
@@ -794,8 +808,15 @@ function setCursor(c){
   main.style.cursor=c;
   mainSvg.style.cursor=c;
 }
+function clearSelection(){
+  for (let e of selection.elements) {
+    e.classList.remove('selected')
+  }
+  selection.elements=[];
+  selection.objects=[];
+}
 function drawMarquee(x1,y1,x2,y2) {
-  let x,y,w,h, partial=true;
+  let x,y,w,h;
   if (x2<x1) {x=x2; w=x1-x2} else {x=x1; w=x2-x1}
   if (y2<y1) {y=y2; h=y1-y2} else {y=y1; h=y2-y1}
 
@@ -804,12 +825,18 @@ function drawMarquee(x1,y1,x2,y2) {
       lw = w/level.view.s,
       lh = h/level.view.s;
 
+  selection.elements=[];
+  selection.objects=[];
+
   for (let i=0;i<level.children.length;i++) {
     let c=level.children[i];
+    if (c.pinned) continue;
     if ( c.x>lx
       && c.y>ly
       && c.x+c.width<lx+lw
       && c.y+c.height<ly+lh) {
+        selection.objects.push(level.children[i])
+        selection.elements.push(main.children[i])
         main.children[i].classList.add('selected')
     } else main.children[i].classList.remove('selected')
   }
