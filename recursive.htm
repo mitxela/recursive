@@ -162,15 +162,15 @@ details>p{display:inline-block;}
   background:rgba(0,0,0,0.7);
 }
 #help div{
-  position:fixed;
-  left:50%;
-  margin-left:-32vw;
-  top:10vh;
-  width:56vw;
+  margin:10vh auto;
+  width:810px;
   height:76vh;
   background:white;
   padding:2vw;
   overflow:auto;
+}
+@media(max-width:900px) {
+  #help div{width:90vw;}
 }
 #help table{margin:auto}
 #help tr:hover{background:#eee}
@@ -310,7 +310,7 @@ function setOffset(ol){
   sidebarLeft.style.width=ol
   document.getElementById('toolbar').style.left=ol
 }
-var oldOffsetLeft=Math.min(window.innerWidth*0.2,300);
+var oldOffsetLeft=200;
 function toggleSidebarLeft(){
   main.style.transition='0.2s'
   mainSvg.style.transition='0.2s'
@@ -961,6 +961,7 @@ window.onhashchange = function(){
     }
   }, true);
   document.addEventListener("touchmove", function(e){
+    if (sidebarLeft.contains(e.target) || help.contains(e.target)) return;
     e.preventDefault()
     e.stopPropagation()
   
