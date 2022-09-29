@@ -947,10 +947,10 @@ window.onhashchange = function(){
   }
 }
 
-;(function(){ // touch support
-  var tsx={}, tsy={}, td=0, tcx=0,tcy=0;
+{ // touch support
+  let tsx={}, tsy={}, td=0, tcx=0,tcy=0;
   document.addEventListener("touchstart", function(e){
-    var t=e.changedTouches[0], id=t.identifier;
+    let t=e.changedTouches[0], id=t.identifier;
     tsx[id]=t.clientX;
     tsy[id]=t.clientY;
     
@@ -965,7 +965,7 @@ window.onhashchange = function(){
     e.stopPropagation()
   
     if (e.touches.length==1){
-      var t=e.touches[0];
+      let t=e.touches[0];
   
       level.view.x +=(t.clientX-tsx[t.identifier])
       level.view.y +=(t.clientY-tsy[t.identifier])
@@ -988,19 +988,19 @@ window.onhashchange = function(){
       tcy = ntcy
     }
   
-    for (var i=0;i< e.changedTouches.length;i++) {
+    for (let i=0;i< e.changedTouches.length;i++) {
       tsx[e.changedTouches[i].identifier]=e.changedTouches[i].clientX;
       tsy[e.changedTouches[i].identifier]=e.changedTouches[i].clientY;
     }
     setView()
-  }, true);
+  }, {capture:true, passive:false});
   document.addEventListener("touchend", function(e){
     if (e.touches.length==0) saveWithoutHistory()
   }, true);
   function touchdistance(t1,t2){
     return Math.sqrt((t1.clientX-t2.clientX)*(t1.clientX-t2.clientX) + (t1.clientY-t2.clientY)*(t1.clientY-t2.clientY))
   }
-})();
+}
 
 function escapeEntities(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
