@@ -369,8 +369,11 @@ function deleteNote(){
   rePopulateOutline()
 }
 function changeColor(){
-  menuRef.color = hex2hsl(document.getElementById('notecolor').value)
-  save()
+  let c = hex2hsl(document.getElementById('notecolor').value);
+  menuAction(function(n,el){
+    n.color = c
+    setNoteColor(n,el)
+  })
   populate(level)
 }
 function moveUpNote(){
@@ -442,16 +445,19 @@ function eraseAllLines(){
   populate(level)
 }
 function killEvent(e){e.preventDefault();e.stopPropagation()}
-function createNote(n){
-  var d = document.createElement('div');
-  d.className='note'
-  
+function setNoteColor(n,d) {
   if (n.color.l==0){
     d.classList.add("invis")
   } else {
     d.style.backgroundColor='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
     d.style.borderColor='hsl('+n.color.h+','+n.color.s+'%,'+(n.color.l*0.8)+'%)';
   }
+}
+function createNote(n){
+  var d = document.createElement('div');
+  d.className='note'
+  
+  setNoteColor(n,d)
   if (n.pinned) d.classList.add("pinned")
 
   d.style.width=n.width+'px'
