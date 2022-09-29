@@ -389,13 +389,14 @@ function moveUpNote(){
     tree = {title:"Root", children:[tree]}
     trailobj.unshift(tree)
   }
-  trailobj[trailobj.length-2].children.push(menuRef);
-  for (let i in level.children)
-    if (level.children[i]===menuRef) level.children.splice(i,1);
+  let parent=trailobj[trailobj.length-2];
+  menuAction(function(n,el){
+    parent.children.push(n);
+    level.children.splice(level.children.indexOf(n),1)
+  })
 
   reGenLookups()
-  save()
-  showNote(trailobj[trailobj.length-2].id)
+  showNote(parent.id)
   rePopulateOutline()
 }
 function editNote(){
