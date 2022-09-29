@@ -1227,6 +1227,7 @@ document.onkeydown=function(e){
     case 'h': setPenTool('hand'); return;
     case 's': toggleSidebarLeft(); return;
     case '/':
+      if (document.activeElement==searchInput) return;
       killEvent(e);
       if (!offsetLeft) toggleSidebarLeft();
       searchInput.focus();
