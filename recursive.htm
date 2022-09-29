@@ -829,8 +829,8 @@ function clearSelection(){
   selection.objects=[];
 }
 function drawMarquee(x1,y1,x2,y2, existing) {
-  let x,y,w,h;
-  if (x2<x1) {x=x2; w=x1-x2} else {x=x1; w=x2-x1}
+  let x,y,w,h, partial=true;
+  if (x2<x1) {x=x2; w=x1-x2} else {x=x1; w=x2-x1; partial=false}
   if (y2<y1) {y=y2; h=y1-y2} else {y=y1; h=y2-y1}
 
   let lx = (x-level.view.x-offsetLeft)/level.view.s,
@@ -841,11 +841,20 @@ function drawMarquee(x1,y1,x2,y2, existing) {
   selection.elements=[];
   selection.objects=[];
 
-  function withinMarquee(c) {
-    return c.x>lx
-        && c.y>ly
-        && c.x+c.width<lx+lw
-        && c.y+c.height<ly+lh;
+  if (partial) {
+    function withinMarquee(c) {
+      return c.x<lx+lw
+          && c.x+c.width>lx
+          && c.y<ly+lh
+          && c.y+c.height>ly;
+    }
+  } else {
+    function withinMarquee(c) {
+      return c.x>lx
+          && c.y>ly
+          && c.x+c.width<lx+lw
+          && c.y+c.height<ly+lh;
+    }
   }
 
   for (let i=0;i<level.children.length;i++) {
