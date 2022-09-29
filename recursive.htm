@@ -197,11 +197,11 @@ details>p{display:inline-block;}
 <div id=menu>
   <p>Change color <input id=notecolor type=color onchange='changeColor()'><br>(use black for transparent)
   <p><a href='#' onclick='editNote(); return false'>Edit</a>
-  <p><a href='#' onclick='menuToggleStrike(); return false'>Toggle strikethrough</a>
-  <p><a href='#' onclick='menuTogglePinned(); return false'>Toggle pinned</a>
+  <p><a href='#' onclick='menuAction(toggleStrike); return false'>Toggle strikethrough</a>
+  <p><a href='#' onclick='menuAction(togglePinned); return false'>Toggle pinned</a>
   <p><a href='#' onclick='jumpInto(); return false' id=jumpInto>Jump Into</a>
   <p><a href='#' onclick='moveUpNote(); return false'>Move up a level</a>
-  <p><a href='#' onclick='deleteNote(menuRef); return false'>Delete</a>
+  <p><a href='#' onclick='deleteNote(); return false'>Delete</a>
 </div>
 
 <div id=trail></div>
@@ -312,7 +312,7 @@ var marquee=document.getElementById('marquee')
 var selection={elements:[],objects:[]};
 var trailobj=[]
 var menuRef=null;
-var menuRefObj=null;
+var menuRefElement=null;
 var zTopIndex = 0;
 var penSmooth = 0.15;
 var offsetLeft = 0;
@@ -359,12 +359,11 @@ function toggleSidebarLeft(){
     document.getElementById('toolbar').style.transition=''
   },200)
 }
-function deleteNote(n){
-  menu.style.display='none'
+function deleteNote(){
+  menuAction(function(n, el){
+    noteParentById[n.id].children.splice( noteParentById[n.id].children.indexOf(n), 1 )
+  })
 
-  noteParentById[n.id].children.splice( noteParentById[n.id].children.indexOf(n), 1 )
-
-  save()
   reGenLookups()
   populate(level)
   rePopulateOutline()
@@ -398,53 +397,43 @@ function moveUpNote(){
 }
 function editNote(){
   menu.style.display='none';
-  menuRefObj.ondblclick()
+  menuRefElement.ondblclick()
 }
 function jumpInto(){
   menu.style.display='none';
-  menuRefObj.oncontextmenu()
+  menuRefElement.oncontextmenu()
 }
-function menuToggleStrike(){
+function menuAction(fn) {
   menu.style.display='none';
   if (selection.elements.length) {
     for (let i=0; i<selection.elements.length; i++) {
-      toggleStrike(selection.objects[i], selection.elements[i])
+      fn(selection.objects[i], selection.elements[i])
     }
   } else {
-    toggleStrike(menuRef, menuRefObj)
+    fn(menuRef, menuRefElement)
   }
   save()
 }
-function toggleStrike(el, obj){
-  let [a, h, b] = el.title.match(/^(#+)?([\s\S]+)$/)
+function toggleStrike(n, el){
+  let [a, h, b] = n.title.match(/^(#+)?([\s\S]+)$/)
   if (!h) h="";
   let m = b.match(/^~([\s\S]+)~$/)
   if (m){
-    el.title=h+m[1];
+    n.title=h+m[1];
   } else {
-    el.title=h+'~'+b+'~'
+    n.title=h+'~'+b+'~'
   }
-  updateOutlineLink(el)
-  obj.children[1].innerHTML = markdown(el.title)
+  updateOutlineLink(n)
+  el.children[1].innerHTML = markdown(n.title)
 }
-function menuTogglePinned(){
-  menu.style.display='none';
-  if (selection.elements.length) {
-    for (let i=0; i<selection.elements.length; i++) {
-      togglePinned(selection.objects[i], selection.elements[i])
-    }
+function togglePinned(n, el){
+  if (n.pinned) {
+    n.pinned = 0
+    el.classList.remove("pinned")
   } else {
-    togglePinned(menuRef, menuRefObj)
-  }
-  save()
-}
-function togglePinned(el, obj){
-  if (el.pinned) {
-    el.pinned = 0
-    obj.classList.remove("pinned")
-  } else {
-    el.pinned = 1
-    obj.classList.add("pinned")
+    n.pinned = 1
+    el.classList.add("pinned")
+    clearSelection();
   }
 }
 function eraseAllLines(){
@@ -493,7 +482,7 @@ function createNote(n){
     document.getElementById('notecolor').value=hsl2rgb(n.color.h,n.color.s,n.color.l)
     document.getElementById('jumpInto').href='#'+n.id;
     menuRef=n;
-    menuRefObj=d;
+    menuRefElement=d;
   }
   a.ondblclick=killEvent;
   d.appendChild(a)
@@ -603,17 +592,18 @@ function createNote(n){
       let [m, ma] = mostOverlapping(n);
       if (ma>0 && !suppressJump) {
         let p = selection.elements.length>1?"group":'"'+shortTitle(n.title)+'"';
-        if (confirm('Move '+p+' into "'+shortTitle(level.children[m].title)+'"?')) {
-          if (level.children[m].children.length==0) level.children[m].open=true
+        let target = level.children[m];
 
+        if (confirm('Move '+p+' into "'+shortTitle(target.title)+'"?')) {
+          if (target.children.length==0) target.open=true
           let dx = n.x-startx, dy = n.y-starty;
 
           if (selection.elements.length) {
             for (let i=0; i<selection.elements.length; i++) {
-              sendNoteInto(selection.objects[i], selection.elements[i], m,dx,dy)
+              sendNoteInto(selection.objects[i], selection.elements[i], target, dx,dy)
             }
           } else {
-            sendNoteInto(n,d,m,dx,dy)
+            sendNoteInto(n,d,target,dx,dy)
           }
           reGenLookups()
 
@@ -667,8 +657,8 @@ function moveNote(n,d,dx,dy) {
   d.style.left = n.x +'px'
   d.style.top  = n.y +'px'
 }
-function sendNoteInto(n,d,m,dx,dy) {
-  level.children[m].children.push(n)
+function sendNoteInto(n,d,target,dx,dy) {
+  target.children.push(n)
   level.children.splice(level.children.indexOf(n), 1)
   n.x -= dx
   n.y -= dy
