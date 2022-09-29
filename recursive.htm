@@ -241,6 +241,7 @@ details>p{display:inline-block;}
 <tr><td>H</td><td>Hand tool</td></tr>
 <tr><td>S</td><td>Toggle sidebar</td></tr>
 <tr><td>/</td><td>Focus Search</td></tr>
+<tr><td>Delete</td><td>Delete marquee selection</td></tr>
 <tr><td>Escape</td><td>Unequip tool</td></tr>
 <tr><td>Ctrl + Z</td><td>undo</td></tr>
 </table>
@@ -1323,6 +1324,16 @@ document.onkeydown=function(e){
     case 'Escape':
       setPenTool('none');
       menu.style.display='none';
+      return;
+    case 'Delete':
+      if (!selection.objects.length) return;
+      for (let n of selection.objects) {
+        noteParentById[n.id].children.splice( noteParentById[n.id].children.indexOf(n), 1 )
+      }
+      save()
+      reGenLookups()
+      populate(level)
+      rePopulateOutline()
       return;
   }
 }
