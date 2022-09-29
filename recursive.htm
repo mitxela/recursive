@@ -566,6 +566,8 @@ function createNote(n){
     var [sx, sy] = mousePos(e);
     let suppressJump = mostOverlapping(n)[1]>0;
 
+    d.style.cursor='move'
+
     document.onmousemove=function(e){
       if (d.style.width!=sw || d.style.height!=sh) {
         n.width = parseFloat(d.style.width)
@@ -593,6 +595,7 @@ function createNote(n){
     document.onmouseup=function(){
       document.onmouseup=null;
       document.onmousemove=null;
+      d.style.cursor='';
 
       if (d.style.width!=sw || d.style.height!=sh) {save(); return}
       
