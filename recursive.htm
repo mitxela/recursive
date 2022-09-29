@@ -140,8 +140,9 @@ details>p{display:inline-block;}
   bottom:0;left:0;
   background:rgba(0,0,0,0.2);
 }
-#toolbox{white-space:nowrap;}
 #toolbar input, #toolbar button{vertical-align: middle;}
+#toolbar label, #toolbar a{white-space:nowrap}
+#toolbox {display:inline}
 .tool {
   width:28px;
   height:28px;
@@ -155,18 +156,6 @@ details>p{display:inline-block;}
   border: 2px inset;
   background-color: #bbb;
   background-position:1px 1px;
-}
-#drawingControls{
-  position:absolute;
-  background:rgba(0,0,0,0.2);
-  bottom:-100px;
-  opacity:0;
-  transition:0.2s;
-  z-index:-1;
-}
-#toolbox:hover+#drawingControls, #drawingControls:hover{
-  bottom:32px;
-  opacity:1;
 }
 #help {
   display:none;
@@ -252,19 +241,19 @@ details>p{display:inline-block;}
 
 <div id=toolbar>
 <div id=toolbox></div>
-<div id=drawingControls>
- color:<input id=pencolor type=color oninput='penColor=this.value'>
- thickness:<input id=penwidth type=range oninput='penWidth=this.value+"px"' min=1 max=10 value=3>
- arrow style:<select id=arrowstyle oninput='arrowStyle=this.value; setPenTool("arrow")'>
+
+<label>color:<input id=pencolor type=color oninput='penColor=this.value'></label>
+<label>thickness:<input id=penwidth type=range oninput='penWidth=this.value+"px"' min=1 max=10 value=3></label>
+<label>arrow style:<select id=arrowstyle oninput='arrowStyle=this.value; setPenTool("arrow")'>
 <option value='1'>⯈</option>
 <option value='2'>➤</option>
 <option value='3' selected>ᐅ</option>
 <option value='4'>⮚</option>
 <option value='5'>ᐳ</option>
-</select>
- arrow size:<input id=arrowsize type=range oninput='arrowSize=this.value/50; setPenTool("arrow")' min=3 max=10 value=6>
+</select></label>
+<label>arrow size:<input id=arrowsize type=range oninput='arrowSize=this.value/50; setPenTool("arrow")' min=3 max=10 value=6></label>
  <a href='#' onclick='eraseAllLines(); return false'>erase all lines</a>
-</div>
+
 </div>
 
 <script>
