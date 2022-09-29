@@ -872,6 +872,19 @@ document.onmousedown=function(e){
         line.points = drawArrow( sx, sy, mx, my )
         updateSVGline(path,line)
       }
+    } else if (penTool=="rect") {
+      line.smooth=0
+      document.onmousemove=function(e){
+        let [mx, my] = mousePos(e)
+        line.points = [
+          [sx, sy],
+          [mx, sy],
+          [mx, my],
+          [sx, my],
+          [sx, sy]
+        ]
+        updateSVGline(path,line)
+      }
     }
   }
 }
@@ -1208,6 +1221,7 @@ document.onkeydown=function(e){
     case 'b': setPenTool('pencil'); return;
     case 'l': setPenTool('line'); return;
     case 'a': setPenTool('arrow'); return;
+    case 'r': setPenTool('rect'); return;
     case 'e': setPenTool('erase'); return;
     case 'h': setPenTool('hand'); return;
     case 's': toggleSidebarLeft(); return;
@@ -1503,6 +1517,7 @@ var cursors={
   'erase': 'url(erase.png) 5 20, crosshair',
   'line': 'crosshair',
   'arrow': 'crosshair',
+  'rect': 'crosshair',
   'addnote': 'copy'
 }
 var toolTips={
@@ -1510,6 +1525,7 @@ var toolTips={
   "pencil":"Pencil [B]",
   "line":"Line [L]",
   "arrow":"Arrow [A]",
+  "rect":"Rectangle [R]",
   "erase":"Erase [E]",
   "hand":"Hand [H]"
 }
@@ -1530,7 +1546,7 @@ function toolButtonSpacer(){
 toolButton("sidebar", "Toggle Sidebar").onclick=toggleSidebarLeft
 toolButtonSpacer()
 
-for (let i of ["addnote","pencil","line","arrow","erase","hand"]) {
+for (let i of ["addnote","pencil","line","arrow","rect","erase","hand"]) {
   let b = toolButton(i, toolTips[i])
   b.onclick=function(){
     if (penTool==i)
