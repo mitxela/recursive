@@ -1132,6 +1132,10 @@ window.onhashchange = function(){
     }
   }, true);
   document.addEventListener("touchmove", function(e){
+    if (e.target==sidebarLeftAdj && e.touches.length==1) {
+      setOffset(e.touches[0].clientX+4)
+      return;
+    }
     if (sidebarLeft.contains(e.target) || help.contains(e.target)) return;
     e.preventDefault()
     e.stopPropagation()
