@@ -483,7 +483,7 @@ function setNoteColor(n,d) {
     d.style.borderColor='hsl('+n.color.h+','+n.color.s+'%,'+(n.color.l*0.8)+'%)';
   }
 }
-function createNote(n){
+function createNote(n, editImmediately=false){
   var d = document.createElement('div');
   d.className='note'
   
@@ -549,6 +549,7 @@ function createNote(n){
     textEditing=true;
 
     e.focus()
+    if (n.title=="New note") e.select()
     e.onblur=saveText;
     e.onkeydown=function(e){
       e.stopPropagation()
@@ -689,6 +690,7 @@ function createNote(n){
   }
 
   main.appendChild(d)
+  if (editImmediately) d.ondblclick()
 }
 function moveNote(n,d,dx,dy) {
   n.x += dx
@@ -843,7 +845,7 @@ document.onclick=function(e){
     children: []
   }
   if (level.children.length==0) level.open=true;
-  createNote(newNote)
+  createNote(newNote, true)
   level.children.push(newNote)
   save()
   noteById[newNote.id]=newNote;
