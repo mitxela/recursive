@@ -1058,7 +1058,8 @@ document.onmousedown=function(e){
           [mx, sy],
           [mx, my],
           [sx, my],
-          [sx, sy]
+          [sx, sy], // go round again to enforce a sharp corner on chrome
+          [mx, sy]
         ]
         updateSVGline(path,line)
       }
