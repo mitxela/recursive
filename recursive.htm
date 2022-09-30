@@ -142,12 +142,19 @@ details>p{display:inline-block;}
 }
 #toolbar {
   position:absolute;
+  z-index:2;
   top:32px;left:0;
   width:32px;
   background:rgba(128,128,128,0.3);
 }
 #toolbar input, #toolbar button{vertical-align: middle;}
-#toolbar label, #toolbar a{white-space:nowrap}
+#toolbar label{
+  display:inline-block;
+  width:100px;
+  text-align:right;
+  margin-right:5px;
+  line-height:32px;
+}
 #toolbox {width:32px;}
 .tool {
   width:28px;
@@ -165,11 +172,12 @@ details>p{display:inline-block;}
 }
 #drawingControls{
   position:absolute;
+  z-index:-1;
   padding:12px;
   border-radius:0 10px 10px 0;
   background:rgba(212,212,212,0.8);
-  width:250px;
-  left:-250px;
+  width:280px;
+  left:-280px;
   top:115px;
   opacity:0;
   transition:0.2s;
@@ -218,16 +226,18 @@ details>p{display:inline-block;}
 <div id=toolbox></div>
 
 <div id=drawingControls>
-<label>color:<input id=pencolor type=color oninput='penColor=this.value'></label>
-<label>thickness:<input id=penwidth type=range oninput='penWidth=this.value+"px"' min=1 max=10 value=3></label>
-<label>arrow style:<select id=arrowstyle oninput='arrowStyle=this.value; setPenTool("arrow")'>
-<option value='1'>⯈</option>
-<option value='2'>➤</option>
-<option value='3' selected>ᐅ</option>
-<option value='4'>⮚</option>
-<option value='5'>ᐳ</option>
-</select></label>
-<label>arrow size:<input id=arrowsize type=range oninput='arrowSize=this.value/50; setPenTool("arrow")' min=3 max=10 value=6></label>
+<div><label>color:</label><input id=pencolor type=color oninput='penColor=this.value'></div>
+<div><label>thickness:</label><input id=penwidth type=range oninput='penWidth=this.value+"px"' min=1 max=10 value=3></div>
+<div><label>arrow style:</label>
+ <select id=arrowstyle oninput='arrowStyle=this.value; setPenTool("arrow")'>
+  <option value='1'>⯈</option>
+  <option value='2'>➤</option>
+  <option value='3' selected>ᐅ</option>
+  <option value='4'>⮚</option>
+  <option value='5'>ᐳ</option>
+ </select>
+</div>
+<div><label>arrow size:</label><input id=arrowsize type=range oninput='arrowSize=this.value/50; setPenTool("arrow")' min=3 max=10 value=6></div>
  <a href='#' onclick='eraseAllLines(); return false'>erase all lines</a>
 </div>
 
