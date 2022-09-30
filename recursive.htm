@@ -1123,6 +1123,19 @@ window.onhashchange = function(){
 
 { // touch support
   let tsx={}, tsy={}, td=0, tcx=0,tcy=0;
+  function fakeMouse(type, t){
+    if (penTool=="none" || penTool=="hand" || penTool=="zoom") return false;
+    t.target.dispatchEvent(new MouseEvent(type, {
+          bubbles:true,
+          button:0,
+          buttons:0,
+          clientX:t.clientX,
+          clientY:t.clientY,
+          pageX:t.pageX,
+          pageY:t.pageY,
+        }))
+    return true
+  }
   document.addEventListener("touchstart", function(e){
     let t=e.changedTouches[0], id=t.identifier;
     tsx[id]=t.clientX;
@@ -1132,6 +1145,9 @@ window.onhashchange = function(){
       td = touchdistance(e.touches[0],e.touches[1]);
       tcx = (e.touches[0].clientX+e.touches[1].clientX)/2;
       tcy = (e.touches[0].clientY+e.touches[1].clientY)/2;
+    } else {
+      if (pannableTarget(e.target))
+        fakeMouse("mousedown",e.touches[0]);
     }
   }, true);
   document.addEventListener("touchmove", function(e){
@@ -1142,7 +1158,9 @@ window.onhashchange = function(){
     if (!pannableTarget(e.target)) return;
     e.preventDefault()
     e.stopPropagation()
-  
+
+    if (fakeMouse("mousemove",e.touches[0])) return;
+
     if (e.touches.length==1){
       let t=e.touches[0];
   
@@ -1174,7 +1192,10 @@ window.onhashchange = function(){
     setView()
   }, {capture:true, passive:false});
   document.addEventListener("touchend", function(e){
-    if (e.touches.length==0) saveWithoutHistory()
+    if (e.touches.length==0) {
+      if (fakeMouse("mouseup",e.changedTouches[0])) return;
+      saveWithoutHistory()
+    }
   }, true);
   function touchdistance(t1,t2){
     return Math.sqrt((t1.clientX-t2.clientX)*(t1.clientX-t2.clientX) + (t1.clientY-t2.clientY)*(t1.clientY-t2.clientY))
