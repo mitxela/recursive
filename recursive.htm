@@ -830,6 +830,9 @@ function shortTitle(t, last, noescape){
 function background(t){
   return mainSvg.contains(t)
 }
+function pannableTarget(t){
+  return main.contains(t) || mainSvg.contains(t)
+}
 document.onclick=function(e){
   if (textEditing || penTool!="addnote" || !background(e.target))return;
   let [mx, my] = mousePos(e);
@@ -938,7 +941,7 @@ document.onmousedown=function(e){
   }
 
   if (penTool=="hand" || e.button==1) { // middle click
-    if (!main.contains(e.target) && !background(e.target)) return
+    if (!pannableTarget(e.target)) return
     if (e.button==1) killEvent(e);
     let sx = e.pageX, sy = e.pageY;
     document.onmousemove=function(e){
@@ -958,7 +961,7 @@ document.onmousedown=function(e){
     return;
   }
   if (penTool=="zoom"){
-    if (!main.contains(e.target) && !background(e.target)) return
+    if (!pannableTarget(e.target)) return
     let sx = e.pageX, sy = e.pageY, cx=sx, cy=sy;
     document.onmousemove=function(e){
       doZoom( (e.pageX-sx) + (e.pageY-sy), cx, cy)
@@ -1136,7 +1139,7 @@ window.onhashchange = function(){
       setOffset(e.touches[0].clientX+4)
       return;
     }
-    if (sidebarLeft.contains(e.target) || help.contains(e.target)) return;
+    if (!pannableTarget(e.target)) return;
     e.preventDefault()
     e.stopPropagation()
   
