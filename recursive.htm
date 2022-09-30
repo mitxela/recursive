@@ -148,7 +148,7 @@ details>p{display:inline-block;}
 }
 #toolbar input, #toolbar button{vertical-align: middle;}
 #toolbar label, #toolbar a{white-space:nowrap}
-#toolbox {display:inline}
+#toolbox {width:32px;}
 .tool {
   width:28px;
   height:28px;
@@ -163,6 +163,22 @@ details>p{display:inline-block;}
   background-color: #bbb;
   background-position:1px 1px;
 }
+#drawingControls{
+  position:absolute;
+  padding:12px;
+  border-radius:0 10px 10px 0;
+  background:rgba(212,212,212,0.8);
+  width:250px;
+  left:-250px;
+  top:115px;
+  opacity:0;
+  transition:0.2s;
+}
+#toolbox:hover+#drawingControls, #drawingControls:hover{
+  left:32px;
+  opacity:1;
+}
+
 #help {
   display:none;
   position:fixed;
@@ -201,6 +217,7 @@ details>p{display:inline-block;}
 <div id=toolbar>
 <div id=toolbox></div>
 
+<div id=drawingControls>
 <label>color:<input id=pencolor type=color oninput='penColor=this.value'></label>
 <label>thickness:<input id=penwidth type=range oninput='penWidth=this.value+"px"' min=1 max=10 value=3></label>
 <label>arrow style:<select id=arrowstyle oninput='arrowStyle=this.value; setPenTool("arrow")'>
@@ -212,6 +229,7 @@ details>p{display:inline-block;}
 </select></label>
 <label>arrow size:<input id=arrowsize type=range oninput='arrowSize=this.value/50; setPenTool("arrow")' min=3 max=10 value=6></label>
  <a href='#' onclick='eraseAllLines(); return false'>erase all lines</a>
+</div>
 
 </div>
 </div>
