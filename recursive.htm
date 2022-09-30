@@ -53,6 +53,10 @@ ul{margin:0}
   min-width:200px
 }
 #menu p{margin:7px}
+#canvas{
+  position:absolute;
+  top:0;left:0;
+}
 #main{
   transform-origin: 0% 0%;
   position:absolute;
@@ -114,11 +118,11 @@ details>p{display:inline-block;}
 #sidebarLeft{
   background:rgba(255,255,255,0.9);
   position:absolute;
-  left:0;
+  left:-200px;
   top:32px;
-  width:0;
+  width:200px;
   height:calc(100% - 32px);
-  display:none;
+  transition: left 0.2s;
 }
 #sidebarLeftAdj{
   cursor:ew-resize;
@@ -137,9 +141,10 @@ details>p{display:inline-block;}
   height:22px;
 }
 #toolbar {
-  position:fixed;
-  bottom:0;left:0;
-  background:rgba(0,0,0,0.2);
+  position:absolute;
+  top:32px;left:0;
+  width:32px;
+  background:rgba(128,128,128,0.3);
 }
 #toolbar input, #toolbar button{vertical-align: middle;}
 #toolbar label, #toolbar a{white-space:nowrap}
@@ -147,7 +152,7 @@ details>p{display:inline-block;}
 .tool {
   width:28px;
   height:28px;
-  background-color: #ccc;
+  background-color: #ddd;
   background-repeat: no-repeat;
   background-position:0 0;
   border: 2px outset;
@@ -189,8 +194,27 @@ details>p{display:inline-block;}
   cursor:crosshair;
 }
 </style>
+<div id=canvas>
 <svg><g></g></svg>
 <div id=main></div>
+
+<div id=toolbar>
+<div id=toolbox></div>
+
+<label>color:<input id=pencolor type=color oninput='penColor=this.value'></label>
+<label>thickness:<input id=penwidth type=range oninput='penWidth=this.value+"px"' min=1 max=10 value=3></label>
+<label>arrow style:<select id=arrowstyle oninput='arrowStyle=this.value; setPenTool("arrow")'>
+<option value='1'>⯈</option>
+<option value='2'>➤</option>
+<option value='3' selected>ᐅ</option>
+<option value='4'>⮚</option>
+<option value='5'>ᐳ</option>
+</select></label>
+<label>arrow size:<input id=arrowsize type=range oninput='arrowSize=this.value/50; setPenTool("arrow")' min=3 max=10 value=6></label>
+ <a href='#' onclick='eraseAllLines(); return false'>erase all lines</a>
+
+</div>
+</div>
 
 <div id=marquee></div>
 
@@ -251,22 +275,7 @@ details>p{display:inline-block;}
 </div>
 
 
-<div id=toolbar>
-<div id=toolbox></div>
 
-<label>color:<input id=pencolor type=color oninput='penColor=this.value'></label>
-<label>thickness:<input id=penwidth type=range oninput='penWidth=this.value+"px"' min=1 max=10 value=3></label>
-<label>arrow style:<select id=arrowstyle oninput='arrowStyle=this.value; setPenTool("arrow")'>
-<option value='1'>⯈</option>
-<option value='2'>➤</option>
-<option value='3' selected>ᐅ</option>
-<option value='4'>⮚</option>
-<option value='5'>ᐳ</option>
-</select></label>
-<label>arrow size:<input id=arrowsize type=range oninput='arrowSize=this.value/50; setPenTool("arrow")' min=3 max=10 value=6></label>
- <a href='#' onclick='eraseAllLines(); return false'>erase all lines</a>
-
-</div>
 
 <script>
 testtree = {title:"Root", children:[
@@ -300,6 +309,7 @@ if (!window.tree){
 }
 
 var level;
+var canvas=document.getElementById('canvas')
 var menu=document.getElementById('menu')
 var main=document.getElementById('main')
 var trail=document.getElementById('trail')
@@ -325,39 +335,30 @@ function openHelp(){
 function closeHelp(){
   help.style.display='none'
 }
+var sidebarLeftSize=200;
 function setOffset(ol){
-  offsetLeft=ol;
+  sidebarLeftSize=offsetLeft=ol;
   ol+='px';
-  main.style.left=ol;
-  mainSvg.style.left=ol
+  canvas.style.left=ol;
   sidebarLeft.style.width=ol
-  document.getElementById('toolbar').style.left=ol
 }
-var oldOffsetLeft=200;
 function toggleSidebarLeft(){
-  main.style.transition='0.2s'
-  mainSvg.style.transition='0.2s'
-  sidebarLeft.style.transition='0.2s'
-  document.getElementById('toolbar').style.transition='0.2s'
+  canvas.style.transition='0.2s'
 
   if (offsetLeft) {
-    setTimeout(function(){
-      oldOffsetLeft=offsetLeft;
-      setOffset(0)
-    },1)
+    sidebarLeft.style.left=-offsetLeft + "px"
+    canvas.style.left="0px"
+    offsetLeft = 0;
   } else {
-    sidebarLeft.style.display='block'
-    setTimeout(function(){
-      setOffset(oldOffsetLeft);
-    },1)
+    offsetLeft=sidebarLeftSize
+    sidebarLeft.style.visibility="visible"
+    sidebarLeft.style.left="0px"
+    canvas.style.left=offsetLeft+'px'
   }
 
   setTimeout(function(){
-    sidebarLeft.style.display= offsetLeft?'block':'none'
-    main.style.transition=''
-    mainSvg.style.transition=''
-    sidebarLeft.style.transition=''
-    document.getElementById('toolbar').style.transition=''
+    sidebarLeft.style.visibility=offsetLeft?"visible":"hidden"
+    canvas.style.transition=''
   },200)
 }
 function deleteNote(){
