@@ -441,6 +441,7 @@ function menuAction(fn) {
     for (let i=0; i<selection.elements.length; i++) {
       fn(selection.objects[i], selection.elements[i])
     }
+    if (fn==togglePinned) clearSelection()
   } else {
     fn(menuRef, menuRefElement)
   }
@@ -465,7 +466,6 @@ function togglePinned(n, el){
   } else {
     n.pinned = 1
     el.classList.add("pinned")
-    clearSelection();
   }
 }
 function eraseAllLines(){
@@ -835,6 +835,7 @@ function pannableTarget(t){
 }
 document.onclick=function(e){
   if (textEditing || penTool!="addnote" || !background(e.target))return;
+  clearSelection()
   let [mx, my] = mousePos(e);
   var newNote = {
     id: newId(),
