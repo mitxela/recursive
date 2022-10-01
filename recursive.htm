@@ -526,8 +526,8 @@ function createNote(n, editImmediately=false){
   t.innerHTML=markdown(n.title)
   d.appendChild(t)
 
-  d.ondblclick=function(e){
-    if (e) e.stopPropagation()
+  d.ondblclick=function(ev){
+    if (ev && ev.target.tagName=='TEXTAREA') return;
     var e = document.createElement('textarea')
     function saveText(){
       n.title = e.value;
