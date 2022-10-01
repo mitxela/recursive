@@ -297,7 +297,8 @@ details>p{display:inline-block;}
 <tr><td>/</td><td>Focus Search</td></tr>
 <tr><td>Delete</td><td>Delete marquee selection</td></tr>
 <tr><td>Escape</td><td>Unequip tool</td></tr>
-<tr><td>Ctrl + Z</td><td>undo</td></tr>
+<tr><td>Ctrl + Z</td><td>Undo</td></tr>
+<tr><td>Ctrl + A</td><td>Select All</td></tr>
 </table>
 <p><a href=# onclick='closeHelp(); return false'>Close</a>
 </div>
@@ -874,6 +875,17 @@ function setCursor(c){
   main.style.cursor=c;
   mainSvg.style.cursor=c;
 }
+function selectAll(){
+  selection.elements=[];
+  selection.objects=[];
+  for (let i=0;i<level.children.length;i++) {
+    let c=level.children[i];
+    if (c.pinned) continue;
+      selection.objects.push(c)
+      selection.elements.push(main.children[i])
+      main.children[i].classList.add('selected')
+  }
+}
 function clearSelection(){
   for (let e of selection.elements) {
     e.classList.remove('selected')
@@ -1414,7 +1426,8 @@ function doZoom(delta, cx, cy){
 }
 sidebarLeft.onkeydown=function(e){if (e.key!='/') e.stopPropagation()}
 document.onkeydown=function(e){
-  if (e.ctrlKey && e.keyCode==90) {undo(); return}
+  if (e.ctrlKey && e.key=='z') {undo(); return}
+  if (e.ctrlKey && e.key=='a') {selectAll(); return}
 
   switch(e.key) {
     case 'ArrowLeft': pan(100,0); return;
@@ -1443,6 +1456,7 @@ document.onkeydown=function(e){
       return;
     case 'Escape':
       setPenTool('none');
+      clearSelection();
       menu.style.display='none';
       return;
     case 'Delete':
