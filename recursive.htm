@@ -1125,7 +1125,8 @@ window.onhashchange = function(){
   let tsx={}, tsy={}, td=0, tcx=0,tcy=0;
   function fakeMouse(type, t){
     if (penTool=="none" || penTool=="hand" || penTool=="zoom") return false;
-    t.target.dispatchEvent(new MouseEvent(type, {
+    (penTool=="erase"?document.elementFromPoint(t.pageX,t.pageY):t.target)
+      .dispatchEvent(new MouseEvent(type, {
           bubbles:true,
           button:0,
           buttons:0,
