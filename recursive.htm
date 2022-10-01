@@ -836,7 +836,9 @@ function pannableTarget(t){
   return main.contains(t) || mainSvg.contains(t)
 }
 document.onclick=function(e){
-  if (textEditing || penTool!="addnote" || !background(e.target))return;
+  if (textEditing || !background(e.target))return;
+  if (penTool=="none") clearSelection()
+  if (penTool!="addnote") return;
   clearSelection()
   let [mx, my] = mousePos(e);
   var newNote = {
