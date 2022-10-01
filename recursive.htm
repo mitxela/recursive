@@ -1001,7 +1001,6 @@ document.onmousedown=function(e){
   if (penTool=="erase" || e.button==2) {
 
     document.onmousemove=function(e){
-      document.oncontextmenu=killEvent
       if (e.target.tagName!="path") return;
       let i;
       for (i in mainSvgG.children)
@@ -1015,7 +1014,6 @@ document.onmousedown=function(e){
       popCursor()
       document.onmouseup=null;
       document.onmousemove=null;
-      setTimeout(function(){document.oncontextmenu=null;},10)
     }
     pushCursor(cursors['erase'])
 
@@ -1469,6 +1467,9 @@ function setPenTool(newTool){
     if (cursors[newTool]) pushCursor(cursors[newTool])
   }
   penTool = newTool
+
+  if (rightClickAction[penTool]) document.oncontextmenu=killEvent;
+  else document.oncontextmenu=null;
 }
 function downloadJson(){
   let blob = new Blob([JSON.stringify(tree)], {type: "application/json"})
@@ -1754,6 +1755,12 @@ var toolTips={
   "erase":"Erase [E]",
   "hand":"Hand [H]",
   "zoom":"Zoom [Z]"
+}
+var rightClickAction={
+  "pencil":true,
+  "line":true,
+  "arrow":true,
+  "rect":true
 }
 var toolButtons={}
 function toolButton(name, title){
