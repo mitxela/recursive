@@ -1694,7 +1694,7 @@ function searchCheck(n,r){
   let el = outlineLinksById[n.id].parentNode;
   let match = r.test(n.title);
   if (match) {
-    if (n.children.length) searchResults.push(n.id);
+    if (n.children.length || n==tree) searchResults.push(n.id);
     else searchResults.push(noteParentById[n.id].id);
   }
 
