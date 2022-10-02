@@ -328,10 +328,11 @@ testtree = {title:"Root", children:[
     children: [],
 
     // optional properties:
-    id:3,
+    id:1,
     open:false,
     view:{x:0,y:0,s:1},
-    lines:[]
+    lines:[],
+    pinned: 0,
   }
 ]}
 
@@ -404,6 +405,7 @@ function toggleSidebarLeft(){
 }
 function deleteNote(){
   menuAction(function(n, el){
+    delete noteElementsById[n.id];
     noteParentById[n.id].children.splice( noteParentById[n.id].children.indexOf(n), 1 )
   })
 
@@ -412,11 +414,21 @@ function deleteNote(){
   rePopulateOutline()
 }
 function changeColor(){
+  menu.style.display='none';
+
   let c = hex2hsl(document.getElementById('notecolor').value);
-  menuAction(function(n,el){
-    n.color = c
-    setNoteColor(n,el)
-  })
+
+  if (selection.elements.length) {
+    let d=[]
+    for (let i=0; i<selection.elements.length; i++) {
+      d.push(deltaAction({action:"setColor",id:selection.objects[i].id,color:c}))
+    }
+    deltaPushRaw(d)
+    //if (fn==togglePinned) clearSelection()
+  } else {
+    deltaPush({action:"setColor",id:menuRef.id,color:c})
+  }
+
 }
 function moveUpNote(){
   menu.style.display='none';
@@ -606,20 +618,19 @@ function createNote(n, editImmediately=false){
     var sw = d.style.width, sh = d.style.height;
     d.style.zIndex = ++zTopIndex
 
-    if (selection.elements.indexOf(d)==-1) clearSelection();
+    var targets=selection;
+    if (selection.elements.indexOf(d)==-1) {
+      clearSelection();
+      targets={elements:[d],objects:[n]}
+    }
 
     var startx=n.x, starty=n.y;
     var [sx, sy] = mousePos(e);
     let suppressJump = mostOverlapping(n)[1]>0;
 
-    let undoAction;
-    if (selection.objects.length) {
-      undoAction=[]
-      for (let n of selection.objects) {
-        undoAction.push({action:"setLayout", id:n.id, x:n.x,y:n.y,width:n.width,height:n.height})
-      }
-    } else {
-      undoAction ={action:"setLayout", id:n.id, x:n.x,y:n.y,width:n.width,height:n.height};
+    let undoAction =[];
+    for (let n of targets.objects) {
+      undoAction.push({action:"setLayout", id:n.id, x:n.x,y:n.y,width:n.width,height:n.height})
     }
 
     d.style.cursor='move'
@@ -635,12 +646,8 @@ function createNote(n, editImmediately=false){
       let dx = mx - sx, dy = my - sy;
       sx=mx; sy=my;
 
-      if (selection.elements.length) {
-        for (let i=0; i<selection.elements.length; i++) {
-          moveNote(selection.objects[i], selection.elements[i],dx,dy)
-        }
-      } else {
-        moveNote(n,d,dx,dy)
+      for (let i=0; i<targets.elements.length; i++) {
+        moveNote(targets.objects[i], targets.elements[i],dx,dy)
       }
       let [m, ma] = mostOverlapping(n);
       for (let i of main.children){ i.classList.remove('hl')}
@@ -660,19 +667,15 @@ function createNote(n, editImmediately=false){
       
       let [m, ma] = mostOverlapping(n);
       if (ma>0 && !suppressJump) {
-        let p = selection.elements.length>1?"group":'"'+shortTitle(n.title)+'"';
+        let p = targets.elements.length>1?"group":'"'+shortTitle(n.title)+'"';
         let target = level.children[m];
 
         if (confirm('Move '+p+' into "'+shortTitle(target.title)+'"?')) {
           if (target.children.length==0) target.open=true
           let dx = n.x-startx, dy = n.y-starty;
 
-          if (selection.elements.length) {
-            for (let i=0; i<selection.elements.length; i++) {
-              sendNoteInto(selection.objects[i], selection.elements[i], target, dx,dy)
-            }
-          } else {
-            sendNoteInto(n,d,target,dx,dy)
+          for (let i=0; i<targets.elements.length; i++) {
+            sendNoteInto(targets.objects[i], targets.elements[i], target, dx,dy)
           }
           save()
           reGenLookups()
@@ -722,6 +725,7 @@ function createNote(n, editImmediately=false){
   }
 
   main.appendChild(d)
+  noteElementsById[n.id]=d;
   if (editImmediately) d.ondblclick()
 }
 function moveNote(n,d,dx,dy) {
@@ -806,6 +810,7 @@ function populate(t){
 
   zTopIndex=0
   removeAllChildNodes(main)
+  noteElementsById={}
   for (let i of t.children)
     createNote(i)
   level = t
@@ -1481,7 +1486,7 @@ function deltaAction(a){
       undo.action="setColor"
       undo.color = n.color
       n.color = a.color
-      // setNoteColor(n,el)
+      if (noteElementsById[n.id]) setNoteColor(n, noteElementsById[n.id])
     break;
   }
   return undo
@@ -1547,6 +1552,7 @@ document.onkeydown=function(e){
     case 'Delete':
       if (!selection.objects.length) return;
       for (let n of selection.objects) {
+        delete noteElementsById[n.id];
         noteParentById[n.id].children.splice( noteParentById[n.id].children.indexOf(n), 1 )
       }
       save()
@@ -1680,7 +1686,7 @@ function validTree(t){
 }
 
 var nextId = 0;
-var allIds=[], noteById={}, noteParentById={};
+var allIds=[], noteById={}, noteParentById={}, noteElementsById={};
 
 function findIds(ids, n) {
   if (n.id) ids.push(n.id)
