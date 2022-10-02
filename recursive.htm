@@ -304,7 +304,7 @@ details>p{display:inline-block;}
 </div>
 </div>
 
-
+<pre id=dbg style="position:fixed;right:0;top:32px;"></pre>
 
 
 <script>
@@ -368,6 +368,7 @@ var zTopIndex = 0;
 var penSmooth = 0.15;
 var offsetLeft = 0;
 var textEditing=false;
+var deltaHistory=[], redoHistory=[];
 
 function openHelp(){
   help.style.display='block'
@@ -546,10 +547,9 @@ function createNote(n, editImmediately=false){
     if (ev && ev.target.tagName=='TEXTAREA') return;
     var e = document.createElement('textarea')
     function saveText(){
-      n.title = e.value;
+      deltaPush({action:"setTitle", id:n.id, title:e.value})
       t.innerHTML = markdown(n.title);
       d.style.overflow='auto';
-      save();
       updateOutlineLink(n)
       setTimeout(()=>textEditing=false,100)
     }
@@ -612,6 +612,8 @@ function createNote(n, editImmediately=false){
     var [sx, sy] = mousePos(e);
     let suppressJump = mostOverlapping(n)[1]>0;
 
+    let undoAction ={action:"setLayout", id:n.id, x:n.x,y:n.y,width:n.width,height:n.height};
+
     d.style.cursor='move'
 
     document.onmousemove=function(e){
@@ -643,7 +645,10 @@ function createNote(n, editImmediately=false){
       document.onmousemove=null;
       d.style.cursor='';
 
-      if (d.style.width!=sw || d.style.height!=sh) {save(); return}
+      if (d.style.width!=sw || d.style.height!=sh) {
+        deltaPushRaw(undoAction)
+        return
+      }
       
       let [m, ma] = mostOverlapping(n);
       if (ma>0 && !suppressJump) {
@@ -661,6 +666,7 @@ function createNote(n, editImmediately=false){
           } else {
             sendNoteInto(n,d,target,dx,dy)
           }
+          save()
           reGenLookups()
 
           setTimeout(()=>{populate(level); rePopulateOutline()},300)
@@ -670,7 +676,9 @@ function createNote(n, editImmediately=false){
         }
       }
 
-      save()
+      if (n.x!=startx || n.y !=starty) {
+        deltaPushRaw(undoAction)
+      }
     }
   }
 
@@ -1040,10 +1048,10 @@ document.onmousedown=function(e){
     }
     document.onmouseup=function(e){
       if (e.button !=b) return;
+      document.onmousemove=null;
+      popCursor()
       setTimeout(()=>{
-        popCursor()
         document.onmouseup=null;
-        document.onmousemove=null;
       },1);
     }
     pushCursor(cursors['erase'])
@@ -1397,29 +1405,72 @@ function hsl2rgb(h, s, l){
 function hex(s){
   return ('00'+Math.round(s * 255).toString(16)).substr(-2,2);
 }
-
-
-
 var sColor=Math.random()*3.14159
 function randomColor(){
   let angle = sColor+=1.3 // Math.random()*2*3.1415926535;
   return yiq2hsl( 0.8, 0.5*Math.cos(angle), 0.5*Math.sin(angle) );
 }
 
-var undoHistory=[], maxUndoHistory=10;
 function save(){
-  undoHistory.push(localStorage.tree)
-  undoHistory=undoHistory.slice(-maxUndoHistory)
+  dbg.innerHTML='Undo:'+JSON.stringify(deltaHistory,' ',2)+'\nRedo:'+JSON.stringify(redoHistory,' ',2)
   localStorage.tree=JSON.stringify(tree)
 }
 function saveWithoutHistory(){
   localStorage.tree=JSON.stringify(tree)
 }
+function deltaPush(a){
+  deltaHistory.push(deltaAction(a))
+  redoHistory=[];
+  save()
+}
+function deltaPushRaw(a) {
+  deltaHistory.push(a)
+  redoHistory=[]
+  save()
+}
 function undo(){
-  if (!undoHistory.length) return
-  localStorage.tree=undoHistory.pop()
-  tree=JSON.parse(localStorage.tree)
-  reloadAll()
+  traverseHistory(deltaHistory, redoHistory)
+}
+function redo(){
+  traverseHistory(redoHistory, deltaHistory)
+}
+function traverseHistory(from, to){
+  var u = from.pop()
+  if (!u) return
+
+  if (Array.isArray(u)) {
+    let r=[];
+    for (let i of u) r.push(deltaAction(i));
+    to.push(r)
+  } else to.push(deltaAction(u))
+
+  save()
+  reloadAll() // remove later
+}
+function deltaAction(a){
+  let undo = {id:a.id}, n=noteById[a.id];
+  switch(a.action){
+    case "setTitle":
+      undo.action="setTitle";
+      undo.title=n.title;
+      n.title = a.title;
+      // if note visible, update innerHTML
+      // update outline link
+    break;
+    case "setLayout":
+      undo.action="setLayout"
+      undo.x = n.x
+      undo.y = n.y
+      undo.width = n.width
+      undo.height = n.height
+      n.x = a.x
+      n.y = a.y
+      n.width = a.width
+      n.height = a.height
+      // if note visible, or... note is within a child of level, update
+    break;
+  }
+  return undo
 }
 function pan(dx,dy) {
   menu.style.display='none'
@@ -1446,6 +1497,7 @@ function doZoom(delta, cx, cy){
 sidebarLeft.onkeydown=function(e){if (e.key!='/') e.stopPropagation()}
 document.onkeydown=function(e){
   if (e.ctrlKey && e.key=='z') {undo(); return}
+  if (e.ctrlKey && (e.key=='Z' || e.key=='y')) {redo(); return}
   if (e.ctrlKey && e.key=='a') {selectAll(); return}
 
   switch(e.key) {
