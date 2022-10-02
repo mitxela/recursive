@@ -475,6 +475,9 @@ function eraseAllLines(){
   populate(level)
 }
 function killEvent(e){e.preventDefault();e.stopPropagation()}
+function backgroundKillEvent(e){
+  if (background(e.target)) {e.preventDefault();e.stopPropagation()}
+}
 function setNoteColor(n,d) {
   if (n.color.l==0){
     d.classList.add("invis")
@@ -1485,7 +1488,7 @@ function setPenTool(newTool){
   }
   penTool = newTool
 
-  if (rightClickAction[penTool]) document.oncontextmenu=killEvent;
+  if (rightClickAction[penTool]) document.oncontextmenu=backgroundKillEvent;
   else document.oncontextmenu=null;
 }
 function downloadJson(){
