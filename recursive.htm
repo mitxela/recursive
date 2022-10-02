@@ -250,8 +250,8 @@ details>p{display:inline-block;}
 <div id=menu>
   <p>Change color <input id=notecolor type=color onchange='changeColor()'><br>(use black for transparent)
   <p><a href='#' onclick='editNote(); return false'>Edit</a>
-  <p><a href='#' onclick='menuAction(toggleStrike); return false'>Toggle strikethrough</a>
-  <p><a href='#' onclick='menuAction(togglePinned); return false'>Toggle pinned</a>
+  <p><a href='#' onclick='menuActionDelta({action:"toggleStrike"}); return false'>Toggle strikethrough</a>
+  <p><a href='#' onclick='menuActionDelta({action:"togglePinned"}); return false'>Toggle pinned</a>
   <p><a href='#' onclick='jumpInto(); return false' id=jumpInto>Jump Into</a>
   <p><a href='#' onclick='moveUpNote(); return false'>Move up a level</a>
   <p><a href='#' onclick='deleteNote(); return false'>Delete</a>
@@ -414,21 +414,21 @@ function deleteNote(){
   rePopulateOutline()
 }
 function changeColor(){
-  menu.style.display='none';
-
   let c = hex2hsl(document.getElementById('notecolor').value);
-
-  if (selection.elements.length) {
+  menuActionDelta({action:"setColor", color:c})
+}
+function menuActionDelta(a){
+  menu.style.display='none';
+  if (selection.objects.length) {
     let d=[]
     for (let n of selection.objects) {
-      d.push(deltaAction({action:"setColor",id:n.id,color:c}))
+      d.push(deltaAction(Object.assign({id:n.id}, a)))
     }
     deltaPushRaw(d)
-    //if (fn==togglePinned) clearSelection()
+    if (a.action=="togglePinned") clearSelection()
   } else {
-    deltaPush({action:"setColor",id:menuRef.id,color:c})
+    deltaPush(Object.assign({id:menuRef.id},a))
   }
-
 }
 function moveUpNote(){
   menu.style.display='none';
@@ -484,15 +484,6 @@ function toggleStrike(n, el){
   }
   updateOutlineLink(n)
   if (el) el.children[1].innerHTML = markdown(n.title)
-}
-function togglePinned(n, el){
-  if (n.pinned) {
-    n.pinned = 0
-    el.classList.remove("pinned")
-  } else {
-    n.pinned = 1
-    el.classList.add("pinned")
-  }
 }
 function eraseAllLines(){
   delete level.lines;
@@ -1494,6 +1485,14 @@ function deltaAction(a){
     case "toggleStrike":
       undo.action="toggleStrike"
       toggleStrike(n, d)
+    break;
+    case "togglePinned":
+      undo.action="togglePinned"
+      n.pinned=1-(n.pinned||0);
+      if (d) {
+        if (n.pinned) d.classList.add("pinned")
+        else d.classList.remove("pinned")
+      }
     break;
   }
   return undo
