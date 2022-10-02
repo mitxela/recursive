@@ -254,7 +254,7 @@ details>p{display:inline-block;}
   <p><a href='#' onclick='menuActionDelta({action:"togglePinned"}); return false'>Toggle pinned</a>
   <p><a href='#' onclick='jumpInto(); return false' id=jumpInto>Jump Into</a>
   <p><a href='#' onclick='moveUpNote(); return false'>Move up a level</a>
-  <p><a href='#' onclick='deleteNote(); return false'>Delete</a>
+  <p><a href='#' onclick='menuActionDelta({action:"deleteNote"}); return false'>Delete</a>
 </div>
 
 <div id=trail></div>
@@ -402,10 +402,6 @@ function toggleSidebarLeft(){
     sidebarLeft.style.visibility=offsetLeft?"visible":"hidden"
     canvas.style.transition=''
   },200)
-}
-function deleteNote(){
-  menuActionDelta({action:"deleteNote"})
-  rePopulateOutline()
 }
 function changeColor(){
   let c = hex2hsl(document.getElementById('notecolor').value);
@@ -1486,13 +1482,13 @@ function deltaAction(a){
       }
     break;
     case "deleteNote":
-      console.log('delete', n.id)
       undo.action="addNote"
       undo.id = noteParentById[n.id].id;
       undo.newNote = n
       undo.index = noteParentById[n.id].children.indexOf(n);
-      noteParentById[n.id].children.splice( undo.index, 1 )
 
+      let escapeView = noteContains( n, level )
+      noteParentById[n.id].children.splice( undo.index, 1 )
       if (d) {
         delete noteById[n.id];
         delete noteParentById[n.id];
@@ -1500,7 +1496,8 @@ function deltaAction(a){
         main.removeChild(d)
       }
       // todo: update outline without repopulate
-      // todo: if viewing the deleted note or any of its children, refresh
+      rePopulateOutline()
+      if (escapeView) window.onhashchange()
     break;
     case "addNote":
       undo.action="deleteNote"
@@ -1513,9 +1510,8 @@ function deltaAction(a){
       noteById[a.newNote.id]=a.newNote;
       noteParentById[a.newNote.id]=n;
 
-      rePopulateOutline()
-
-
+      rePopulateOutline() //todo: improve
+      //todo: if level==parent, add subnotes
     break;
   }
   return undo
@@ -1580,14 +1576,8 @@ document.onkeydown=function(e){
       return;
     case 'Delete':
       if (!selection.objects.length) return;
-      for (let n of selection.objects) {
-        delete noteElementsById[n.id];
-        noteParentById[n.id].children.splice( noteParentById[n.id].children.indexOf(n), 1 )
-      }
-      save()
-      reGenLookups()
-      populate(level)
-      rePopulateOutline()
+      menuRef=selection.objects[0]; menuRefElement=selection.elements[0];
+      menuActionDelta({action:"deleteNote"})
       return;
   }
 }
