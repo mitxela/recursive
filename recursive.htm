@@ -1678,6 +1678,7 @@ function updateOutlineLink(n){
   let a = outlineLinksById[n.id];
   a.textContent=shortTitle(n.title,1,1)
   a.href='#'+n.id
+  a.onclick=function(e){if (e.shiftKey) {location.href='#'+noteParentById[n.id].id; return false }}
   if (n.color && n.color.l) a.style.background='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
   a.style.textDecoration= (n.title.match(/^[#]*~[^~]+~/))?'line-through':'';
 }
