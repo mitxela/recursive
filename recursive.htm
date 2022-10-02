@@ -565,7 +565,7 @@ function createNote(n, editImmediately=false){
   }
 
   d.oncontextmenu = function(e){
-    if (document.oncontextmenu!=null || document.onmouseup!=null) return
+    if (document.onmouseup!=null) return false;
     if (e && e.target.tagName=='TEXTAREA') return;
     d.style.transition="0.3s linear"
     
@@ -1031,9 +1031,11 @@ document.onmousedown=function(e){
     }
     document.onmouseup=function(e){
       if (e.button !=b) return;
-      popCursor()
-      document.onmouseup=null;
-      document.onmousemove=null;
+      setTimeout(()=>{
+        popCursor()
+        document.onmouseup=null;
+        document.onmousemove=null;
+      },1);
     }
     pushCursor(cursors['erase'])
 
