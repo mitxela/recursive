@@ -342,7 +342,11 @@ if (!window.tree){
   localStorage.tree = JSON.stringify(tree)
 }
 
-window.onstorage=(e)=>{ tree=JSON.parse(localStorage.tree); reloadAll() }
+window.onstorage=(e)=>{
+  if (document.hasFocus()) return;
+  tree=JSON.parse(localStorage.tree); 
+  reloadAll()
+}
 
 var level;
 var canvas=document.getElementById('canvas')
