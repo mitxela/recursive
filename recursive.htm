@@ -612,7 +612,15 @@ function createNote(n, editImmediately=false){
     var [sx, sy] = mousePos(e);
     let suppressJump = mostOverlapping(n)[1]>0;
 
-    let undoAction ={action:"setLayout", id:n.id, x:n.x,y:n.y,width:n.width,height:n.height};
+    let undoAction;
+    if (selection.objects.length) {
+      undoAction=[]
+      for (let n of selection.objects) {
+        undoAction.push({action:"setLayout", id:n.id, x:n.x,y:n.y,width:n.width,height:n.height})
+      }
+    } else {
+      undoAction ={action:"setLayout", id:n.id, x:n.x,y:n.y,width:n.width,height:n.height};
+    }
 
     d.style.cursor='move'
 
@@ -1468,6 +1476,12 @@ function deltaAction(a){
       n.width = a.width
       n.height = a.height
       // if note visible, or... note is within a child of level, update
+    break;
+    case "setColor":
+      undo.action="setColor"
+      undo.color = n.color
+      n.color = a.color
+      // setNoteColor(n,el)
     break;
   }
   return undo
