@@ -329,7 +329,10 @@ testtree = {title:"Root", children:[
   }
 ]}
 
-if (localStorage.tree) tree=JSON.parse(localStorage.tree);
+if (localStorage.tree) {
+  let newtree=JSON.parse(localStorage.tree);
+  if (validTree(newtree)) tree=newtree;
+}
 
 if (!window.tree){
   tree=testtree;
@@ -1556,7 +1559,7 @@ function updateSVGline(path, line){
   setSVGsize(mainSvg, window.innerWidth,window.innerHeight);
 })();
 
-document.body.addEventListener('dragover', function(e){e.preventDefault();e.stopPropagation()},false);
+document.body.addEventListener('dragover', killEvent, false);
 document.body.addEventListener('drop', function(e){
   e.stopPropagation();
   e.preventDefault();
@@ -1567,8 +1570,8 @@ document.body.addEventListener('drop', function(e){
   let reader = new FileReader();
   reader.onload = function(e) {
 
-    newtree = JSON.parse(e.target.result);
-    if (!newtree.title || !Array.isArray(newtree.children)) return // more error checking needed - version number?
+    let newtree = JSON.parse(e.target.result);
+    if (!validTree(newtree)) {alert("Invalid JSON data"); return }
 
     tree=newtree;
     save()
@@ -1577,6 +1580,27 @@ document.body.addEventListener('drop', function(e){
   reader.readAsText(files[0])
 
 },false);
+
+// Todo: check IDs are unique
+// check lines
+// check view
+// check color of root if present
+function validTree(t){
+  if (!t.title || !Array.isArray(t.children)) return false;
+  for (let c of t.children){
+    if (typeof c.width !=="number"
+     || typeof c.height !=="number"
+     || typeof c.x !=="number"
+     || typeof c.y !=="number"
+     || typeof c.color !=="object"
+     || typeof c.color.l !=="number"
+     || typeof c.color.h !=="number"
+     || typeof c.color.s !=="number"
+     || !validTree(c)
+    ) return false
+  }
+  return true
+}
 
 var nextId = 0;
 var allIds=[], noteById={}, noteParentById={};
