@@ -404,13 +404,7 @@ function toggleSidebarLeft(){
   },200)
 }
 function deleteNote(){
-  menuAction(function(n, el){
-    delete noteElementsById[n.id];
-    noteParentById[n.id].children.splice( noteParentById[n.id].children.indexOf(n), 1 )
-  })
-
-  reGenLookups()
-  populate(level)
+  menuActionDelta({action:"deleteNote"})
   rePopulateOutline()
 }
 function changeColor(){
@@ -550,7 +544,10 @@ function createNote(n, editImmediately=false){
     if (ev && ev.target.tagName=='TEXTAREA') return;
     var e = document.createElement('textarea')
     function saveText(){
-      deltaPush({action:"setTitle", id:n.id, title:e.value})
+      if (e.value!=n.title)
+        deltaPush({action:"setTitle", id:n.id, title:e.value})
+      else
+        t.innerHTML=markdown(n.title)
       d.style.overflow='auto';
       setTimeout(()=>textEditing=false,100)
     }
@@ -876,13 +873,7 @@ document.onclick=function(e){
     color: randomColor(),
     children: []
   }
-  if (level.children.length==0) level.open=true;
-  createNote(newNote, true)
-  level.children.push(newNote)
-  save()
-  noteById[newNote.id]=newNote;
-  noteParentById[newNote.id]=level;
-  rePopulateOutline()
+  deltaPush({action:"addNote", id:level.id, index:-1, newNote})
 }
 menu.onmousedown=function(e){e.stopPropagation()}
 
@@ -1493,6 +1484,38 @@ function deltaAction(a){
         if (n.pinned) d.classList.add("pinned")
         else d.classList.remove("pinned")
       }
+    break;
+    case "deleteNote":
+      console.log('delete', n.id)
+      undo.action="addNote"
+      undo.id = noteParentById[n.id].id;
+      undo.newNote = n
+      undo.index = noteParentById[n.id].children.indexOf(n);
+      noteParentById[n.id].children.splice( undo.index, 1 )
+
+      if (d) {
+        delete noteById[n.id];
+        delete noteParentById[n.id];
+        delete noteElementsById[n.id];
+        main.removeChild(d)
+      }
+      // todo: update outline without repopulate
+      // todo: if viewing the deleted note or any of its children, refresh
+    break;
+    case "addNote":
+      undo.action="deleteNote"
+      undo.id=a.newNote.id;
+
+      if (n.children.length==0) n.open=true;
+      createNote(a.newNote, (a.index==-1))
+      //todo: insert at a.index
+      n.children.push(a.newNote)
+      noteById[a.newNote.id]=a.newNote;
+      noteParentById[a.newNote.id]=n;
+
+      rePopulateOutline()
+
+
     break;
   }
   return undo
