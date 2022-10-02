@@ -420,8 +420,8 @@ function changeColor(){
 
   if (selection.elements.length) {
     let d=[]
-    for (let i=0; i<selection.elements.length; i++) {
-      d.push(deltaAction({action:"setColor",id:selection.objects[i].id,color:c}))
+    for (let n of selection.objects) {
+      d.push(deltaAction({action:"setColor",id:n.id,color:c}))
     }
     deltaPushRaw(d)
     //if (fn==togglePinned) clearSelection()
@@ -483,7 +483,7 @@ function toggleStrike(n, el){
     n.title=h+'~'+b+'~'
   }
   updateOutlineLink(n)
-  el.children[1].innerHTML = markdown(n.title)
+  if (el) el.children[1].innerHTML = markdown(n.title)
 }
 function togglePinned(n, el){
   if (n.pinned) {
@@ -560,9 +560,7 @@ function createNote(n, editImmediately=false){
     var e = document.createElement('textarea')
     function saveText(){
       deltaPush({action:"setTitle", id:n.id, title:e.value})
-      t.innerHTML = markdown(n.title);
       d.style.overflow='auto';
-      updateOutlineLink(n)
       setTimeout(()=>textEditing=false,100)
     }
 
@@ -1458,17 +1456,16 @@ function traverseHistory(from, to){
   } else to.push(deltaAction(u))
 
   save()
-  reloadAll() // remove later
 }
 function deltaAction(a){
-  let undo = {id:a.id}, n=noteById[a.id];
+  let undo = {id:a.id}, n=noteById[a.id], d=noteElementsById[n.id];
   switch(a.action){
     case "setTitle":
       undo.action="setTitle";
       undo.title=n.title;
       n.title = a.title;
-      // if note visible, update innerHTML
-      // update outline link
+      if (d) d.children[1].innerHTML = markdown(n.title);
+      updateOutlineLink(n)
     break;
     case "setLayout":
       undo.action="setLayout"
@@ -1480,13 +1477,23 @@ function deltaAction(a){
       n.y = a.y
       n.width = a.width
       n.height = a.height
-      // if note visible, or... note is within a child of level, update
+      // todo: if note is within a child of level, update
+      if (d) {
+        d.style.left=n.x+'px'
+        d.style.top=n.y+'px'
+        d.style.width=n.width+'px';
+        d.style.height=n.height+'px';
+      }
     break;
     case "setColor":
       undo.action="setColor"
       undo.color = n.color
       n.color = a.color
-      if (noteElementsById[n.id]) setNoteColor(n, noteElementsById[n.id])
+      if (d) setNoteColor(n, d)
+    break;
+    case "toggleStrike":
+      undo.action="toggleStrike"
+      toggleStrike(n, d)
     break;
   }
   return undo
