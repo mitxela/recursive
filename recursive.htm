@@ -325,19 +325,24 @@ testtree = {title:"Root", children:[
     width: 150,
     height: 50,
     color: {h: 10, s:100, l:50},
-    children: []
+    children: [],
+
+    // optional properties:
+    id:3,
+    open:false,
+    view:{x:0,y:0,s:1},
+    lines:[]
   }
 ]}
 
-if (localStorage.tree) {
-  let newtree=JSON.parse(localStorage.tree);
-  if (validTree(newtree)) tree=newtree;
-}
+if (localStorage.tree) tree=JSON.parse(localStorage.tree);
 
 if (!window.tree){
   tree=testtree;
   localStorage.tree = JSON.stringify(tree)
 }
+
+window.onstorage=(e)=>{ tree=JSON.parse(localStorage.tree); reloadAll() }
 
 var level;
 var canvas=document.getElementById('canvas')
