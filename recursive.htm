@@ -492,7 +492,7 @@ function setNoteColor(n,d) {
     d.style.borderColor='hsl('+n.color.h+','+n.color.s+'%,'+(n.color.l*0.8)+'%)';
   }
 }
-function createNote(n, editImmediately=false){
+function createNote(n, editImmediately=false, index=-1){
   var d = document.createElement('div');
   d.className='note'
   
@@ -705,9 +705,13 @@ function createNote(n, editImmediately=false){
 
     d.appendChild(sn)
   }
-
-  main.appendChild(d)
   noteElementsById[n.id]=d;
+
+  if (index!=-1){
+    main.insertBefore(d, main.children[index])
+  }else{
+    main.appendChild(d)
+  }
   if (editImmediately) d.ondblclick()
 }
 function moveNote(n,d,dx,dy) {
@@ -1429,6 +1433,7 @@ function traverseHistory(from, to){
 
   if (Array.isArray(u)) {
     let r=[];
+    if (from==deltaHistory) u.reverse();
     for (let i of u) r.push(deltaAction(i));
     to.push(r)
   } else to.push(deltaAction(u))
@@ -1497,21 +1502,26 @@ function deltaAction(a){
       }
       // todo: update outline without repopulate
       rePopulateOutline()
-      if (escapeView) window.onhashchange()
+      if (escapeView) window.onhashchange() //todo: focus parent instead
     break;
     case "addNote":
       undo.action="deleteNote"
       undo.id=a.newNote.id;
 
       if (n.children.length==0) n.open=true;
-      createNote(a.newNote, (a.index==-1))
-      //todo: insert at a.index
-      n.children.push(a.newNote)
+      createNote(a.newNote, a.index==-1, a.index)
+      if (a.index>=0) n.children.splice(a.index,0,a.newNote)
+      else n.children.push(a.newNote)
       noteById[a.newNote.id]=a.newNote;
       noteParentById[a.newNote.id]=n;
 
       rePopulateOutline() //todo: improve
       //todo: if level==parent, add subnotes
+    break;
+    case "setParent":
+      undo.action="setParent"
+      // worry about indexes?
+
     break;
   }
   return undo
