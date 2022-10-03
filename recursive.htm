@@ -407,30 +407,28 @@ function changeColor(){
   let c = hex2hsl(document.getElementById('notecolor').value);
   menuAction({action:"setColor", color:c})
 }
-function menuAction(a){
+function menuAction(a, undo=[]){
   menu.style.display='none';
   if (selection.objects.length) {
-    let d=[]
     for (let n of selection.objects) {
-      d.push(deltaAction(Object.assign({id:n.id}, a)))
+      undo.push(deltaAction(Object.assign({id:n.id}, a)))
     }
-    deltaPushRaw(d)
     if (a.action=="togglePinned") clearSelection()
   } else {
-    deltaPush(Object.assign({id:menuRef.id},a))
+    undo.push(deltaAction(Object.assign({id:menuRef.id},a)))
   }
+  deltaPushRaw(undo)
 }
 function moveUpNote(){
   menu.style.display='none';
+  let undoAction=[];
   if (trailobj.length<=1) {
     if (!confirm("Create new note above root?")) return;
-    deltaPush({action:"newRoot", id:tree.id})
+    undoAction.push(deltaAction({action:"newRoot", id:tree.id}))
   }
 
   let parent=trailobj[trailobj.length-2];
-  menuAction({action:"setParent", parent:parent.id})
-
-  //todo: combine into single history entry
+  menuAction({action:"setParent", parent:parent.id}, undoAction)
 }
 function editNote(){
   menu.style.display='none';
@@ -1417,9 +1415,8 @@ function traverseHistory(from, to){
   if (!u) return
 
   if (Array.isArray(u)) {
-    let r=[];
-    if (from==deltaHistory) u.reverse();
-    for (let i of u) r.push(deltaAction(i));
+    let i,r=[];
+    while (i = u.pop()) r.push(deltaAction(i));
     to.push(r)
   } else to.push(deltaAction(u))
 
