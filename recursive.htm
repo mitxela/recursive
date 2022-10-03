@@ -655,10 +655,26 @@ function createNote(n, editImmediately=false, index=-1){
         if (confirm('Move '+p+' into "'+shortTitle(target.title)+'"?')) {
           if (target.children.length==0) target.open=true
           let dx = n.x-startx, dy = n.y-starty;
+          let undoAction=[]
 
           for (let i=0; i<targets.elements.length; i++) {
-            sendNoteInto(targets.objects[i], targets.elements[i], target, dx,dy)
+            let n = targets.objects[i], d = targets.elements[i];
+
+            undoAction.push({
+              action:"setParent",
+              id:n.id,
+              parent:noteParentById[n.id].id,
+              index:level.children.indexOf(n)
+            })
+
+            target.children.push(n)
+            level.children.splice(level.children.indexOf(n), 1)
+            n.x -= dx
+            n.y -= dy
+            d.style.transition="0.3s linear"
+            d.style.transform="scale(0)"
           }
+          deltaPushRaw(undoAction)
           save()
           reGenLookups()
 
@@ -719,14 +735,6 @@ function moveNote(n,d,dx,dy) {
   n.y += dy
   d.style.left = n.x +'px'
   d.style.top  = n.y +'px'
-}
-function sendNoteInto(n,d,target,dx,dy) {
-  target.children.push(n)
-  level.children.splice(level.children.indexOf(n), 1)
-  n.x -= dx
-  n.y -= dy
-  d.style.transition="0.3s linear"
-  d.style.transform="scale(0)"
 }
 function zoomReset(){
   level.view={x:0,y:0,s:1}
@@ -1519,9 +1527,25 @@ function deltaAction(a){
       //todo: if level==parent, add subnotes
     break;
     case "setParent":
-      undo.action="setParent"
-      // worry about indexes?
+      let oldParent=noteParentById[n.id];
+      let newParent=noteById[a.parent];
 
+      undo.action="setParent"
+      undo.index = oldParent.children.indexOf(n)
+      undo.parent = oldParent.id
+
+      oldParent.children.splice(undo.index, 1)
+
+      if (a.index!=-1) {
+        newParent.children.splice(a.index,0,n)
+      } else {
+        newParent.children.push(n)
+      }
+      noteParentById[n.id]=newParent;
+
+      // check if changes are visible...
+      populate(level)
+      rePopulateOutline()
     break;
   }
   return undo
