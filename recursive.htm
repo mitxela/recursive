@@ -250,11 +250,11 @@ details>p{display:inline-block;}
 <div id=menu>
   <p>Change color <input id=notecolor type=color onchange='changeColor()'><br>(use black for transparent)
   <p><a href='#' onclick='editNote(); return false'>Edit</a>
-  <p><a href='#' onclick='menuActionDelta({action:"toggleStrike"}); return false'>Toggle strikethrough</a>
-  <p><a href='#' onclick='menuActionDelta({action:"togglePinned"}); return false'>Toggle pinned</a>
+  <p><a href='#' onclick='menuAction({action:"toggleStrike"}); return false'>Toggle strikethrough</a>
+  <p><a href='#' onclick='menuAction({action:"togglePinned"}); return false'>Toggle pinned</a>
   <p><a href='#' onclick='jumpInto(); return false' id=jumpInto>Jump Into</a>
   <p><a href='#' onclick='moveUpNote(); return false'>Move up a level</a>
-  <p><a href='#' onclick='menuActionDelta({action:"deleteNote"}); return false'>Delete</a>
+  <p><a href='#' onclick='menuAction({action:"deleteNote"}); return false'>Delete</a>
 </div>
 
 <div id=trail></div>
@@ -405,9 +405,9 @@ function toggleSidebarLeft(){
 }
 function changeColor(){
   let c = hex2hsl(document.getElementById('notecolor').value);
-  menuActionDelta({action:"setColor", color:c})
+  menuAction({action:"setColor", color:c})
 }
-function menuActionDelta(a){
+function menuAction(a){
   menu.style.display='none';
   if (selection.objects.length) {
     let d=[]
@@ -428,7 +428,7 @@ function moveUpNote(){
   }
 
   let parent=trailobj[trailobj.length-2];
-  menuActionDelta({action:"setParent", parent:parent.id})
+  menuAction({action:"setParent", parent:parent.id})
 
   //todo: combine into single history entry
 }
@@ -439,18 +439,6 @@ function editNote(){
 function jumpInto(){
   menu.style.display='none';
   menuRefElement.oncontextmenu()
-}
-function menuAction(fn) {
-  menu.style.display='none';
-  if (selection.elements.length) {
-    for (let i=0; i<selection.elements.length; i++) {
-      fn(selection.objects[i], selection.elements[i])
-    }
-    if (fn==togglePinned) clearSelection()
-  } else {
-    fn(menuRef, menuRefElement)
-  }
-  save()
 }
 function toggleStrike(n, el){
   let [a, h, b] = n.title.match(/^(#+)?([\s\S]+)$/)
@@ -1630,7 +1618,7 @@ document.onkeydown=function(e){
     case 'Delete':
       if (!selection.objects.length) return;
       menuRef=selection.objects[0]; menuRefElement=selection.elements[0];
-      menuActionDelta({action:"deleteNote"})
+      menuAction({action:"deleteNote"})
       return;
   }
 }
