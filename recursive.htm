@@ -424,24 +424,13 @@ function moveUpNote(){
   menu.style.display='none';
   if (trailobj.length<=1) {
     if (!confirm("Create new note above root?")) return;
-    tree.x=50 //todo: check it doesn't collide with menuref
-    tree.y=50
-    tree.width=200
-    tree.height=200
-    tree.color={h:0,s:0,l:100}
-    tree.title="Old root"
-    tree = {title:"Root", children:[tree]}
-    trailobj.unshift(tree)
+    deltaPush({action:"newRoot", id:tree.id})
   }
-  let parent=trailobj[trailobj.length-2];
-  menuAction(function(n,el){
-    parent.children.push(n);
-    level.children.splice(level.children.indexOf(n),1)
-  })
 
-  reGenLookups()
-  showNote(parent.id)
-  rePopulateOutline()
+  let parent=trailobj[trailobj.length-2];
+  menuActionDelta({action:"setParent", parent:parent.id})
+
+  //todo: combine into single history entry
 }
 function editNote(){
   menu.style.display='none';
@@ -1544,7 +1533,37 @@ function deltaAction(a){
       noteParentById[n.id]=newParent;
 
       // check if changes are visible...
-      showNote(level.id)
+      showNote(level.id) // if group, this will get called repeatedly
+      rePopulateOutline()
+    break;
+    case "newRoot":
+      undo.action="undoNewRoot"
+
+      let id = a.newId || newId();
+
+      tree.x=50 //todo: check it doesn't collide with menuref
+      tree.y=50
+      tree.width=200
+      tree.height=200
+      tree.color={h:0,s:0,l:100}
+      tree.title="Old root"
+      tree = {title:"Root", id:id, children:[tree]}
+      noteById[id]=tree;
+      noteParentById[ tree.children[0].id ]=tree;
+
+      level=tree
+      trailobj.unshift(tree)
+      //regenTrail()
+    break;
+    case "undoNewRoot":
+      undo.action="newRoot"
+      undo.newId=tree.id
+      delete noteById[tree.id]
+      delete noteParentById[tree.children[0].id]
+      tree = tree.children[0]
+      tree.title="Root"
+      trailobj.shift()
+      showNote(tree.id)
       rePopulateOutline()
     break;
   }
