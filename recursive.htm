@@ -653,8 +653,6 @@ function createNote(n, editImmediately=false, index=-1){
             d.style.transform="scale(0)"
           }
           deltaPushRaw(undoAction)
-          save()
-          reGenLookups()
 
           setTimeout(()=>{populate(level); rePopulateOutline()},300)
         } else {
