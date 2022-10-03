@@ -1019,9 +1019,8 @@ document.onmousedown=function(e){
       let i;
       for (i in mainSvgG.children)
         if (mainSvgG.children[i] == e.target) break
-      level.lines.splice(i,1)
-      e.target.remove()
-      save()
+
+      deltaPush({action:"eraseLine",id:level.id,index:i})
     }
     document.onmouseup=function(e){
       if (e.button !=b) return;
@@ -1048,7 +1047,11 @@ document.onmousedown=function(e){
       document.onmousemove(e)
       document.onmouseup=null;
       document.onmousemove=null;
-      save();
+      deltaPushRaw({
+        action:"eraseLine",
+        id:level.id,
+        index:level.lines.indexOf(line)
+      })
     }
 
     if (penTool=="pencil") {
@@ -1426,6 +1429,28 @@ function traverseHistory(from, to){
 function deltaAction(a){
   let undo = {id:a.id}, n=noteById[a.id], d=noteElementsById[n.id];
   switch(a.action){
+    case "addLine":
+      undo.action="eraseLine"
+      if (a.index>=0) {
+        undo.index=a.index
+        n.lines.splice(a.index,0,a.line)
+      } else {
+        n.lines.push(a.line)
+        undo.index=n.lines.length-1
+      }
+      if (n==level) addSVGline(mainSvgG, a.line, undo.index)
+      // todo: if n is child of level, add to note
+    break;
+    case "eraseLine":
+      undo.action="addLine"
+      undo.index = a.index
+      undo.line = n.lines.splice(a.index,1)[0];
+      if (n==level) mainSvgG.children[a.index].remove()
+      //todo: if n is child of level, remove from note
+
+    break;
+//    case "eraseAllLines":
+//    break;
     case "setTitle":
       undo.action="setTitle";
       undo.title=n.title;
@@ -1660,13 +1685,18 @@ function setSVGsize(svg, w,h){
   svg.setAttribute("height",h)
   svg.setAttribute("viewBox", `0 0 ${w} ${h}`)
 }
-function addSVGline(svg, line){
+function addSVGline(svg, line, index){
   let path=document.createElementNS(svgNS, "path");
   path.setAttributeNS(null, "style", "stroke-width: "+(line.width||'3px')+"; fill: "+(line.fill||'none')+"; stroke: "+(line.color||'black'))
   path.setAttributeNS(null, "stroke-linecap", "round")
   if (!line.points.length) return;
   updateSVGline(path, line);
-  svg.appendChild(path)
+
+  if (index>=0){
+    svg.insertBefore(path, svg.children[index])
+  }else{
+    svg.appendChild(path)
+  }
   return path
 }
 function updateSVGline(path, line){
