@@ -304,7 +304,7 @@ details>p{display:inline-block;}
 </div>
 </div>
 
-<pre id=dbg style="position:fixed;right:0;top:32px;"></pre>
+<pre id=dbg style="position:fixed;right:0;top:32px;height:calc(100% - 32px);margin:0;overflow:auto"></pre>
 
 
 <script>
@@ -437,18 +437,6 @@ function editNote(){
 function jumpInto(){
   menu.style.display='none';
   menuRefElement.oncontextmenu()
-}
-function toggleStrike(n, el){
-  let [a, h, b] = n.title.match(/^(#+)?([\s\S]+)$/)
-  if (!h) h="";
-  let m = b.match(/^~([\s\S]+)~$/)
-  if (m){
-    n.title=h+m[1];
-  } else {
-    n.title=h+'~'+b+'~'
-  }
-  updateOutlineLink(n)
-  if (el) el.children[1].innerHTML = markdown(n.title)
 }
 function eraseAllLines(){
   deltaPush({action:"eraseAllLines", id:level.id})
@@ -770,6 +758,9 @@ function removeAllChildNodes(a){
   while (a.children.length)
     a.removeChild(a.lastChild)
 }
+function setBackgroundColor(t){
+  document.body.style.backgroundColor= t.color? 'hsl('+t.color.h+','+t.color.s+'%,'+(t.color.l*0.3+70)+'%)' : '#fff';
+}
 function populate(t){
   if (window.location.hash!='#'+t.id)
     window.history.pushState({},'','#'+t.id) //or maybe replaceState
@@ -784,12 +775,11 @@ function populate(t){
   level = t
   setView()
 
-  while(mainSvgG.children.length)
-    mainSvgG.removeChild(mainSvgG.lastChild)
+  removeAllChildNodes(mainSvgG)
   if (t.lines) {
     for (let line of t.lines) addSVGline(mainSvgG, line)
   }
-  document.body.style.backgroundColor= t.color? 'hsl('+t.color.h+','+t.color.s+'%,'+(t.color.l*0.3+70)+'%)' : '#fff';
+  setBackgroundColor(t)
 }
 function showNote(id){
   trailobj=[]
@@ -1469,6 +1459,7 @@ function deltaAction(a){
       n.title = a.title;
       if (d) d.children[1].innerHTML = markdown(n.title);
       updateOutlineLink(n)
+      if (trailobj.indexOf(n)!=-1) regenTrail();
     break;
     case "setLayout":
       undo.action="setLayout"
@@ -1497,11 +1488,21 @@ function deltaAction(a){
         (n.color && n.color.l) ?
         'hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)'
         : '';
-      // todo: update trail too
+      if (trailobj.indexOf(n)!=-1) regenTrail();
+      if (level==n) setBackgroundColor(n)
     break;
     case "toggleStrike":
       undo.action="toggleStrike"
-      toggleStrike(n, d)
+      let [a, h, b] = n.title.match(/^(#+)?([\s\S]+)$/)
+      if (!h) h="";
+      let m = b.match(/^~([\s\S]+)~$/)
+      if (m){
+        n.title=h+m[1];
+      } else {
+        n.title=h+'~'+b+'~'
+      }
+      updateOutlineLink(n)
+      if (d) d.children[1].innerHTML = markdown(n.title)
     break;
     case "togglePinned":
       undo.action="togglePinned"
