@@ -1493,7 +1493,7 @@ function deltaAction(a){
     break;
     case "toggleStrike":
       undo.action="toggleStrike"
-      let [a, h, b] = n.title.match(/^(#+)?([\s\S]+)$/)
+      let [x, h, b] = n.title.match(/^(#+)?([\s\S]+)$/)
       if (!h) h="";
       let m = b.match(/^~([\s\S]+)~$/)
       if (m){
