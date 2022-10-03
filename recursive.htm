@@ -462,7 +462,10 @@ function backgroundKillEvent(e){
 function setNoteColor(n,d) {
   if (n.color.l==0){
     d.classList.add("invis")
+    d.style.backgroundColor=""
+    d.style.borderColor=""
   } else {
+    d.classList.remove("invis")
     d.style.backgroundColor='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
     d.style.borderColor='hsl('+n.color.h+','+n.color.s+'%,'+(n.color.l*0.8)+'%)';
   }
