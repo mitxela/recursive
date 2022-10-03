@@ -1536,7 +1536,7 @@ function deltaAction(a){
 
       oldParent.children.splice(undo.index, 1)
 
-      if (a.index!=-1) {
+      if (a.index>=0) {
         newParent.children.splice(a.index,0,n)
       } else {
         newParent.children.push(n)
@@ -1544,7 +1544,7 @@ function deltaAction(a){
       noteParentById[n.id]=newParent;
 
       // check if changes are visible...
-      populate(level)
+      showNote(level.id)
       rePopulateOutline()
     break;
   }
@@ -1786,13 +1786,11 @@ function makeDropTarget(a, n) {
 
           if (moved && !noteContains(moved, n) && confirm('Move "'+shortTitle(moved.title)+'" into "'+shortTitle(n.title)+'"?')){
             if (n.children.length==0) n.open=true
-            n.children.push(moved)
-            let from = noteParentById[moved.id].children
-            from.splice( from.indexOf(moved), 1 )
-            reGenLookups()
-            save()
-            showNote(level.id)
-            rePopulateOutline()
+            deltaPush({
+              action:"setParent",
+              id:moved.id,
+              parent:n.id
+            })
           }
           a.className=''
         })
