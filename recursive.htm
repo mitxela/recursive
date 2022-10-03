@@ -451,9 +451,7 @@ function toggleStrike(n, el){
   if (el) el.children[1].innerHTML = markdown(n.title)
 }
 function eraseAllLines(){
-  delete level.lines;
-  save()
-  populate(level)
+  deltaPush({action:"eraseAllLines", id:level.id})
 }
 function killEvent(e){e.preventDefault();e.stopPropagation()}
 function backgroundKillEvent(e){
@@ -1431,6 +1429,7 @@ function deltaAction(a){
   switch(a.action){
     case "addLine":
       undo.action="eraseLine"
+      if (!n.lines) n.lines=[];
       if (a.index>=0) {
         undo.index=a.index
         n.lines.splice(a.index,0,a.line)
@@ -1449,8 +1448,21 @@ function deltaAction(a){
       //todo: if n is child of level, remove from note
 
     break;
-//    case "eraseAllLines":
-//    break;
+    case "eraseAllLines":
+      undo.action="undoEraseAllLines"
+      undo.lines=n.lines
+      delete n.lines;
+      if (n==level) removeAllChildNodes(mainSvgG)
+      //todo: if n is child of level, remove from note
+    break;
+    case "undoEraseAllLines":
+      undo.action="eraseAllLines"
+      n.lines=a.lines
+      if (n==level && n.lines) {
+        for (let line of n.lines) addSVGline(mainSvgG, line)
+      }
+      // todo: if n is child of level, add to note
+    break;
     case "setTitle":
       undo.action="setTitle";
       undo.title=n.title;
