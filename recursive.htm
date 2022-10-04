@@ -1138,7 +1138,7 @@ function drawArrow(x1,y1,x2,y2){
   }
 }
 document.onwheel=function(e){
-  if (sidebarLeft.contains(e.target) || help.contains(e.target)) return;
+  if (!pannableTarget(e.target)) return;
   menu.style.display='none'
 
   doZoom(e.deltaY, e.pageX, e.pageY)
