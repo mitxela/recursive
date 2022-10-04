@@ -573,7 +573,7 @@ function createNote(n, editImmediately=false, index=-1){
 
     var startx=n.x, starty=n.y;
     var [sx, sy] = mousePos(e);
-    let suppressJump = mostOverlapping(n)[1]>0;
+    let suppressJump = mostOverlapping(n, targets)[1]>0;
 
     let undoAction =[];
     for (let n of targets.objects) {
@@ -596,7 +596,7 @@ function createNote(n, editImmediately=false, index=-1){
       for (let i=0; i<targets.elements.length; i++) {
         moveNote(targets.objects[i], targets.elements[i],dx,dy)
       }
-      let [m, ma] = mostOverlapping(n);
+      let [m, ma] = mostOverlapping(n, targets);
       for (let i of main.children){ i.classList.remove('hl')}
       if (ma>0) {
         if (!suppressJump) main.children[m].classList.add('hl');
@@ -612,7 +612,7 @@ function createNote(n, editImmediately=false, index=-1){
         return
       }
       
-      let [m, ma] = mostOverlapping(n);
+      let [m, ma] = mostOverlapping(n, targets);
       if (ma>0 && !suppressJump) {
         let p = targets.elements.length>1?"group":'"'+shortTitle(n.title)+'"';
         let target = level.children[m];
@@ -1306,12 +1306,12 @@ function areaOfOverlap(a,b){
   let v = Math.min(Math.max(0,Math.min(a.y+a.height-b.y, b.y+b.height-a.y)),a.height,b.height);
   return h*v // / Math.min(a.width*a.height, b.width*b.height)
 }
-function mostOverlapping(n){
+function mostOverlapping(n, ignore){
   let m, ma=0;
   for (let i in level.children){
-    if (n==level.children[i]) continue;
-    if (level.children[i].pinned) continue;
-    let a=areaOfOverlap(n,level.children[i])
+    let c=level.children[i];
+    if (c.pinned || ignore.objects.includes(c)) continue;
+    let a=areaOfOverlap(n,c)
     if (a>ma) {ma=a; m=i}
   }
   return [m, ma]
