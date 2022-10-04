@@ -656,17 +656,18 @@ function createNote(n, editImmediately=false, index=-1){
   let bound = {w:window.innerWidth,h:window.innerHeight}
   let scale = Math.min(0.9*n.width/bound.w, 0.9*n.height/bound.h) || 0.1;
   
-  if (n.lines){
+  {
     let container = document.createElement("div")
     let svg = document.createElementNS(svgNS, "svg");
     setSVGsize(svg,bound.w,bound.h)
-    for (let line of n.lines) addSVGline(svg, line)
+    if (n.lines) for (let line of n.lines) addSVGline(svg, line)
     svg.style.transform='scale('+scale+')'
     container.appendChild(svg)
     container.style.position='absolute'
     container.style.left='0'
     container.style.bottom=bound.h*scale+'px'
     d.appendChild(container)
+    subNoteSvgById[n.id]=svg
   }
 
   for (let i of n.children) {
@@ -770,6 +771,7 @@ function populate(t){
   zTopIndex=0
   removeAllChildNodes(main)
   noteElementsById={}
+  subNoteSvgById={}
   for (let i of t.children)
     createNote(i)
   level = t
@@ -1428,15 +1430,20 @@ function deltaAction(a){
         undo.index=n.lines.length-1
       }
       if (n==level) addSVGline(mainSvgG, a.line, undo.index)
-      // todo: if n is child of level, add to note
+
+      if (level.children.indexOf(n)!=-1) {
+        addSVGline(subNoteSvgById[n.id], a.line, undo.index)
+      }
     break;
     case "eraseLine":
       undo.action="addLine"
       undo.index = a.index
       undo.line = n.lines.splice(a.index,1)[0];
       if (n==level) mainSvgG.children[a.index].remove()
-      //todo: if n is child of level, remove from note
 
+      if (level.children.indexOf(n)!=-1) {
+        subNoteSvgById[n.id].children[a.index].remove()
+      }
     break;
     case "eraseAllLines":
       undo.action="undoEraseAllLines"
@@ -1794,7 +1801,7 @@ function validTree(t){
 }
 
 var nextId = 0;
-var allIds=[], noteById={}, noteParentById={}, noteElementsById={};
+var allIds=[], noteById={}, noteParentById={}, noteElementsById={}, subNoteSvgById={};
 
 function findIds(ids, n) {
   if (n.id) ids.push(n.id)
