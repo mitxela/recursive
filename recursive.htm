@@ -1392,11 +1392,13 @@ function saveWithoutHistory(){
 }
 function deltaPush(a){
   deltaHistory.push(deltaAction(a))
+  deltaCleanup()
   redoHistory=[];
   save()
 }
 function deltaPushRaw(a) {
   deltaHistory.push(a)
+  deltaCleanup()
   redoHistory=[]
   save()
 }
@@ -1416,7 +1418,19 @@ function traverseHistory(from, to){
     to.push(r)
   } else to.push(deltaAction(u))
 
+  deltaCleanup()
   save()
+}
+var deltaFlags={ rePopulateOutline:false, showNote:false,};
+function deltaCleanup(){
+  if (deltaFlags.rePopulateOutline) {
+    rePopulateOutline();
+    deltaFlags.rePopulateOutline=false
+  }
+  if (deltaFlags.showNote!==false) {
+    showNote(deltaFlags.showNote);
+    deltaFlags.showNote=false
+  }
 }
 function deltaAction(a){
   let undo = {id:a.id}, n=noteById[a.id], d=noteElementsById[n.id];
@@ -1502,6 +1516,7 @@ function deltaAction(a){
         : '';
       if (trailobj.indexOf(n)!=-1) regenTrail();
       if (level==n) setBackgroundColor(n)
+      // todo: if note is within a child of level, update
     break;
     case "toggleStrike":
       undo.action="toggleStrike"
@@ -1539,7 +1554,7 @@ function deltaAction(a){
         main.removeChild(d)
       }
       // todo: update outline without repopulate
-      rePopulateOutline()
+      deltaFlags.rePopulateOutline=true
       if (escapeView) window.onhashchange() //todo: focus parent instead
     break;
     case "addNote":
@@ -1553,7 +1568,7 @@ function deltaAction(a){
       noteById[a.newNote.id]=a.newNote;
       noteParentById[a.newNote.id]=n;
 
-      rePopulateOutline() //todo: improve
+      deltaFlags.rePopulateOutline=true //todo: improve
       //todo: if level==parent, add subnotes
     break;
     case "setParent":
@@ -1574,8 +1589,9 @@ function deltaAction(a){
       noteParentById[n.id]=newParent;
 
       // check if changes are visible...
-      showNote(level.id) // if group, this will get called repeatedly
-      rePopulateOutline()
+
+      deltaFlags.showNote=level.id
+      deltaFlags.rePopulateOutline=true
     break;
     case "newRoot":
       undo.action="undoNewRoot"
@@ -1604,8 +1620,9 @@ function deltaAction(a){
       tree = tree.children[0]
       tree.title="Root"
       trailobj.shift()
-      showNote(tree.id)
-      rePopulateOutline()
+
+      deltaFlags.showNote=tree.id
+      deltaFlags.rePopulateOutline=true
     break;
   }
   return undo
