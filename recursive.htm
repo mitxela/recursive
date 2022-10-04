@@ -1545,24 +1545,25 @@ function deltaAction(a){
       undo.newNote = n
       undo.index = noteParentById[n.id].children.indexOf(n);
 
-      let escapeView = noteContains( n, level )
+      if (!d && noteContains( n, level )) {
+        deltaFlags.showNote=undo.id
+      }
       noteParentById[n.id].children.splice( undo.index, 1 )
       if (d) {
-        delete noteById[n.id];
-        delete noteParentById[n.id];
         delete noteElementsById[n.id];
         main.removeChild(d)
       }
       // todo: update outline without repopulate
       deltaFlags.rePopulateOutline=true
-      if (escapeView) window.onhashchange() //todo: focus parent instead
+      delete noteById[n.id];
+      delete noteParentById[n.id];
     break;
     case "addNote":
       undo.action="deleteNote"
       undo.id=a.newNote.id;
 
       if (n.children.length==0) n.open=true;
-      createNote(a.newNote, a.index==-1, a.index)
+      if (level==n) createNote(a.newNote, a.index==-1, a.index)
       if (a.index>=0) n.children.splice(a.index,0,a.newNote)
       else n.children.push(a.newNote)
       noteById[a.newNote.id]=a.newNote;
@@ -1570,6 +1571,8 @@ function deltaAction(a){
 
       deltaFlags.rePopulateOutline=true //todo: improve
       //todo: if level==parent, add subnotes
+      //if (level==noteParentById[n.id])
+      //  deltaFlags.showNote=level.id
     break;
     case "setParent":
       let oldParent=noteParentById[n.id];
