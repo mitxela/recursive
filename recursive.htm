@@ -634,6 +634,7 @@ function createNote(n, editImmediately=false, index=-1){
 
             target.children.push(n)
             level.children.splice(level.children.indexOf(n), 1)
+            noteParentById[n.id]=target;
             n.x -= dx
             n.y -= dy
             d.style.transition="0.3s linear"
