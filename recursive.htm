@@ -503,7 +503,14 @@ function createNote(n, editImmediately=false, index=-1){
   d.appendChild(t)
 
   d.ondblclick=function(ev){
-    if (ev && ev.target.tagName=='TEXTAREA') return;
+    if (ev){
+      if (ev.target.tagName=='TEXTAREA') return;
+      if (ev.target.tagName=='LI' && ev.clientX < ev.target.getBoundingClientRect().x) {
+        toggleBulletStrike(n,t, ...ev.target.dataset.i.split(','))
+        return
+      }
+    }
+    
     var e = document.createElement('textarea');
     var saved=false;
     function saveText(){
@@ -1241,7 +1248,7 @@ window.onhashchange = function(){
 function escapeEntities(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
 }
-function markdownApply(s){
+function markdownApply(s, j){
   let lines = s.replace(/</g,'&lt;').replace(/>/g,'&gt;').split("\n") //ampersand may occur in url
   let links=[]
   let namedlinks=[]
@@ -1270,12 +1277,12 @@ function markdownApply(s){
       .replace(/^([ ]*)[-\*] (.+)$/, function(m,p1,p2){
         indent=p1.length+1;
         listtag="ul>";
-        return "<li>"+p2
+        return `<li data-i="${i},${j}">${p2}`
       })
       .replace(/^([ ]*)[0-9]{1,2}\. (.+)$/, function(m,p1,p2){
         indent=p1.length+1;
         listtag="ol>";
-        return "<li>"+p2
+        return `<li data-i="${i},${j}">${p2}`
       })
       //.replace(/&(?!lt;|gt;)/g,'&amp;')
       .replace(/^([#]+)(.+)$/,function(m, p1, p2){
@@ -1291,12 +1298,15 @@ function markdownApply(s){
       }
 
       while (list.length<indentstack.length) lines[i]="<"+listtag+lines[i],list.push("</"+listtag);
+      if (list.length && i==lines.length-1) {
+        while (list.length) lines[i]+=list.pop();
+      }
       while (list.length>indentstack.length) lines[i]=list.pop()+lines[i];
   }
   return lines.join("<br>")
         .replace(/_([^_]+)_/g,'<i>$1</i>')
         .replace(/\*([^\*]+)\*/g,'<b>$1</b>')
-        .replace(/~([^~]+)~/g,'<s>$1</s>')
+        .replace(/~([^~]*)~/g,'<s>$1</s>')
         .replace(/<PRECODE>/g,function(m){
           return "<code>"+codes.shift()+"</code>";
         })
@@ -1315,12 +1325,32 @@ function markdownApply(s){
 }
 function markdown(s){
   //separate out preformatted areas first
-  let pre = s.replace(/[\n]?```[\n]?/g,'```').split('```')
+  let pre = s.split(/[\n]?```[\n]?/)
   for (let i = 0; i<pre.length; i++) {
     if (i%2) pre[i]="<pre>"+escapeEntities(pre[i])+"</pre>"
-    else pre[i] = markdownApply(pre[i])
+    else pre[i] = markdownApply(pre[i],i)
   }
   return pre.join("\n")
+}
+function toggleBulletStrike(n, t, i, j){
+  let joints = n.title.match(/[\n]?```[\n]?/g) || [];
+
+  let pre = n.title.split(/[\n]?```[\n]?/)
+  let lines = pre[j].split('\n')
+  let b = lines[i].match(/^([ ]*)([-\*] |[0-9]{1,2}\. )(.+)$/)
+  let m = b[3].match(/^~([\s\S]+)~$/)
+  if (m) {
+    b[3] = m[1]
+  } else {
+    b[3] = '~'+b[3]+'~'
+  }
+  lines[i] = b[1]+b[2]+b[3];
+  pre[j]=lines.join('\n')
+  let newTitle = ""
+  for (let s in pre) {
+    newTitle += pre[s] + (joints[s] || "")
+  }
+  deltaPush({action:"setTitle", id:n.id, title:newTitle})
 }
 function autoIndex(n){
   return Math.round(Math.sqrt(n.x*n.x +n.y*n.y))
