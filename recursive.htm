@@ -665,14 +665,17 @@ function createNote(n, editImmediately=false, index=-1){
   }
 
   let bound = {w:window.innerWidth,h:window.innerHeight}
+  if (!n.view) n.view={x:0,y:0,s:1};
+
   let scale = Math.min(0.9*n.width/bound.w, 0.9*n.height/bound.h) || 0.1;
-  
+  let tr = `scale(${scale}) translate(${n.view.x}px, ${n.view.y}px) scale(${n.view.s})`
+
   {
     let container = document.createElement("div")
     let svg = document.createElementNS(svgNS, "svg");
     setSVGsize(svg,bound.w,bound.h)
     if (n.lines) for (let line of n.lines) addSVGline(svg, line)
-    svg.style.transform='scale('+scale+')'
+    svg.style.transform=tr
     container.appendChild(svg)
     container.style.position='absolute'
     container.style.left='0'
@@ -682,7 +685,7 @@ function createNote(n, editImmediately=false, index=-1){
   }
   {
     let container = document.createElement("div")
-    container.style.transform='scale('+scale+')'
+    container.style.transform=tr
     container.style.position='absolute'
     container.style.left='0'
     container.style.bottom=bound.h*scale+'px'
