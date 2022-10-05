@@ -22,11 +22,9 @@ pre{background:rgba(128,128,128,0.2)}
 .note.selected {outline:2px dashed;}
 .note svg{z-index:-1}
 .note img{max-width:100%}
-.subnote {
-  position:absolute;
-  border: 1px solid;
-  box-shadow:2px 2px 2px rgba(0,0,0,0.3);
-  z-index:-1;
+.subnote{
+  filter:blur(2px);
+  pointer-events: none;
 }
 ul{margin:0}
 .gear{
@@ -674,22 +672,19 @@ function createNote(n, editImmediately=false, index=-1){
     d.appendChild(container)
     subNoteSvgById[n.id]=svg
   }
-
-  for (let i of n.children) {
-    let sn = document.createElement('div')
-    sn.className='subnote'
-    let lighter = i.color.l*0.5 + 50;
-    sn.style.backgroundColor='hsl('+i.color.h+','+i.color.s+'%,'+lighter+'%)';
-    sn.style.borderColor='hsl('+i.color.h+','+i.color.s+'%,'+(lighter*0.8)+'%)';
-
-    sn.style.width=i.width*scale+'px'
-    sn.style.height=i.height*scale+'px'
-    sn.style.left=i.x*scale+'px'
-    sn.style.bottom=(bound.h-i.y-i.height)*scale+'px'
-
-    d.appendChild(sn)
+  {
+    let container = document.createElement("div")
+    container.style.transform='scale('+scale+')'
+    container.style.position='absolute'
+    container.style.left='0'
+    container.style.bottom=bound.h*scale+'px'
+    container.style.zIndex='-1'
+    for (let i of n.children) {
+      container.appendChild(createSubNote(i))
+    }
+    d.appendChild(container)
+    noteElementsById[n.id]=d;
   }
-  noteElementsById[n.id]=d;
 
   if (index!=-1){
     main.insertBefore(d, main.children[index])
@@ -697,6 +692,23 @@ function createNote(n, editImmediately=false, index=-1){
     main.appendChild(d)
   }
   if (editImmediately) d.ondblclick()
+}
+function createSubNote(i) {
+    let sn = document.createElement('div')
+    sn.className='note subnote'
+    let lighter = i.color.l*0.5 + 50;
+    sn.style.backgroundColor='hsl('+i.color.h+','+i.color.s+'%,'+lighter+'%)';
+    sn.style.borderColor='hsl('+i.color.h+','+i.color.s+'%,'+(lighter*0.8)+'%)';
+
+    sn.innerHTML=markdown(i.title)
+
+    sn.style.width=i.width+'px'
+    sn.style.height=i.height+'px'
+    sn.style.left=i.x+'px'
+    sn.style.top=i.y+'px'
+
+    subNoteById[i.id]=sn
+    return sn
 }
 function moveNote(n,d,dx,dy) {
   n.x += dx
@@ -777,6 +789,7 @@ function populate(t){
   removeAllChildNodes(main)
   noteElementsById={}
   subNoteSvgById={}
+  subNoteById={}
   for (let i of t.children)
     createNote(i)
   level = t
@@ -1487,6 +1500,7 @@ function deltaAction(a){
       undo.title=n.title;
       n.title = a.title;
       if (d) d.children[1].innerHTML = markdown(n.title);
+// else if subNote update
       updateOutlineLink(n)
       if (trailobj.indexOf(n)!=-1) regenTrail();
     break;
@@ -1829,7 +1843,7 @@ function validTree(t){
 }
 
 var nextId = 0;
-var allIds=[], noteById={}, noteParentById={}, noteElementsById={}, subNoteSvgById={};
+var allIds=[], noteById={}, noteParentById={}, noteElementsById={}, subNoteById={}, subNoteSvgById={};
 
 function findIds(ids, n) {
   if (n.id) ids.push(n.id)
