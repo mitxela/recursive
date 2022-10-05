@@ -1524,13 +1524,13 @@ function deltaAction(a){
       undo.color = n.color
       n.color = a.color
       if (d) setNoteColor(n, d)
+      else if (subNoteById[n.id]) setNoteColor(n, subNoteById[n.id])
+      else if (level==n) setBackgroundColor(n)
       outlineLinksById[n.id].style.background=
         (n.color && n.color.l) ?
         'hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)'
         : '';
       if (trailobj.indexOf(n)!=-1) regenTrail();
-      if (level==n) setBackgroundColor(n)
-      // todo: if note is within a child of level, update
     break;
     case "toggleStrike":
       undo.action="toggleStrike"
@@ -1564,8 +1564,11 @@ function deltaAction(a){
       }
       noteParentById[n.id].children.splice( undo.index, 1 )
       if (d) {
+        d.remove()
         delete noteElementsById[n.id];
-        main.removeChild(d)
+      } else if (subNoteById[n.id]) {
+        subNoteById[n.id].remove()
+        delete subNoteById[n.id];
       }
       // todo: update outline without repopulate
       deltaFlags.rePopulateOutline=true
@@ -1578,15 +1581,15 @@ function deltaAction(a){
 
       if (n.children.length==0) n.open=true;
       if (level==n) createNote(a.newNote, a.index==-1, a.index)
+      else if (level==noteParentById[n.id]) {
+        d.lastChild.append(createSubNote(a.newNote))
+      }
       if (a.index>=0) n.children.splice(a.index,0,a.newNote)
       else n.children.push(a.newNote)
       noteById[a.newNote.id]=a.newNote;
       noteParentById[a.newNote.id]=n;
 
       deltaFlags.rePopulateOutline=true //todo: improve
-      //todo: if level==parent, add subnotes
-      //if (level==noteParentById[n.id])
-      //  deltaFlags.showNote=level.id
     break;
     case "setParent":
       let oldParent=noteParentById[n.id];
