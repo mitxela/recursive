@@ -20,9 +20,10 @@ pre{background:rgba(128,128,128,0.2)}
 }
 .note.pinned {box-shadow:1px 1px 2px rgba(0,0,0,0.3);resize:none;}
 .note.selected {outline:2px dashed;}
-.note svg{z-index:-1; filter:blur(2px);}
+.note svg{z-index:-1;}
+.note svg g{filter:blur(2px);}
 .note img{max-width:100%}
-.subnote{
+.note .note{
   filter:brightness(1.5) saturate(0.5) blur(2px);
   pointer-events: none;
 }
@@ -673,15 +674,17 @@ function createNote(n, editImmediately=false, index=-1){
   {
     let container = document.createElement("div")
     let svg = document.createElementNS(svgNS, "svg");
+    let g = document.createElementNS(svgNS, "g");
     setSVGsize(svg,bound.w,bound.h)
-    if (n.lines) for (let line of n.lines) addSVGline(svg, line)
-    svg.style.transform=tr
+    if (n.lines) for (let line of n.lines) addSVGline(g, line)
+    g.style.transform=tr  
+    svg.appendChild(g)
     container.appendChild(svg)
     container.style.position='absolute'
     container.style.left='0'
     container.style.bottom=bound.h*scale+'px'
     d.appendChild(container)
-    subNoteSvgById[n.id]=svg
+    subNoteSvgById[n.id]=g
   }
   {
     let container = document.createElement("div")
@@ -706,7 +709,7 @@ function createNote(n, editImmediately=false, index=-1){
 }
 function createSubNote(i) {
     let sn = document.createElement('div')
-    sn.className='note subnote'
+    sn.className='note'
 
     setNoteColor(i,sn)
     setNoteLayout(i,sn)
