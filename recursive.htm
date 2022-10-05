@@ -503,8 +503,11 @@ function createNote(n, editImmediately=false, index=-1){
 
   d.ondblclick=function(ev){
     if (ev && ev.target.tagName=='TEXTAREA') return;
-    var e = document.createElement('textarea')
+    var e = document.createElement('textarea');
+    var saved=false;
     function saveText(){
+      if (saved) return;
+      saved=true;
       if (e.value!=n.title)
         deltaPush({action:"setTitle", id:n.id, title:e.value})
       else
