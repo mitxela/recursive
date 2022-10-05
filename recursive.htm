@@ -16,14 +16,14 @@ pre{background:rgba(128,128,128,0.2)}
   border-radius:3px;
   opacity:0.9; box-shadow:5px 5px 5px rgba(0,0,0,0.3);
   min-height:50px; min-width:50px;
-  resize:both; overflow:auto;
+  resize:both; overflow:hidden;
 }
 .note.pinned {box-shadow:1px 1px 2px rgba(0,0,0,0.3);resize:none;}
 .note.selected {outline:2px dashed;}
-.note svg{z-index:-1}
+.note svg{z-index:-1; filter:blur(2px);}
 .note img{max-width:100%}
 .subnote{
-  filter:blur(2px);
+  filter:brightness(1.5) saturate(0.5) blur(2px);
   pointer-events: none;
 }
 ul{margin:0}
@@ -455,17 +455,19 @@ function setNoteColor(n,d) {
     d.style.borderColor='hsl('+n.color.h+','+n.color.s+'%,'+(n.color.l*0.8)+'%)';
   }
 }
+function setNoteLayout(n,d){
+  d.style.width=n.width+'px'
+  d.style.height=n.height+'px'
+  d.style.left=n.x+'px'
+  d.style.top=n.y+'px'
+}
 function createNote(n, editImmediately=false, index=-1){
   var d = document.createElement('div');
   d.className='note'
   
   setNoteColor(n,d)
+  setNoteLayout(n,d)
   if (n.pinned) d.classList.add("pinned")
-
-  d.style.width=n.width+'px'
-  d.style.height=n.height+'px'
-  d.style.left=n.x+'px'
-  d.style.top=n.y+'px'
 
   var a = document.createElement('div');
   a.className='gear'
@@ -510,7 +512,7 @@ function createNote(n, editImmediately=false, index=-1){
         deltaPush({action:"setTitle", id:n.id, title:e.value})
       else
         t.innerHTML=markdown(n.title)
-      d.style.overflow='auto';
+      d.style.overflow='';
       setTimeout(()=>textEditing=false,100)
     }
 
@@ -696,16 +698,10 @@ function createNote(n, editImmediately=false, index=-1){
 function createSubNote(i) {
     let sn = document.createElement('div')
     sn.className='note subnote'
-    let lighter = i.color.l*0.5 + 50;
-    sn.style.backgroundColor='hsl('+i.color.h+','+i.color.s+'%,'+lighter+'%)';
-    sn.style.borderColor='hsl('+i.color.h+','+i.color.s+'%,'+(lighter*0.8)+'%)';
 
+    setNoteColor(i,sn)
+    setNoteLayout(i,sn)
     sn.innerHTML=markdown(i.title)
-
-    sn.style.width=i.width+'px'
-    sn.style.height=i.height+'px'
-    sn.style.left=i.x+'px'
-    sn.style.top=i.y+'px'
 
     subNoteById[i.id]=sn
     return sn
@@ -1500,7 +1496,7 @@ function deltaAction(a){
       undo.title=n.title;
       n.title = a.title;
       if (d) d.children[1].innerHTML = markdown(n.title);
-// else if subNote update
+      else if (subNoteById[n.id]) subNoteById[n.id].innedHTML=markdown(n.title)
       updateOutlineLink(n)
       if (trailobj.indexOf(n)!=-1) regenTrail();
     break;
@@ -1514,13 +1510,8 @@ function deltaAction(a){
       n.y = a.y
       n.width = a.width
       n.height = a.height
-      // todo: if note is within a child of level, update
-      if (d) {
-        d.style.left=n.x+'px'
-        d.style.top=n.y+'px'
-        d.style.width=n.width+'px';
-        d.style.height=n.height+'px';
-      }
+      if (d) setNoteLayout(n,d)
+      else if (subNoteById[n.id]) setNoteLayout(n, subNoteById[n.id])
     break;
     case "setColor":
       undo.action="setColor"
