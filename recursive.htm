@@ -1538,7 +1538,7 @@ function deltaAction(a){
       undo.title=n.title;
       n.title = a.title;
       if (d) d.children[1].innerHTML = markdown(n.title);
-      else if (subNoteById[n.id]) subNoteById[n.id].innedHTML=markdown(n.title)
+      else if (subNoteById[n.id]) subNoteById[n.id].innerHTML=markdown(n.title)
       updateOutlineLink(n)
       if (trailobj.indexOf(n)!=-1) regenTrail();
     break;
