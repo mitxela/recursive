@@ -506,7 +506,8 @@ function createNote(n, editImmediately=false, index=-1){
     if (ev){
       if (ev.target.tagName=='TEXTAREA') return;
       if (ev.target.tagName=='LI' && ev.clientX < ev.target.getBoundingClientRect().x) {
-        toggleBulletStrike(n,t, ...ev.target.dataset.i.split(','))
+        let [i,j]=ev.target.dataset.i.split(',')
+        deltaPush({action:"toggleBulletStrike", id:n.id, i,j})
         return
       }
     }
@@ -1332,7 +1333,7 @@ function markdown(s){
   }
   return pre.join("\n")
 }
-function toggleBulletStrike(n, t, i, j){
+function toggleBulletStrike(n, i, j){
   let joints = n.title.match(/[\n]?```[\n]?/g) || [];
 
   let pre = n.title.split(/[\n]?```[\n]?/)
@@ -1350,7 +1351,7 @@ function toggleBulletStrike(n, t, i, j){
   for (let s in pre) {
     newTitle += pre[s] + (joints[s] || "")
   }
-  deltaPush({action:"setTitle", id:n.id, title:newTitle})
+  n.title=newTitle;
 }
 function autoIndex(n){
   return Math.round(Math.sqrt(n.x*n.x +n.y*n.y))
@@ -1567,6 +1568,16 @@ function deltaAction(a){
         'hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)'
         : '';
       if (trailobj.indexOf(n)!=-1) regenTrail();
+    break;
+    case "toggleBulletStrike":
+      undo.action="toggleBulletStrike"
+      undo.i=a.i
+      undo.j=a.j
+      toggleBulletStrike(n,a.i,a.j)
+      if (d) d.children[1].innerHTML = markdown(n.title);
+      else if (subNoteById[n.id]) subNoteById[n.id].innerHTML=markdown(n.title)
+      updateOutlineLink(n)
+      // trail shouldn't be affected by toggling strike
     break;
     case "toggleStrike":
       undo.action="toggleStrike"
