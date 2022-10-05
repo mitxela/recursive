@@ -658,6 +658,12 @@ function createNote(n, editImmediately=false, index=-1){
     }
   }
 
+  d.onmouseover=function(e){
+    if (e.buttons==2 && penTool=="addnote" && n.title=="New note") {
+      deltaPush({action:"deleteNote",id:n.id})
+    }
+  }
+
   let bound = {w:window.innerWidth,h:window.innerHeight}
   let scale = Math.min(0.9*n.width/bound.w, 0.9*n.height/bound.h) || 0.1;
   
