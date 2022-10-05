@@ -1589,8 +1589,9 @@ function deltaAction(a){
       } else {
         n.title=h+'~'+b+'~'
       }
-      updateOutlineLink(n)
       if (d) d.children[1].innerHTML = markdown(n.title)
+      else if (subNoteById[n.id]) subNoteById[n.id].innerHTML=markdown(n.title)
+      updateOutlineLink(n)
     break;
     case "togglePinned":
       undo.action="togglePinned"
