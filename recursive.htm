@@ -675,7 +675,7 @@ function createNote(n, editImmediately=false, index=-1){
     let container = document.createElement("div")
     let svg = document.createElementNS(svgNS, "svg");
     let g = document.createElementNS(svgNS, "g");
-    setSVGsize(svg,bound.w,bound.h)
+    setSVGsize(svg,bound.w*scale,bound.h*scale)
     if (n.lines) for (let line of n.lines) addSVGline(g, line)
     g.style.transform=tr  
     svg.appendChild(g)
