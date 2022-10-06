@@ -632,33 +632,27 @@ function createNote(n, editImmediately=false, index=-1){
         if (confirm('Move '+p+' into "'+shortTitle(target.title)+'"?')) {
           if (target.children.length==0) target.open=true
           let dx = n.x-startx, dy = n.y-starty;
-          let undoAction=[]
+          let action=[]
 
           for (let i=0; i<targets.elements.length; i++) {
             let n = targets.objects[i], d = targets.elements[i];
 
-            undoAction.push({
+            action.push({
               action:"setParent",
               id:n.id,
-              parent:noteParentById[n.id].id,
-              index:level.children.indexOf(n)
+              parent:target.id,
+              animate:1,
             })
-
-            target.children.push(n)
-            level.children.splice(level.children.indexOf(n), 1)
-            noteParentById[n.id]=target;
             n.x -= dx
             n.y -= dy
-            d.style.transition="0.3s linear"
-            d.style.transform="scale(0)"
           }
-          deltaPushRaw(undoAction)
+          deltaPushGroup(action)
 
-          setTimeout(()=>{populate(level); rePopulateOutline()},300)
         } else {
           suppressJump = true;
           main.children[m].classList.remove('hl')
         }
+        return
       }
 
       if (n.x!=startx || n.y !=starty) {
@@ -716,15 +710,15 @@ function createNote(n, editImmediately=false, index=-1){
   if (editImmediately) d.ondblclick()
 }
 function createSubNote(i) {
-    let sn = document.createElement('div')
-    sn.className='note'
+  let sn = document.createElement('div')
+  sn.className='note'
 
-    setNoteColor(i,sn)
-    setNoteLayout(i,sn)
-    sn.innerHTML=markdown(i.title)
+  setNoteColor(i,sn)
+  setNoteLayout(i,sn)
+  sn.innerHTML=markdown(i.title)
 
-    subNoteById[i.id]=sn
-    return sn
+  subNoteById[i.id]=sn
+  return sn
 }
 function moveNote(n,d,dx,dy) {
   n.x += dx
@@ -1451,6 +1445,11 @@ function deltaPush(a){
   redoHistory=[];
   save()
 }
+function deltaPushGroup(g){
+  let a=[];
+  for (let i of g) a.push(deltaAction(i))
+  deltaPushRaw(a)
+}
 function deltaPushRaw(a) {
   deltaHistory.push(a)
   deltaCleanup()
@@ -1476,7 +1475,7 @@ function traverseHistory(from, to){
   deltaCleanup()
   save()
 }
-var deltaFlags={ rePopulateOutline:false, showNote:false,};
+var deltaFlags={ rePopulateOutline:false, showNote:false, delayedShowNote:false };
 function deltaCleanup(){
   if (deltaFlags.rePopulateOutline) {
     rePopulateOutline();
@@ -1485,6 +1484,12 @@ function deltaCleanup(){
   if (deltaFlags.showNote!==false) {
     showNote(deltaFlags.showNote);
     deltaFlags.showNote=false
+  }
+  if (deltaFlags.delayedShowNote!==false) {
+    setTimeout(()=>{
+      showNote(deltaFlags.delayedShowNote);
+      deltaFlags.showNote=false
+    },300)
   }
 }
 function deltaAction(a){
@@ -1658,7 +1663,19 @@ function deltaAction(a){
 
       // check if changes are visible...
 
-      deltaFlags.showNote=level.id
+      if (d && noteElementsById[newParent.id] && a.animate) {
+        d.style.transition="0.3s linear"
+        d.style.transform="scale(0)"
+        //setTimeout(()=>{
+        //  d.remove();
+        //  // possibly also update subNote lookups
+        //  // redraw target...
+        //  noteElementsById[newParent.id].classList.remove("hl")
+        //  delete noteElementsById[n.id];
+        //},300)
+        deltaFlags.delayedShowNote=level.id
+      } else deltaFlags.showNote=level.id
+
       deltaFlags.rePopulateOutline=true
     break;
     case "newRoot":
