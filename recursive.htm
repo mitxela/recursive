@@ -406,28 +406,28 @@ function changeColor(){
   let c = hex2hsl(document.getElementById('notecolor').value);
   menuAction({action:"setColor", color:c})
 }
-function menuAction(a, undo=[]){
+function menuAction(a, action=[]){
   menu.style.display='none';
   if (selection.objects.length) {
     for (let n of selection.objects) {
-      undo.push(deltaAction(Object.assign({id:n.id}, a)))
+      action.push(Object.assign({id:n.id}, a))
     }
     if (a.action=="togglePinned") clearSelection()
   } else {
-    undo.push(deltaAction(Object.assign({id:menuRef.id},a)))
+    action.push(Object.assign({id:menuRef.id},a))
   }
-  deltaPushRaw(undo)
+  deltaPushGroup(action)
 }
 function moveUpNote(){
   menu.style.display='none';
-  let undoAction=[];
+  let action=[];
   if (trailobj.length<=1) {
     if (!confirm("Create new note above root?")) return;
-    undoAction.push(deltaAction({action:"newRoot", id:tree.id}))
+    action.push({action:"newRoot", id:tree.id})
   }
 
   let parent=trailobj[trailobj.length-2];
-  menuAction({action:"setParent", parent:parent.id}, undoAction)
+  menuAction({action:"setParent", parent:parent.id}, action)
 }
 function editNote(){
   menu.style.display='none';
@@ -1666,13 +1666,6 @@ function deltaAction(a){
       if (d && noteElementsById[newParent.id] && a.animate) {
         d.style.transition="0.3s linear"
         d.style.transform="scale(0)"
-        //setTimeout(()=>{
-        //  d.remove();
-        //  // possibly also update subNote lookups
-        //  // redraw target...
-        //  noteElementsById[newParent.id].classList.remove("hl")
-        //  delete noteElementsById[n.id];
-        //},300)
         deltaFlags.delayedShowNote=level.id
       } else deltaFlags.showNote=level.id
 
