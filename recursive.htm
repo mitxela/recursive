@@ -27,6 +27,7 @@ pre{background:rgba(128,128,128,0.2)}
   filter:brightness(1.5) saturate(0.5) blur(2px);
   pointer-events: none;
 }
+textarea{min-width:42px;min-height:42px}
 ul{margin:0}
 .gear{
   cursor:pointer;
@@ -520,21 +521,31 @@ function createNote(n, editImmediately=false, index=-1){
     }
     
     var e = document.createElement('textarea');
+    var sw = (n.width-8)+'px', sh=(n.height-8)+'px';
     var saved=false;
     function saveText(){
       if (saved) return;
       saved=true;
+      let a=[]
       if (e.value!=n.title)
-        deltaPush([{action:"setTitle", id:n.id, title:e.value}])
+        a.push({action:"setTitle", id:n.id, title:e.value})
       else
         t.innerHTML=markdown(n.title)
+      if (e.style.width!=sw || e.style.height!=sh)
+        a.push({
+          action:"setLayout", id:n.id, x:n.x,y:n.y, 
+          width:parseFloat(e.style.width)+8,
+          height:parseFloat(e.style.height)+8
+        })
+      if (a.length) deltaPush(a)
+
       d.style.overflow='';
       setTimeout(()=>textEditing=false,100)
     }
 
     e.textContent = n.title
-    e.style.width = (n.width-8)+'px'
-    e.style.height = (n.height-8)+'px'
+    e.style.width = sw
+    e.style.height = sh
     e.style.background = n.color.l==0?'transparent':'hsl('+n.color.h+','+n.color.s+'%,'+n.color.l*1.2+'%)';
     t.innerHTML = "";
     d.style.overflow='visible'
