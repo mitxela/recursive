@@ -647,6 +647,7 @@ function createNote(n, editImmediately=false){
       d.style.cursor='';
 
       if (d.style.width!=sw || d.style.height!=sh) {save(); return}
+      if (startx==n.x && starty==n.y) return;
       
       let [m, ma] = mostOverlapping(n);
       if (ma>0 && !suppressJump) {
