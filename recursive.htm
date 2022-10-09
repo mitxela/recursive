@@ -183,7 +183,7 @@ details>p{display:inline-block;}
   opacity:0;
   transition:0.2s;
 }
-#toolbox:hover+#drawingControls, #drawingControls:hover{
+#drawingControls.open{
   left:32px;
   opacity:1;
 }
@@ -294,6 +294,7 @@ details>p{display:inline-block;}
 <tr><td>H</td><td>Hand tool</td></tr>
 <tr><td>Z</td><td>Zoom tool</td></tr>
 <tr><td>S</td><td>Toggle sidebar</td></tr>
+<tr><td>Q</td><td>Toggle extra drawing controls</td></tr>
 <tr><td>/</td><td>Focus Search</td></tr>
 <tr><td>Delete</td><td>Delete marquee selection</td></tr>
 <tr><td>Escape</td><td>Unequip tool</td></tr>
@@ -400,6 +401,9 @@ function toggleSidebarLeft(){
     sidebarLeft.style.visibility=offsetLeft?"visible":"hidden"
     canvas.style.transition=''
   },200)
+}
+function toggleMoreControls(){
+  document.getElementById('drawingControls').classList.toggle("open")
 }
 function deleteNote(){
   menuAction(function(n, el){
@@ -1474,6 +1478,7 @@ document.onkeydown=function(e){
     case 'h': setPenTool('hand'); return;
     case 'z': setPenTool('zoom'); return;
     case 's': toggleSidebarLeft(); return;
+    case 'q': toggleMoreControls(); return;
     case '/':
       if (document.activeElement==searchInput) return;
       killEvent(e);
@@ -1850,6 +1855,8 @@ for (let i of ["addnote","marquee","pencil","line","arrow","rect","erase","hand"
       setPenTool(i)
   }
 }
+
+toolButton("gear", "More tools [Q]").onclick =toggleMoreControls
 
 toolButtonSpacer()
 toolButton("zoom100", "Zoom to 100% [Home]").onclick = zoomReset
