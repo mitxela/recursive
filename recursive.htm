@@ -93,7 +93,7 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
   padding:10px;
   position:absolute;
   left:0;
-  top:0px;
+  top:22px;
   width:calc(100% - 28px);
   height:calc(100% - 42px);
   overflow:auto;
@@ -135,7 +135,7 @@ details>p{display:inline-block;}
 }
 #searchInput{
   position:absolute;
-  bottom:0;
+  top:0;
   left:0;
   width:calc(100% - 8px);
   height:22px;
@@ -182,7 +182,7 @@ details>p{display:inline-block;}
   opacity:0;
   transition:0.2s;
 }
-#toolbox:hover+#drawingControls, #drawingControls:hover{
+#drawingControls.open{
   left:32px;
   opacity:1;
 }
@@ -293,6 +293,7 @@ details>p{display:inline-block;}
 <tr><td>H</td><td>Hand tool</td></tr>
 <tr><td>Z</td><td>Zoom tool</td></tr>
 <tr><td>S</td><td>Toggle sidebar</td></tr>
+<tr><td>Q</td><td>Toggle extra drawing controls</td></tr>
 <tr><td>/</td><td>Focus Search</td></tr>
 <tr><td>Delete</td><td>Delete marquee selection</td></tr>
 <tr><td>Escape</td><td>Unequip tool</td></tr>
@@ -390,17 +391,23 @@ function toggleSidebarLeft(){
     sidebarLeft.style.left=-offsetLeft + "px"
     canvas.style.left="0px"
     offsetLeft = 0;
+    toolButtons.sidebar.classList.remove('active')
   } else {
     offsetLeft=sidebarLeftSize
     sidebarLeft.style.visibility="visible"
     sidebarLeft.style.left="0px"
     canvas.style.left=offsetLeft+'px'
+    toolButtons.sidebar.classList.add('active')
   }
 
   setTimeout(function(){
     sidebarLeft.style.visibility=offsetLeft?"visible":"hidden"
     canvas.style.transition=''
   },200)
+}
+function toggleMoreControls(){
+  document.getElementById('drawingControls').classList.toggle("open")
+  toolButtons.gear.classList.toggle('active')
 }
 function changeColor(){
   let c = hex2hsl(document.getElementById('notecolor').value);
@@ -749,25 +756,25 @@ function zoomFit(){
     if (p[1]>maxy) maxy=p[1];
     }
   }
-  let margin = 10;
-  maxx += margin
-  maxy += margin
-  minx -= margin
-  miny -= margin
+  // margins
+  maxx += 10
+  maxy += 10
+  minx -= 5
+  miny -= 5
 
-  let ww= window.innerWidth-offsetLeft,
-      wh= window.innerHeight;
+  let ww= window.innerWidth-offsetLeft -32,
+      wh= window.innerHeight -32;
 
   let s1= ww/(maxx-minx),
       s2= wh/(maxy-miny);
   if (s1<s2){
     level.view.s = s1
-    level.view.x = -minx*s1
-    level.view.y = -miny*s1 + (wh-(maxy-miny)*s1)/2
+    level.view.x = 32-minx*s1
+    level.view.y = 32-miny*s1 + (wh-(maxy-miny)*s1)/2
   } else {
     level.view.s = s2
-    level.view.y = -miny*s2
-    level.view.x = -minx*s2 + (ww-(maxx-minx)*s2)/2
+    level.view.y = 32-miny*s2
+    level.view.x = 32-minx*s2 + (ww-(maxx-minx)*s2)/2
   }
   setView()
   saveWithoutHistory()
@@ -1752,6 +1759,7 @@ document.onkeydown=function(e){
     case 'h': setPenTool('hand'); return;
     case 'z': setPenTool('zoom'); return;
     case 's': toggleSidebarLeft(); return;
+    case 'q': toggleMoreControls(); return;
     case '/':
       if (document.activeElement==searchInput) return;
       killEvent(e);
@@ -1773,7 +1781,7 @@ document.onkeydown=function(e){
 function setPenTool(newTool){
   if (document.onmouseup!=null) return;
 
-  for (let t in toolButtons) toolButtons[t].classList.remove("active")
+  for (let t of penTools) toolButtons[t].classList.remove("active")
   if (toolButtons[newTool]) toolButtons[newTool].classList.add("active");
 
   if (penTool!=newTool) {
@@ -2076,6 +2084,7 @@ var penWidth = document.getElementById('penwidth').value || "3px";
 var arrowStyle = document.getElementById('arrowstyle').value || "3";
 var arrowSize = document.getElementById('arrowsize').value/50 || 0.12;
 
+var penTools=["addnote","marquee","pencil","line","arrow","rect","erase","hand","zoom"]
 var cursors={
   'hand':'grab',
   'pencil': 'url(icons/pencil.png) 2 21, crosshair',
@@ -2121,7 +2130,7 @@ function toolButtonSpacer(){
 toolButton("sidebar", "Toggle Sidebar [S]").onclick=toggleSidebarLeft
 toolButtonSpacer()
 
-for (let i of ["addnote","marquee","pencil","line","arrow","rect","erase","hand","zoom"]) {
+for (let i of penTools) {
   toolButton(i, toolTips[i]).onclick=function(){
     if (penTool==i)
       setPenTool("none")
@@ -2130,10 +2139,13 @@ for (let i of ["addnote","marquee","pencil","line","arrow","rect","erase","hand"
   }
 }
 
+toolButton("gear", "More tools [Q]").onclick =toggleMoreControls
+
 toolButtonSpacer()
 toolButton("zoom100", "Zoom to 100% [Home]").onclick = zoomReset
 toolButton("zoomfit", "Zoom fit [End]").onclick = zoomFit
 toolButtonSpacer()
+toolButton("download", "Download JSON").onclick = downloadJson
 toolButton("help", "Help").onclick = openHelp
 
 reloadAll()
