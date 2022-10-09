@@ -435,7 +435,7 @@ function moveUpNote(){
   }
 
   let parent=trailobj[trailobj.length-2];
-  menuAction({action:"setParent", parent:parent.id}, action)
+  menuAction({action:"setParent", parent:parent.id, animate:1}, action)
 }
 function editNote(){
   menu.style.display='none';
@@ -1683,6 +1683,11 @@ function deltaAction(a){
         d.style.transition="0.3s linear"
         d.style.transform="scale(0)"
         deltaFlags.delayedShowNote=level.id
+      } else if (d && a.animate && oldParent==level && newParent==noteParentById[level.id]){
+        d.style.transition="0.3s"
+        d.style.transform="translateY(-100px)"
+        d.style.opacity="0"
+        deltaFlags.delayedShowNote=newParent.id
       } else deltaFlags.showNote=level.id
 
       deltaFlags.rePopulateOutline=true
