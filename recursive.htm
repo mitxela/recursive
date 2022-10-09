@@ -585,7 +585,7 @@ function createNote(n, editImmediately=false, index=-1){
     d.style.zIndex = ++zTopIndex
 
     var targets=selection;
-    if (selection.elements.indexOf(d)==-1) {
+    if (!selection.elements.includes(d)) {
       clearSelection();
       targets={elements:[d],objects:[n]}
     }
@@ -952,7 +952,7 @@ function drawMarquee(x1,y1,x2,y2, existing) {
   for (let i=0;i<level.children.length;i++) {
     let c=level.children[i];
     if (c.pinned) continue;
-    if (withinMarquee(c) || existing.indexOf(c)!=-1) {
+    if (withinMarquee(c) || existing.includes(c)) {
         selection.objects.push(c)
         selection.elements.push(main.children[i])
         main.children[i].classList.add('selected')
@@ -1511,7 +1511,7 @@ function deltaAction(a){
         undo.index=n.lines.length-1
       }
       if (n==level) addSVGline(mainSvgG, a.line, undo.index)
-      else if (level.children.indexOf(n)!=-1) {
+      else if (level.children.includes(n)) {
         addSVGline(subNoteSvgById[n.id], a.line, undo.index)
       }
     break;
@@ -1520,7 +1520,7 @@ function deltaAction(a){
       undo.index = a.index
       undo.line = n.lines.splice(a.index,1)[0];
       if (n==level) mainSvgG.children[a.index].remove()
-      else if (level.children.indexOf(n)!=-1) {
+      else if (level.children.includes(n)) {
         subNoteSvgById[n.id].children[a.index].remove()
       }
     break;
@@ -1529,7 +1529,7 @@ function deltaAction(a){
       undo.lines=n.lines
       delete n.lines;
       if (n==level) removeAllChildNodes(mainSvgG)
-      else if (level.children.indexOf(n)!=-1) {
+      else if (level.children.includes(n)) {
         removeAllChildNodes(subNoteSvgById[n.id])
       }
     break;
@@ -1540,7 +1540,7 @@ function deltaAction(a){
       if (n==level) {
         for (let line of n.lines) addSVGline(mainSvgG, line)
       }
-      else if (level.children.indexOf(n)!=-1) {
+      else if (level.children.includes(n)) {
         for (let line of n.lines) addSVGline(subNoteSvgById[n.id], line)
       }
     break;
@@ -1551,7 +1551,7 @@ function deltaAction(a){
       if (d) d.children[1].innerHTML = markdown(n.title);
       else if (subNoteById[n.id]) subNoteById[n.id].innerHTML=markdown(n.title)
       updateOutlineLink(n)
-      if (trailobj.indexOf(n)!=-1) regenTrail();
+      if (trailobj.includes(n)) regenTrail();
     break;
     case "setLayout":
       undo.action="setLayout"
@@ -1577,7 +1577,7 @@ function deltaAction(a){
         (n.color && n.color.l) ?
         'hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)'
         : '';
-      if (trailobj.indexOf(n)!=-1) regenTrail();
+      if (trailobj.includes(n)) regenTrail();
     break;
     case "toggleBulletStrike":
       undo.action="toggleBulletStrike"
@@ -1867,7 +1867,7 @@ document.body.addEventListener('drop', function(e){
   e.preventDefault();
 
   let files = e.dataTransfer.files;
-  if (!files.length || files[0].name.indexOf(".json")==-1) return;
+  if (!files.length || !files[0].name.includes(".json")) return;
 
   let reader = new FileReader();
   reader.onload = function(e) {
@@ -1915,7 +1915,7 @@ function findIds(ids, n) {
     findIds(ids,c)
 }
 function idInUse(id) {
-  return (allIds.indexOf(id)!=-1)
+  return (allIds.includes(id))
 }
 function newId(){
   while (idInUse(nextId)) nextId++;
