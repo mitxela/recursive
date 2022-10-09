@@ -274,7 +274,7 @@ details>p{display:inline-block;}
 <p>Middle-click drag to pan, scroll to zoom
 <p>Drawing tools: Left click drag on background to draw, right click erase
 <p>Sidebar: drag &amp; drop a note onto another to move it
-<p><a href=# onclick='downloadJson(); return false'>Download the current state</a>, drag & drop .json file onto this page to load
+<p><a href=# onclick='downloadJson(); return false'>Download the current state as JSON</a>, drag & drop .json file onto this page to load
 <p><a href='#' onclick='if (confirm("reset?")){localStorage.tree="";location.hash="";location.reload()} else return false'>Delete everything and reset</a>
 
 <p>Keyboard shortcuts:
@@ -309,45 +309,11 @@ details>p{display:inline-block;}
 
 
 <script>
-testtree = {title:"Root", children:[
-  {
-    title: "Test note one",
-    x: 80,
-    y: 60,
-    width: 150,
-    height: 50,
-    color: {h: 50, s:100, l:50},
-    children: []
-  },
-  {
-    title: "Test note two",
-    x: 130,
-    y: 140,
-    width: 150,
-    height: 50,
-    color: {h: 10, s:100, l:50},
-    children: [],
+originalDocument = "<!doctype html>\n" + document.documentElement.outerHTML;
 
-    // optional properties:
-    id:3,
-    open:false,
-    view:{x:0,y:0,s:1},
-    lines:[]
-  }
-]}
+tree = {"title":"Root","children":[{"title":"Test note one","x":80,"y":60,"width":150,"height":50,"color":{"h":50,"s":100,"l":50},"children":[]},{"title":"Test note two","x":130,"y":140,"width":150,"height":50,"color":{"h":10,"s":100,"l":50},"children":[]}]}
 
-if (localStorage.tree) tree=JSON.parse(localStorage.tree);
-
-if (!window.tree){
-  tree=testtree;
-  localStorage.tree = JSON.stringify(tree)
-}
-
-window.onstorage=(e)=>{
-  if (document.hasFocus()) return;
-  tree=JSON.parse(localStorage.tree); 
-  reloadAll()
-}
+localStorage.tree = JSON.stringify(tree)
 
 var level;
 var canvas=document.getElementById('canvas')
@@ -1522,10 +1488,20 @@ function setPenTool(newTool){
 }
 function downloadJson(){
   let blob = new Blob([JSON.stringify(tree)], {type: "application/json"})
+  downloadBlob(blob, "tree.json")
+}
+function downloadHTML(){
+  let blob = new Blob(
+    [originalDocument.replace(/^tree = .+$/m, 'tree = '+JSON.stringify(tree))],
+    {type: "application/html"}
+  )
+  downloadBlob(blob, "recursive.htm")
+}
+function downloadBlob(blob, name){
   let url = URL.createObjectURL(blob)
   let a = document.createElement('a')
   a.href=url
-  a.download="tree.json"
+  a.download=name
   document.body.appendChild(a);
   a.click()
   document.body.removeChild(a);
@@ -1866,7 +1842,7 @@ toolButtonSpacer()
 toolButton("zoom100", "Zoom to 100% [Home]").onclick = zoomReset
 toolButton("zoomfit", "Zoom fit [End]").onclick = zoomFit
 toolButtonSpacer()
-toolButton("download", "Download JSON").onclick = downloadJson
+toolButton("download", "Download HTML").onclick = downloadHTML
 toolButton("help", "Help").onclick = openHelp
 
 reloadAll()
