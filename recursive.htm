@@ -1446,7 +1446,7 @@ function save(){
 function saveWithoutHistory(){
   localStorage.tree=JSON.stringify(tree)
 }
-function deltaPush(g, overwrite){
+function deltaPush(g){
   let a=[];
   for (let i of g) a.push(deltaAction(i))
 
