@@ -390,11 +390,13 @@ function toggleSidebarLeft(){
     sidebarLeft.style.left=-offsetLeft + "px"
     canvas.style.left="0px"
     offsetLeft = 0;
+    toolButtons.sidebar.classList.remove('active')
   } else {
     offsetLeft=sidebarLeftSize
     sidebarLeft.style.visibility="visible"
     sidebarLeft.style.left="0px"
     canvas.style.left=offsetLeft+'px'
+    toolButtons.sidebar.classList.add('active')
   }
 
   setTimeout(function(){
@@ -404,6 +406,7 @@ function toggleSidebarLeft(){
 }
 function toggleMoreControls(){
   document.getElementById('drawingControls').classList.toggle("open")
+  toolButtons.gear.classList.toggle('active')
 }
 function deleteNote(){
   menuAction(function(n, el){
@@ -1505,7 +1508,7 @@ document.onkeydown=function(e){
 function setPenTool(newTool){
   if (document.onmouseup!=null) return;
 
-  for (let t in toolButtons) toolButtons[t].classList.remove("active")
+  for (let t of penTools) toolButtons[t].classList.remove("active")
   if (toolButtons[newTool]) toolButtons[newTool].classList.add("active");
 
   if (penTool!=newTool) {
@@ -1802,6 +1805,7 @@ var penWidth = document.getElementById('penwidth').value || "3px";
 var arrowStyle = document.getElementById('arrowstyle').value || "3";
 var arrowSize = document.getElementById('arrowsize').value/50 || 0.12;
 
+var penTools=["addnote","marquee","pencil","line","arrow","rect","erase","hand","zoom"]
 var cursors={
   'hand':'grab',
   'pencil': 'url(icons/pencil.png) 2 21, crosshair',
@@ -1847,7 +1851,7 @@ function toolButtonSpacer(){
 toolButton("sidebar", "Toggle Sidebar [S]").onclick=toggleSidebarLeft
 toolButtonSpacer()
 
-for (let i of ["addnote","marquee","pencil","line","arrow","rect","erase","hand","zoom"]) {
+for (let i of penTools) {
   toolButton(i, toolTips[i]).onclick=function(){
     if (penTool==i)
       setPenTool("none")
