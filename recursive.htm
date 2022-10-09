@@ -752,25 +752,25 @@ function zoomFit(){
     if (p[1]>maxy) maxy=p[1];
     }
   }
-  let margin = 10;
-  maxx += margin
-  maxy += margin
-  minx -= margin
-  miny -= margin
+  // margins
+  maxx += 10
+  maxy += 10
+  minx -= 5
+  miny -= 5
 
-  let ww= window.innerWidth-offsetLeft,
-      wh= window.innerHeight;
+  let ww= window.innerWidth-offsetLeft -32,
+      wh= window.innerHeight -32;
 
   let s1= ww/(maxx-minx),
       s2= wh/(maxy-miny);
   if (s1<s2){
     level.view.s = s1
-    level.view.x = -minx*s1
-    level.view.y = -miny*s1 + (wh-(maxy-miny)*s1)/2
+    level.view.x = 32-minx*s1
+    level.view.y = 32-miny*s1 + (wh-(maxy-miny)*s1)/2
   } else {
     level.view.s = s2
-    level.view.y = -miny*s2
-    level.view.x = -minx*s2 + (ww-(maxx-minx)*s2)/2
+    level.view.y = 32-miny*s2
+    level.view.x = 32-minx*s2 + (ww-(maxx-minx)*s2)/2
   }
   setView()
   saveWithoutHistory()
