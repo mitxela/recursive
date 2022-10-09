@@ -423,7 +423,7 @@ function menuAction(a, action=[]){
   } else {
     action.push(Object.assign({id:menuRef.id},a))
   }
-  deltaPushGroup(action)
+  deltaPush(action)
 }
 function moveUpNote(){
   menu.style.display='none';
@@ -446,7 +446,7 @@ function jumpInto(){
 }
 function eraseAllLines(){
   if (!level.lines) return;
-  deltaPush({action:"eraseAllLines", id:level.id})
+  deltaPush([{action:"eraseAllLines", id:level.id}])
 }
 function killEvent(e){e.preventDefault();e.stopPropagation()}
 function backgroundKillEvent(e){
@@ -514,7 +514,7 @@ function createNote(n, editImmediately=false, index=-1){
       if (ev.target.tagName=='TEXTAREA') return;
       if (ev.target.tagName=='LI' && ev.clientX < ev.target.getBoundingClientRect().x) {
         let [i,j]=ev.target.dataset.i.split(',')
-        deltaPush({action:"toggleBulletStrike", id:n.id, i,j})
+        deltaPush([{action:"toggleBulletStrike", id:n.id, i,j}])
         return
       }
     }
@@ -525,7 +525,7 @@ function createNote(n, editImmediately=false, index=-1){
       if (saved) return;
       saved=true;
       if (e.value!=n.title)
-        deltaPush({action:"setTitle", id:n.id, title:e.value})
+        deltaPush([{action:"setTitle", id:n.id, title:e.value}])
       else
         t.innerHTML=markdown(n.title)
       d.style.overflow='';
@@ -653,7 +653,7 @@ function createNote(n, editImmediately=false, index=-1){
             n.x -= dx
             n.y -= dy
           }
-          deltaPushGroup(action)
+          deltaPush(action)
 
         } else {
           suppressJump = true;
@@ -670,7 +670,7 @@ function createNote(n, editImmediately=false, index=-1){
 
   d.onmouseover=function(e){
     if (e.buttons==2 && penTool=="addnote" && n.title=="New note") {
-      deltaPush({action:"deleteNote",id:n.id})
+      deltaPush([{action:"deleteNote",id:n.id}])
     }
   }
 
@@ -882,7 +882,7 @@ document.onclick=function(e){
     color: randomColor(),
     children: []
   }
-  deltaPush({action:"addNote", id:level.id, index:-1, newNote})
+  deltaPush([{action:"addNote", id:level.id, index:-1, newNote}])
 }
 menu.onmousedown=function(e){e.stopPropagation()}
 
@@ -1045,7 +1045,7 @@ document.onmousedown=function(e){
       for (i in mainSvgG.children)
         if (mainSvgG.children[i] == e.target) break
 
-      deltaPush({action:"eraseLine",id:level.id,index:i})
+      deltaPush([{action:"eraseLine",id:level.id,index:i}])
     }
     document.onmouseup=function(e){
       if (e.button !=b) return;
@@ -1446,16 +1446,14 @@ function save(){
 function saveWithoutHistory(){
   localStorage.tree=JSON.stringify(tree)
 }
-function deltaPush(a){
-  deltaHistory.push(deltaAction(a))
-  deltaCleanup()
-  redoHistory=[];
-  save()
-}
-function deltaPushGroup(g){
+function deltaPush(g, overwrite){
   let a=[];
   for (let i of g) a.push(deltaAction(i))
-  deltaPushRaw(a)
+
+  deltaHistory.push(a)
+  deltaCleanup()
+  redoHistory=[]
+  save()
 }
 function deltaPushRaw(a) {
   deltaHistory.push(a)
@@ -1495,7 +1493,7 @@ function deltaCleanup(){
   if (deltaFlags.delayedShowNote!==false) {
     setTimeout(()=>{
       showNote(deltaFlags.delayedShowNote);
-      deltaFlags.showNote=false
+      deltaFlags.delayedShowNote=false
     },300)
   }
 }
@@ -1956,11 +1954,11 @@ function makeDropTarget(a, n) {
 
           if (moved && !noteContains(moved, n) && confirm('Move "'+shortTitle(moved.title)+'" into "'+shortTitle(n.title)+'"?')){
             if (n.children.length==0) n.open=true
-            deltaPush({
+            deltaPush([{
               action:"setParent",
               id:moved.id,
               parent:n.id
-            })
+            }])
           }
           a.className=''
         })
