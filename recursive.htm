@@ -330,7 +330,6 @@ testtree = {title:"Root", children:[
 
     // optional properties:
     id:1,
-    open:false,
     lines:[],
     pinned: 0,
   }
@@ -649,7 +648,7 @@ function createNote(n, editImmediately=false, index=-1){
         let target = level.children[m];
 
         if (confirm('Move '+p+' into "'+shortTitle(target.title)+'"?')) {
-          if (target.children.length==0) target.open=true
+          openViewIfEmpty(target)
           let dx = n.x-startx, dy = n.y-starty;
           let action=[]
 
@@ -795,6 +794,12 @@ function setView(){
   if (!view) view={x:0,y:0,s:1}
   mainSvgG.style.transform = 
   main.style.transform=`translate(${view.x}px, ${view.y}px) scale(${view.s})`
+}
+function openViewIfEmpty(n){
+  if (n.children.length==0) {
+    if (!viewById[n.id]) viewById[n.id]={x:0,y:0,s:1}
+    viewById[n.id].open=true;
+  }
 }
 function mousePos(e) {
   return [
@@ -1651,7 +1656,7 @@ function deltaAction(a){
       undo.action="deleteNote"
       undo.id=a.newNote.id;
 
-      if (n.children.length==0) n.open=true;
+      openViewIfEmpty(n)
       if (level==n) createNote(a.newNote, a.index==-1, a.index)
       else if (level==noteParentById[n.id]) {
         d.lastChild.append(createSubNote(a.newNote))
@@ -1982,7 +1987,7 @@ function makeDropTarget(a, n) {
           let moved = noteById[parseInt(s[1])];
 
           if (moved && !noteContains(moved, n) && confirm('Move "'+shortTitle(moved.title)+'" into "'+shortTitle(n.title)+'"?')){
-            if (n.children.length==0) n.open=true
+            openViewIfEmpty(n)
             deltaPush([{
               action:"setParent",
               id:moved.id,
@@ -2026,8 +2031,12 @@ function populateOutline(n,parent){
   let d=document.createElement('details')
   let s=document.createElement('summary')
 
-  d.ontoggle=function(){n.open=d.open;saveView()} //TODO
-  if (n.open) {d.setAttribute('open','')}
+  d.ontoggle=function(){
+    if (!viewById[n.id]) viewById[n.id]={x:0,y:0,s:1}
+    viewById[n.id].open=d.open;
+    saveView()
+  }
+  if (viewById[n.id] && viewById[n.id].open) {d.setAttribute('open','')}
 
   s.append(a)
   d.append(s)
@@ -2040,7 +2049,8 @@ function populateOutline(n,parent){
 function rePopulateOutline(){
   removeAllChildNodes(outline)
   outlineLinksById=[];
-  if (!tree.hasOwnProperty('open')) tree.open=true;
+  if (!viewById[tree.id]) viewById[tree.id]={x:0,y:0,s:1}
+  if (!viewById[tree.id].hasOwnProperty('open')) viewById[tree.id].open=true;
   populateOutline(tree,outline)
 
   search(searchInput)
