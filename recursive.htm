@@ -672,12 +672,11 @@ function createNote(n, editImmediately=false, index=-1){
             n.y -= dy
           }
           deltaPush(action)
-
+          return
         } else {
           suppressJump = true;
           main.children[m].classList.remove('hl')
         }
-        return
       }
 
       if (n.x!=startx || n.y !=starty) {
