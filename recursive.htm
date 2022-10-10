@@ -434,8 +434,7 @@ function moveUpNote(){
     action.push({action:"newRoot", id:tree.id})
   }
 
-  let parent=trailobj[trailobj.length-2];
-  menuAction({action:"setParent", parent:parent.id, animate:1}, action)
+  menuAction({action:"setParent", parent:-1, animate:1}, action)
 }
 function editNote(){
   menu.style.display='none';
@@ -1662,7 +1661,10 @@ function deltaAction(a){
     break;
     case "setParent":
       let oldParent=noteParentById[n.id];
-      let newParent=noteById[a.parent];
+      let newParent=
+        (a.parent==-1)
+        ?noteParentById[oldParent.id]
+        :noteById[a.parent];
 
       undo.action="setParent"
       undo.index = oldParent.children.indexOf(n)
