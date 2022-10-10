@@ -1165,6 +1165,7 @@ document.onwheel=function(e){
   saveWithoutHistory()
 }
 window.onhashchange = function(){
+  menu.style.display='none';
   let i = location.hash.substr(1);
   if ( i && noteById.hasOwnProperty(i) ) {
     showNote(i)
