@@ -275,7 +275,7 @@ details>p{display:inline-block;}
 <p>Drawing tools: Left click drag on background to draw, right click erase
 <p>Sidebar: drag &amp; drop a note onto another to move it
 <p><a href=# onclick='downloadJson(); return false'>Download the current state</a>, drag & drop .json file onto this page to load
-<p><a href='#' onclick='if (confirm("reset?")){localStorage.tree="";location.hash="";location.reload()} else return false'>Delete everything and reset</a>
+<p><a href='#' onclick='if (confirm("reset?")){localStorage.tree="";localStorage.view="";location.hash="";location.reload()} else return false'>Delete everything and reset</a>
 
 <p>Keyboard shortcuts:
 <table>
@@ -331,23 +331,24 @@ testtree = {title:"Root", children:[
     // optional properties:
     id:1,
     open:false,
-    view:{x:0,y:0,s:1},
     lines:[],
     pinned: 0,
   }
 ]}
 
 if (localStorage.tree) tree=JSON.parse(localStorage.tree);
+if (localStorage.view) viewById=JSON.parse(localStorage.view);
 
 if (!window.tree){
   tree=testtree;
   localStorage.tree = JSON.stringify(tree)
+  delete localStorage.view;
 }
 
-window.onstorage=(e)=>{
-  if (document.hasFocus()) return;
-  tree=JSON.parse(localStorage.tree); 
-  reloadAll()
+window.onstorage=(e)=>{ //TODO
+  //if (document.hasFocus()) return;
+  //tree=JSON.parse(localStorage.tree); 
+  //reloadAll()
 }
 
 var level;
@@ -371,6 +372,7 @@ var penSmooth = 0.15;
 var offsetLeft = 0;
 var textEditing=false;
 var deltaHistory=[], redoHistory=[];
+var view, viewById={};
 
 function openHelp(){
   help.style.display='block'
@@ -685,10 +687,10 @@ function createNote(n, editImmediately=false, index=-1){
   }
 
   let bound = {w:window.innerWidth,h:window.innerHeight}
-  if (!n.view) n.view={x:0,y:0,s:1};
+  let v = viewById[n.id] || {x:0,y:0,s:1};
 
   let scale = Math.min(0.9*n.width/bound.w, 0.9*n.height/bound.h) || 0.1;
-  let tr = `scale(${scale}) translate(${n.view.x}px, ${n.view.y}px) scale(${n.view.s})`
+  let tr = `scale(${scale}) translate(${v.x}px, ${v.y}px) scale(${v.s})`
 
   {
     let container = document.createElement("div")
@@ -744,9 +746,9 @@ function moveNote(n,d,dx,dy) {
   d.style.top  = n.y +'px'
 }
 function zoomReset(){
-  level.view={x:0,y:0,s:1}
+  view={x:0,y:0,s:1}
   setView()
-  saveWithoutHistory()
+  saveView()
 }
 function zoomFit(){
   if (level.children.length==0 && (!level.lines || level.lines.length==0) ) return;
@@ -778,26 +780,26 @@ function zoomFit(){
   let s1= ww/(maxx-minx),
       s2= wh/(maxy-miny);
   if (s1<s2){
-    level.view.s = s1
-    level.view.x = 32-minx*s1
-    level.view.y = 32-miny*s1 + (wh-(maxy-miny)*s1)/2
+    view.s = s1
+    view.x = 32-minx*s1
+    view.y = 32-miny*s1 + (wh-(maxy-miny)*s1)/2
   } else {
-    level.view.s = s2
-    level.view.y = 32-miny*s2
-    level.view.x = 32-minx*s2 + (ww-(maxx-minx)*s2)/2
+    view.s = s2
+    view.y = 32-miny*s2
+    view.x = 32-minx*s2 + (ww-(maxx-minx)*s2)/2
   }
   setView()
-  saveWithoutHistory()
+  saveView()
 }
 function setView(){
-  if (!level.view) level.view={x:0,y:0,s:1}
+  if (!view) view={x:0,y:0,s:1}
   mainSvgG.style.transform = 
-  main.style.transform=`translate(${level.view.x}px, ${level.view.y}px) scale(${level.view.s})`
+  main.style.transform=`translate(${view.x}px, ${view.y}px) scale(${view.s})`
 }
 function mousePos(e) {
   return [
-    (e.pageX-level.view.x-offsetLeft)/level.view.s,
-    (e.pageY-level.view.y           )/level.view.s ]
+    (e.pageX-view.x-offsetLeft)/view.s,
+    (e.pageY-view.y           )/view.s ]
 }
 function removeAllChildNodes(a){
   while (a.children.length)
@@ -817,6 +819,7 @@ function populate(t){
   noteElementsById={}
   subNoteSvgById={}
   subNoteById={}
+  view = viewById[t.id] || {x:0,y:0,s:1};
   for (let i of t.children)
     createNote(i)
   level = t
@@ -935,10 +938,10 @@ function drawMarquee(x1,y1,x2,y2, existing) {
   if (x2<x1) {x=x2; w=x1-x2} else {x=x1; w=x2-x1; partial=false}
   if (y2<y1) {y=y2; h=y1-y2} else {y=y1; h=y2-y1}
 
-  let lx = (x-level.view.x-offsetLeft)/level.view.s,
-      ly = (y-level.view.y)/level.view.s,
-      lw = w/level.view.s,
-      lh = h/level.view.s;
+  let lx = (x-view.x-offsetLeft)/view.s,
+      ly = (y-view.y)/view.s,
+      lw = w/view.s,
+      lh = h/view.s;
 
   selection.elements=[];
   selection.objects=[];
@@ -996,8 +999,8 @@ document.onmousedown=function(e){
     if (e.button==1) killEvent(e);
     let sx = e.pageX, sy = e.pageY;
     document.onmousemove=function(e){
-      level.view.x+= (e.pageX-sx)
-      level.view.y+= (e.pageY-sy)
+      view.x+= (e.pageX-sx)
+      view.y+= (e.pageY-sy)
       sx = e.pageX, sy = e.pageY;
       setView()
     }
@@ -1005,7 +1008,7 @@ document.onmousedown=function(e){
       if (e.button !=b) return;
       document.onmouseup=null;
       document.onmousemove=null;
-      saveWithoutHistory()
+      saveView()
       popCursor()
     }
     pushCursor('grabbing')
@@ -1022,7 +1025,7 @@ document.onmousedown=function(e){
       if (e.button !=b) return;
       document.onmouseup=null;
       document.onmousemove=null;
-      saveWithoutHistory()
+      saveView()
     }
     return;
   }
@@ -1162,7 +1165,7 @@ document.onwheel=function(e){
 
   doZoom(e.deltaY, e.pageX, e.pageY)
 
-  saveWithoutHistory()
+  saveView()
 }
 window.onhashchange = function(){
   menu.style.display='none';
@@ -1220,21 +1223,21 @@ window.onhashchange = function(){
     if (e.touches.length==1){
       let t=e.touches[0];
   
-      level.view.x +=(t.clientX-tsx[t.identifier])
-      level.view.y +=(t.clientY-tsy[t.identifier])
+      view.x +=(t.clientX-tsx[t.identifier])
+      view.y +=(t.clientY-tsy[t.identifier])
     
     } else {
       let ntcx = (e.touches[0].clientX+e.touches[1].clientX)/2;
       let ntcy = (e.touches[0].clientY+e.touches[1].clientY)/2;
       let ntd = touchdistance(e.touches[0],e.touches[1])
   
-      let sx= (ntcx -level.view.x -offsetLeft)/level.view.s;
-      let sy= (ntcy -level.view.y            )/level.view.s;
+      let sx= (ntcx -view.x -offsetLeft)/view.s;
+      let sy= (ntcy -view.y            )/view.s;
       
-      level.view.s *= ntd/td
+      view.s *= ntd/td
       
-      level.view.x = -sx*level.view.s + ntcx + (ntcx-tcx) -offsetLeft
-      level.view.y = -sy*level.view.s + ntcy + (ntcy-tcy)
+      view.x = -sx*view.s + ntcx + (ntcx-tcx) -offsetLeft
+      view.y = -sy*view.s + ntcy + (ntcy-tcy)
   
       td = ntd
       tcx = ntcx
@@ -1250,7 +1253,7 @@ window.onhashchange = function(){
   document.addEventListener("touchend", function(e){
     if (e.touches.length==0) {
       if (fakeMouse("mouseup",e.changedTouches[0])) return;
-      saveWithoutHistory()
+      saveView()
     }
   }, true);
   function touchdistance(t1,t2){
@@ -1454,8 +1457,9 @@ function save(){
   //dbg.innerHTML='Undo:'+JSON.stringify(deltaHistory,' ',2)+'\nRedo:'+JSON.stringify(redoHistory,' ',2)
   localStorage.tree=JSON.stringify(tree)
 }
-function saveWithoutHistory(){
-  localStorage.tree=JSON.stringify(tree)
+function saveView(){
+  viewById[level.id]=view
+  localStorage.view=JSON.stringify(viewById)
 }
 function deltaPush(actions){
   let undo=[];
@@ -1730,23 +1734,23 @@ function deltaAction(a){
 }
 function pan(dx,dy) {
   menu.style.display='none'
-  level.view.x += dx;
-  level.view.y += dy;
+  view.x += dx;
+  view.y += dy;
   setView()
-  saveWithoutHistory()
+  saveView()
 }
 function zoomCentred(s){
   doZoom(s, (window.innerWidth+offsetLeft)/2, window.innerHeight/2)
-  saveWithoutHistory();
+  saveView();
 }
 function doZoom(delta, cx, cy){
-  let sx= (cx-level.view.x-offsetLeft)/level.view.s,
-      sy= (cy-level.view.y           )/level.view.s;
+  let sx= (cx-view.x-offsetLeft)/view.s,
+      sy= (cy-view.y           )/view.s;
 
-  level.view.s*= Math.pow(10,delta*-0.001);
+  view.s*= Math.pow(10,delta*-0.001);
 
-  level.view.x = -sx*level.view.s+cx-offsetLeft
-  level.view.y = -sy*level.view.s+cy
+  view.x = -sx*view.s+cx-offsetLeft
+  view.y = -sy*view.s+cy
 
   setView()
 }
@@ -1810,7 +1814,7 @@ function setPenTool(newTool){
   else document.oncontextmenu=null;
 }
 function downloadJson(){
-  let blob = new Blob([JSON.stringify(tree)], {type: "application/json"})
+  let blob = new Blob([JSON.stringify({tree,view:viewById})], {type: "application/json"})
   let url = URL.createObjectURL(blob)
   let a = document.createElement('a')
   a.href=url
@@ -1890,7 +1894,15 @@ document.body.addEventListener('drop', function(e){
   let reader = new FileReader();
   reader.onload = function(e) {
 
-    let newtree = JSON.parse(e.target.result);
+    let newtree, data = JSON.parse(e.target.result);
+    if (data.view) { // new format
+      newtree = data.tree
+      viewById = data.view
+    } else {
+      newtree = data
+      viewById = {} // todo: maybe load properly from old format
+    }
+
     if (!validTree(newtree)) {alert("Invalid JSON data"); return }
 
     tree=newtree;
@@ -1905,7 +1917,6 @@ document.body.addEventListener('drop', function(e){
 
 // Todo: check IDs are unique
 // check lines
-// check view
 // check color of root if present
 function validTree(t){
   if (!t.title || !Array.isArray(t.children)) return false;
@@ -2015,7 +2026,7 @@ function populateOutline(n,parent){
   let d=document.createElement('details')
   let s=document.createElement('summary')
 
-  d.ontoggle=function(){n.open=d.open;saveWithoutHistory()}
+  d.ontoggle=function(){n.open=d.open;saveView()} //TODO
   if (n.open) {d.setAttribute('open','')}
 
   s.append(a)
