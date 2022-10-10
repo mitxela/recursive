@@ -1457,17 +1457,16 @@ function save(){
 function saveWithoutHistory(){
   localStorage.tree=JSON.stringify(tree)
 }
-function deltaPush(g){
-  let a=[];
-  for (let i of g) a.push(deltaAction(i))
-
-  deltaHistory.push(a)
+function deltaPush(actions){
+  let undo=[];
+  for (let a of actions) undo.push(deltaAction(a))
+  deltaHistory.push(undo)
   deltaCleanup()
   redoHistory=[]
   save()
 }
-function deltaPushRaw(a) {
-  deltaHistory.push(a)
+function deltaPushRaw(undo) {
+  deltaHistory.push(undo)
   deltaCleanup()
   redoHistory=[]
   save()
