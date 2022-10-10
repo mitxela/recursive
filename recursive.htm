@@ -56,6 +56,7 @@ ul{margin:0}
 #canvas{
   position:absolute;
   top:0;left:0;
+  height:100%;
 }
 #main{
   transform-origin: 0% 0%;
@@ -147,15 +148,11 @@ details>p{display:inline-block;}
   top:32px;left:0;
   width:32px;
   background:rgba(128,128,128,0.3);
+  max-height:calc(100% - 32px);
+  overflow-y:auto;
+  scrollbar-width:none;
 }
-#toolbar input, #toolbar button{vertical-align: middle;}
-#toolbar label{
-  display:inline-block;
-  width:100px;
-  text-align:right;
-  margin-right:5px;
-  line-height:32px;
-}
+#toolbar::-webkit-scrollbar{display:none;}
 #toolbox {width:32px;}
 .tool {
   width:28px;
@@ -173,7 +170,6 @@ details>p{display:inline-block;}
 }
 #drawingControls{
   position:absolute;
-  z-index:-1;
   padding:12px;
   border-radius:0 10px 10px 0;
   background:rgba(212,212,212,0.8);
@@ -187,7 +183,14 @@ details>p{display:inline-block;}
   left:32px;
   opacity:1;
 }
-
+#drawingControls input{vertical-align: middle;}
+#drawingControls label{
+  display:inline-block;
+  width:100px;
+  text-align:right;
+  margin-right:5px;
+  line-height:32px;
+}
 #help {
   display:none;
   position:fixed;
@@ -223,8 +226,7 @@ details>p{display:inline-block;}
 <svg><g></g></svg>
 <div id=main></div>
 
-<div id=toolbar>
-<div id=toolbox></div>
+
 
 <div id=drawingControls>
 <div><label>color:</label><input id=pencolor type=color oninput='penColor=this.value'></div>
@@ -242,6 +244,8 @@ details>p{display:inline-block;}
  <a href='#' onclick='eraseAllLines(); return false'>erase all lines</a>
 </div>
 
+<div id=toolbar>
+<div id=toolbox></div>
 </div>
 </div>
 
@@ -367,10 +371,11 @@ if (!window.tree){
   delete localStorage.view;
 }
 
-window.onstorage=(e)=>{ //TODO
-  //if (document.hasFocus()) return;
-  //tree=JSON.parse(localStorage.tree); 
-  //reloadAll()
+window.onstorage=(e)=>{
+  if (e.key=='tree') {
+    tree=JSON.parse(localStorage.tree); 
+    reloadAll()
+  }
 }
 
 function openHelp(){
