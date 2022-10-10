@@ -2036,6 +2036,7 @@ function rePopulateOutline(){
 }
 var searchResults=[], reverseSearchDirection=false;
 searchInput.onkeydown=function(e){
+  if (e.key=='Escape') searchInput.blur();
   reverseSearchDirection=e.shiftKey
 }
 searchInput.onkeyup=function(e){
