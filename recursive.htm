@@ -305,7 +305,7 @@ details>p{display:inline-block;}
 </div>
 </div>
 
-<pre id=dbg style="position:fixed;right:0;top:32px;height:calc(100% - 32px);margin:0;overflow:auto"></pre>
+<!--<pre id=dbg style="position:fixed;right:0;top:32px;height:calc(100% - 32px);margin:0;overflow:auto"></pre>-->
 
 
 <script>
@@ -1451,7 +1451,7 @@ function randomColor(){
 }
 
 function save(){
-  dbg.innerHTML='Undo:'+JSON.stringify(deltaHistory,' ',2)+'\nRedo:'+JSON.stringify(redoHistory,' ',2)
+  //dbg.innerHTML='Undo:'+JSON.stringify(deltaHistory,' ',2)+'\nRedo:'+JSON.stringify(redoHistory,' ',2)
   localStorage.tree=JSON.stringify(tree)
 }
 function saveWithoutHistory(){
