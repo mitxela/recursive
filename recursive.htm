@@ -335,21 +335,6 @@ testtree = {title:"Root", children:[
   }
 ]}
 
-if (localStorage.tree) tree=JSON.parse(localStorage.tree);
-if (localStorage.view) viewById=JSON.parse(localStorage.view);
-
-if (!window.tree){
-  tree=testtree;
-  localStorage.tree = JSON.stringify(tree)
-  delete localStorage.view;
-}
-
-window.onstorage=(e)=>{ //TODO
-  //if (document.hasFocus()) return;
-  //tree=JSON.parse(localStorage.tree); 
-  //reloadAll()
-}
-
 var level;
 var canvas=document.getElementById('canvas')
 var menu=document.getElementById('menu')
@@ -373,15 +358,29 @@ var textEditing=false;
 var deltaHistory=[], redoHistory=[];
 var view, viewById={};
 
+if (localStorage.tree) tree=JSON.parse(localStorage.tree);
+if (localStorage.view) viewById=JSON.parse(localStorage.view);
+
+if (!window.tree){
+  tree=testtree;
+  localStorage.tree = JSON.stringify(tree)
+  delete localStorage.view;
+}
+
+window.onstorage=(e)=>{ //TODO
+  //if (document.hasFocus()) return;
+  //tree=JSON.parse(localStorage.tree); 
+  //reloadAll()
+}
+
 function openHelp(){
   help.style.display='block'
 }
 function closeHelp(){
   help.style.display='none'
 }
-var sidebarLeftSize=200;
 function setOffset(ol){
-  sidebarLeftSize=offsetLeft=ol;
+  viewById.sidebarLeft.size=offsetLeft=ol;
   ol+='px';
   canvas.style.left=ol;
   sidebarLeft.style.width=ol
@@ -390,17 +389,20 @@ function toggleSidebarLeft(){
   canvas.style.transition='0.2s'
 
   if (offsetLeft) {
+    viewById.sidebarLeft.open=false
     sidebarLeft.style.left=-offsetLeft + "px"
     canvas.style.left="0px"
     offsetLeft = 0;
     toolButtons.sidebar.classList.remove('active')
   } else {
-    offsetLeft=sidebarLeftSize
+    viewById.sidebarLeft.open=true
+    offsetLeft=viewById.sidebarLeft.size
     sidebarLeft.style.visibility="visible"
     sidebarLeft.style.left="0px"
     canvas.style.left=offsetLeft+'px'
     toolButtons.sidebar.classList.add('active')
   }
+  saveView()
 
   setTimeout(function(){
     sidebarLeft.style.visibility=offsetLeft?"visible":"hidden"
@@ -994,6 +996,7 @@ document.onmousedown=function(e){
       setOffset(e.clientX+4)
     }
     document.onmouseup=function(e){
+      saveView()
       document.onmouseup=null;
       document.onmousemove=null;
     }
@@ -1257,7 +1260,7 @@ window.onhashchange = function(){
   }, {capture:true, passive:false});
   document.addEventListener("touchend", function(e){
     if (e.touches.length==0) {
-      if (fakeMouse("mouseup",e.changedTouches[0])) return;
+      if (fakeMouse("mouseup",e.changedTouches[0])) return; //todo: also check if target==sidebarLeftAdj
       saveView()
     }
   }, true);
@@ -1900,14 +1903,13 @@ document.body.addEventListener('drop', function(e){
   reader.onload = function(e) {
 
     let newtree, data = JSON.parse(e.target.result);
-    if (data.view) { // new format
+    if (data.tree) { // new format
       newtree = data.tree
       viewById = data.view
     } else {
       newtree = data
       viewById = {} // todo: maybe load properly from old format
     }
-
     if (!validTree(newtree)) {alert("Invalid JSON data"); return }
 
     tree=newtree;
@@ -2110,10 +2112,20 @@ function reloadAll(){
   nextId=Math.max(0,...allIds) +1;
 
   reGenLookups()
-
   rePopulateOutline()
 
   window.onhashchange()
+
+  if (!viewById.sidebarLeft) viewById.sidebarLeft = {size:200,open:false}
+  if (viewById.sidebarLeft.open) {
+    if (!offsetLeft) toggleSidebarLeft();
+    setOffset(viewById.sidebarLeft.size)
+  } else {
+    if (offsetLeft) toggleSidebarLeft();
+    sidebarLeft.style.width=viewById.sidebarLeft.size+'px'
+    sidebarLeft.style.left=-viewById.sidebarLeft.size + "px"
+  }
+
 }
 
 var penTool = "none";
