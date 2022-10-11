@@ -35,7 +35,7 @@ ul{margin:0}
   width:13px; height:13px;
   background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6+R8AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAOtJREFUeNp8kj0LwkAMhtterau26uCgIPixOIiTf91fIeiiIo6C2joIFj/rG3kPwlE8eOglby6X5Gq88jUCMxCAsysG/PpgABL6OvR3aCfUfRssa0inrBcIVWJtb8Da3pSpoNCpRtupdojxBgbcwYqJYjAGEfVfcsOmJ6DCBAtwYFlXkIM2e+tKnNzUd8q5/LGrEi+nd+CphNg5VFd7idtJeSewBz013pwBLfZk2NMcHEOVzagSpiUPLnpNhmZH3lDixwnWdtNT2TM+9BYsOSXRHiwpZcnyuIU9VPAfu3EfcSDS65H+MzXvK8AAT5g1PwYr5mUAAAAASUVORK5CYII=)
 }
-.hl{box-shadow: inset 0px 0px 50px white, 5px 5px 5px rgba(0,0,0,0.3) !important; opacity:0.5}
+.note.hl{box-shadow: inset 0px 0px 50px white, 5px 5px 5px rgba(0,0,0,0.3) !important; opacity:0.5}
 .invis{box-shadow:none; border-color:transparent; resize:none;}
 .invis:hover{border-color:rgba(128,128,128,0.2);background:rgba(128,128,128,0.1); resize:both;}
 .invis .gear{display:none;}
@@ -109,6 +109,12 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 }
 #outline a:hover{opacity:1}
 #outline a.drop {outline:1px dashed black;opacity:0.5}
+#outline a.hl {
+  box-shadow: -20px 0px 0px 0px rgba(0,128,255,0.3);
+}
+#outline a.hl2 {
+  box-shadow: -20px 0px 0px 0px rgba(0,128,255,0.3), 20px 0px 0px 0px rgba(0,128,255,0.3);
+}
 details p{
   white-space:nowrap;
   line-height:23px;
@@ -801,9 +807,12 @@ function setView(){
   mainSvgG.style.transform = 
   main.style.transform=`translate(${view.x}px, ${view.y}px) scale(${view.s})`
 }
+function initView(n){
+  if (!viewById[n.id]) viewById[n.id]={x:0,y:0,s:1}
+}
 function openViewIfEmpty(n){
   if (n.children.length==0) {
-    if (!viewById[n.id]) viewById[n.id]={x:0,y:0,s:1}
+    initView(n)
     viewById[n.id].open=true;
   }
 }
@@ -841,6 +850,8 @@ function populate(t){
     for (let line of t.lines) addSVGline(mainSvgG, line)
   }
   setBackgroundColor(t)
+
+  outlineHighlight(t)
 }
 function showNote(id){
   trailobj=[]
@@ -2008,7 +2019,7 @@ function makeDropTarget(a, n) {
   a.ondragenter=function(e){a.className='drop'}
   a.ondragleave=function(e){a.className=''}
 }
-var outlineLinksById=[];
+var outlineLinksById={};
 function updateOutlineLink(n){
   let a = outlineLinksById[n.id];
   a.textContent=shortTitle(n.title,1,1)
@@ -2017,6 +2028,22 @@ function updateOutlineLink(n){
   if (n.color && n.color.l) a.style.background='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
   else a.style.background='';
   a.style.textDecoration= (n.title.match(/^[#]*~[^~]+~/))?'line-through':'';
+}
+function outlineHighlight(n){
+  for (let a in outlineLinksById) outlineLinksById[a].classList.remove('hl','hl2')
+
+  let t=n;
+  outlineLinksById[t.id].classList.add('hl2')
+  while (t=noteParentById[t.id]) {
+    outlineLinksById[t.id].classList.add('hl')
+    if (offsetLeft) {
+      initView(t)
+      viewById[t.id].open=true
+      outlineLinksById[t.id].parentNode.parentNode.setAttribute('open','')
+    }
+  }
+
+  if (offsetLeft) outlineLinksById[n.id].scrollIntoView({behavior:'smooth',block:'center'})
 }
 function populateOutline(n,parent){
 
@@ -2038,7 +2065,7 @@ function populateOutline(n,parent){
   let s=document.createElement('summary')
 
   d.ontoggle=function(){
-    if (!viewById[n.id]) viewById[n.id]={x:0,y:0,s:1}
+    initView(n)
     viewById[n.id].open=d.open;
     saveView()
   }
@@ -2054,8 +2081,8 @@ function populateOutline(n,parent){
 }
 function rePopulateOutline(){
   removeAllChildNodes(outline)
-  outlineLinksById=[];
-  if (!viewById[tree.id]) viewById[tree.id]={x:0,y:0,s:1}
+  outlineLinksById={};
+  initView(tree)
   if (!viewById[tree.id].hasOwnProperty('open')) viewById[tree.id].open=true;
   populateOutline(tree,outline)
 
