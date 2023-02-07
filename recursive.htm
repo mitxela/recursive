@@ -1202,7 +1202,7 @@ function drawArrow(x1,y1,x2,y2){
   }
 }
 document.onwheel=function(e){
-  if (!pannableTarget(e.target)) return;
+  if (!pannableTarget(e.target) || e.target.tagName=="TEXTAREA") return;
   menu.style.display='none'
 
   doZoom(e.deltaY, e.pageX, e.pageY)
