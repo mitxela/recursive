@@ -1353,12 +1353,14 @@ function markdownApply(s, j){
       } else while (indentstack.length && indent != indentstack[0]){ // indent must have dropped, by one or more
         indentstack.shift()
       }
-
       while (list.length<indentstack.length) lines[i]="<"+listtag+lines[i],list.push("</"+listtag);
+      let closing=[]
+      while (list.length>indentstack.length) closing.push(list.pop())
+      if (closing.length) lines[i]=closing.join("")+lines[i];
+
       if (list.length && i==lines.length-1) {
         while (list.length) lines[i]+=list.pop();
       }
-      while (list.length>indentstack.length) lines[i]=list.pop()+lines[i];
   }
   return lines.join("<br>")
         .replace(/_([^_]+)_/g,'<i>$1</i>')
