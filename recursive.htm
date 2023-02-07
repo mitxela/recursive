@@ -282,8 +282,9 @@ details>p{display:inline-block;}
 <p>Drag corners to resize
 <p>Right click note body to expand, double click to edit text
 <p>Middle-click drag to pan, scroll to zoom
-<p>Drawing tools: Left click drag on background to draw, right click erase
-<p>Sidebar: drag &amp; drop a note onto another to move it
+<p><b>Drawing tools</b>: Left click drag on background to draw, right click erase
+<p><b>Sidebar</b>: drag &amp; drop a note onto another to move it
+<p><b>Search</b>: Enter to jump to result, shift+Enter to search backwards, Esc to defocus
 <p><a href=# onclick='downloadJson(); return false'>Download the current state</a>, drag & drop .json file onto this page to load
 <p><a href='#' onclick='if (confirm("reset?")){localStorage.tree="";localStorage.view="";location.hash="";location.reload()} else return false'>Delete everything and reset</a>
 
@@ -311,6 +312,23 @@ details>p{display:inline-block;}
 <tr><td>Ctrl + Z</td><td>Undo</td></tr>
 <tr><td>Ctrl + A</td><td>Select All</td></tr>
 </table>
+
+<p>Supported markdown:
+<table style='font-family:courier, monospace'>
+<tr><td>Headings</td><td>### H1<br> ## H2<br> # H3<br> </td></tr>
+<tr><td>Bold</td><td>*text*</td></tr>
+<tr><td>Italic</td><td>_text_</td></tr>
+<tr><td>Strikethrough</td><td>~text~</td></tr>
+<tr><td>Inline code</td><td>`code`</td></tr>
+<tr><td>Code block</td><td>```code```</td></tr>
+<tr><td>Hyperlink</td><td>[title](https://www.example.com)</td></tr>
+<tr><td>Images</td><td>![alt text](image.jpg)</td></tr>
+<tr><td>Ordered list</td><td>1. First item<br>2. Second item<br>3. Third item</td></tr>
+<tr><td>Unordered list</td><td>- First item<br>- Second item<br>- Third item</td></tr>
+<tr><td colspan=2>Lists can be nested<br><b>Double-click</b> a list marker to strike out that list item</td></tr>
+<tr><td></td><td></td></tr>
+</table>
+
 <p><a href=# onclick='closeHelp(); return false'>Close</a>
 </div>
 </div>
