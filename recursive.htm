@@ -310,6 +310,7 @@ details>p{display:inline-block;}
 <tr><td>Delete</td><td>Delete marquee selection</td></tr>
 <tr><td>Escape</td><td>Unequip tool</td></tr>
 <tr><td>Ctrl + Z</td><td>Undo</td></tr>
+<tr><td>Ctrl + Y<br>(or Ctrl+Shift+Z)</td><td>Redo</td></tr>
 <tr><td>Ctrl + A</td><td>Select All</td></tr>
 </table>
 
@@ -1833,6 +1834,7 @@ document.onkeydown=function(e){
       setPenTool('none');
       clearSelection();
       menu.style.display='none';
+      help.style.display='none';
       return;
     case 'Delete':
       if (!selection.objects.length) return;
@@ -1867,6 +1869,30 @@ function downloadJson(){
   document.body.removeChild(a);
   URL.revokeObjectURL(url)
 }
+
+document.onpaste = function (event) {
+  var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+
+  for (var index in items) {
+    var item = items[index];
+    if (item.kind === 'file') {
+      var blob = item.getAsFile();
+      var file = new File([blob], "capture.png", { type: 'image/png' });
+
+      var reader = new FileReader();
+      reader.onload = function (event) {
+        let e=document.querySelector('textarea')
+        if (!e) return;
+        let t=e.value;
+        e.value =
+          t.substring(0, e.selectionStart) +
+          '![pasted image](' + event.target.result + ')'
+          + t.substring(e.selectionEnd, t.length)
+      }; 
+      reader.readAsDataURL(blob);
+    }
+  }
+};
 
 const mainSvg=document.querySelector('svg')
 const mainSvgG=mainSvg.firstChild
