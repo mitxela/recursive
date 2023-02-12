@@ -1,4 +1,5 @@
 <!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width, initial-scale=1.0, user-scalable=no">
+<link rel=icon>
 <style>
 h3,h2,h1{margin:0;display:inline-block}
 body{
@@ -336,6 +337,8 @@ details>p{display:inline-block;}
 </div>
 </div>
 
+<canvas id=favicanvas width=32 height=32 style='display:none'></canvas>
+
 <!--<pre id=dbg style="position:fixed;right:0;top:32px;height:calc(100% - 32px);margin:0;overflow:auto"></pre>-->
 
 
@@ -378,6 +381,9 @@ var searchInput=document.getElementById('searchInput')
 var help=document.getElementById('help')
 var toolbox=document.getElementById('toolbox')
 var marquee=document.getElementById('marquee')
+var favicon=document.querySelector("link[rel=icon]")
+var favicanvas=document.getElementById('favicanvas')
+var favictx=favicanvas.getContext('2d')
 var selection={elements:[],objects:[]};
 var trailobj=[]
 var menuRef=null;
@@ -849,6 +855,18 @@ function removeAllChildNodes(a){
 function setBackgroundColor(t){
   document.body.style.backgroundColor= t.color? 'hsl('+t.color.h+','+t.color.s+'%,'+(t.color.l*0.3+70)+'%)' : '#fff';
 }
+function updateFavicon(){
+  favictx.fillStyle=document.body.style.backgroundColor;
+  favictx.fillRect(0,0,32,32)
+
+  let s = Math.min(32/window.innerWidth,32/window.innerHeight);
+
+  for (let n of level.children) {
+    favictx.fillStyle='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
+    favictx.fillRect(n.x*s,n.y*s,n.width*s,n.height*s)
+  }
+  favicon.href=favicanvas.toDataURL()
+}
 function populate(t){
   if (window.location.hash!='#'+t.id)
     window.history.pushState({},'','#'+t.id) //or maybe replaceState
@@ -871,7 +889,7 @@ function populate(t){
     for (let line of t.lines) addSVGline(mainSvgG, line)
   }
   setBackgroundColor(t)
-
+  updateFavicon()
   outlineHighlight(t)
 }
 function showNote(id){
