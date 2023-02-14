@@ -337,7 +337,7 @@ details>p{display:inline-block;}
 </div>
 </div>
 
-<canvas id=favicanvas width=32 height=32 style='display:none'></canvas>
+<canvas id=favicanvas width=16 height=16 style='display:none'></canvas>
 
 <!--<pre id=dbg style="position:fixed;right:0;top:32px;height:calc(100% - 32px);margin:0;overflow:auto"></pre>-->
 
@@ -857,9 +857,9 @@ function setBackgroundColor(t){
 }
 function updateFavicon(){
   favictx.fillStyle=document.body.style.backgroundColor;
-  favictx.fillRect(0,0,32,32)
+  favictx.fillRect(0,0,16,16)
 
-  let s = Math.min(32/window.innerWidth,32/window.innerHeight);
+  let s = Math.min(16/window.innerWidth,16/window.innerHeight);
 
   for (let n of level.children) {
     favictx.fillStyle='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
