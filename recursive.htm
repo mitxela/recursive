@@ -935,6 +935,7 @@ function regenTrail(){
     a.href='#'+n.id
     a.style.background=c1;
     a.style.borderColor=c2;
+    a.style.textDecoration= (n.title.match(/^[#]*~[^~]+~/))?'line-through':'';
     makeDropTarget(a, n)
     s.push(a)
   }
