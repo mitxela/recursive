@@ -130,10 +130,13 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
   height:21px;
   width:calc(100% - 2px);
   border:1px dotted black;
-  background:#cff;
+  background:#cdf;
 }
 summary.outline-hl2::before{
   height:22px;
+}
+summary:hover::marker{
+  color:#08f;
 }
 details p{
   white-space:nowrap;
@@ -303,7 +306,7 @@ details>p{display:inline-block;}
 <p>Right click note body to expand, double click to edit text
 <p>Middle-click drag to pan, scroll to zoom
 <p><b>Drawing tools</b>: Left click drag on background to draw, right click erase
-<p><b>Sidebar</b>: drag &amp; drop a note onto another to move it
+<p><b>Sidebar</b>: drag &amp; drop a note onto another to move it. Shift+click a link to jump to the parent note.
 <p><b>Search</b>: Enter to jump to result, shift+Enter to search backwards, Esc to defocus
 <p><a href=# onclick='downloadJson(); return false'>Download the current state</a>, drag & drop .json file onto this page to load
 <p><a href='#' onclick='if (confirm("reset?")){localStorage.tree="";localStorage.view="";location.hash="";location.reload()} else return false'>Delete everything and reset</a>
@@ -2107,7 +2110,10 @@ function updateOutlineLink(n){
   let a = outlineLinksById[n.id];
   a.textContent=shortTitle(n.title,1,1)
   a.href='#'+n.id
-  a.onclick=function(e){if (e.shiftKey) {location.href='#'+noteParentById[n.id].id; return false }}
+  a.onclick=function(e){
+    if (e.shiftKey) {location.href='#'+noteParentById[n.id].id; return false }
+    if (level.id==n.id) outlineLinksById[n.id].parentNode.click();
+  }
   if (n.color && n.color.l) a.style.background='hsl('+n.color.h+','+n.color.s+'%,'+n.color.l+'%)';
   else a.style.background='';
   a.style.textDecoration= (n.title.match(/^[#]*~[^~]+~/))?'line-through':'';
