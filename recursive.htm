@@ -101,6 +101,7 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
   width:calc(100% - 28px);
   height:calc(100% - 42px);
   overflow:auto;
+  line-height:23px;
 }
 #outline a{
   color:black;
@@ -111,15 +112,31 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
 }
 #outline a:hover{opacity:1}
 #outline a.drop {outline:1px dashed black;opacity:0.5}
-#outline a.hl {
-  box-shadow: -20px 0px 0px 0px rgba(0,128,255,0.3);
+.outline-hl::before{
+  content:'';
+  position:absolute;
+  z-index:-9999;
+  left:0;
+  height:21px;
+  width:calc(100% - 2px);
+  background:#eee;
+  border:1px solid #eee;
 }
-#outline a.hl2 {
-  box-shadow: -20px 0px 0px 0px rgba(0,128,255,0.3), 20px 0px 0px 0px rgba(0,128,255,0.3);
+.outline-hl2::before{
+  content:'';
+  position:absolute;
+  z-index:-9999;
+  left:0;
+  height:21px;
+  width:calc(100% - 2px);
+  border:1px dotted black;
+  background:#cff;
+}
+summary.outline-hl2::before{
+  height:22px;
 }
 details p{
   white-space:nowrap;
-  line-height:23px;
   margin:0 0 0 15px;
 }
 details>p{display:inline-block;}
@@ -2096,12 +2113,12 @@ function updateOutlineLink(n){
   a.style.textDecoration= (n.title.match(/^[#]*~[^~]+~/))?'line-through':'';
 }
 function outlineHighlight(n){
-  for (let a in outlineLinksById) outlineLinksById[a].classList.remove('hl','hl2')
+  for (let a in outlineLinksById) outlineLinksById[a].parentNode.classList.remove('outline-hl','outline-hl2')
 
   let t=n;
-  outlineLinksById[t.id].classList.add('hl2')
+  outlineLinksById[t.id].parentNode.classList.add('outline-hl2')
   while (t=noteParentById[t.id]) {
-    outlineLinksById[t.id].classList.add('hl')
+    outlineLinksById[t.id].parentNode.classList.add('outline-hl')
     if (offsetLeft) {
       initView(t)
       viewById[t.id].open=true
