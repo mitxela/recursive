@@ -494,13 +494,13 @@ function toggleSidebarRight(animate){
     viewById.sidebarRight.open=false
     sidebarRight.style.right=-offsetRight + "px"
     offsetRight = 0;
-    //toolButtons.sidebar.classList.remove('active')
+    toolButtons.history.classList.remove('active')
   } else {
     viewById.sidebarRight.open=true
     offsetRight=viewById.sidebarRight.size
     sidebarRight.style.visibility="visible"
     sidebarRight.style.right="0px"
-    //toolButtons.sidebar.classList.add('active')
+    toolButtons.history.classList.add('active')
   }
   saveView()
 
@@ -874,7 +874,7 @@ function zoomFit(){
   minx -= 5
   miny -= 5
 
-  let ww= window.innerWidth-offsetLeft -32,
+  let ww= window.innerWidth-offsetLeft-offsetRight -32,
       wh= window.innerHeight -32;
 
   let s1= ww/(maxx-minx),
@@ -1882,7 +1882,7 @@ function pan(dx,dy) {
   saveView()
 }
 function zoomCentred(s){
-  doZoom(s, (window.innerWidth+offsetLeft)/2, window.innerHeight/2)
+  doZoom(s, (window.innerWidth+offsetLeft-offsetRight)/2, window.innerHeight/2)
   saveView();
 }
 function doZoom(delta, cx, cy){
@@ -1921,6 +1921,7 @@ document.onkeydown=function(e){
     case 'h': setPenTool('hand'); return;
     case 'z': setPenTool('zoom'); return;
     case 's': toggleSidebarLeft(1); return;
+    case 'S': toggleSidebarRight(1); return;
     case 'q': toggleMoreControls(); return;
     case '/':
       if (document.activeElement==searchInput) return;
@@ -2367,6 +2368,7 @@ function toolButtonSpacer(){
 
 // somewhat hacky - toggleSidebarLeft is called with the event as an argument (truthy)
 toolButton("sidebar", "Toggle Sidebar [S]").onclick=toggleSidebarLeft
+toolButton("history", "Toggle History [Shift+S]").onclick=toggleSidebarRight
 toolButtonSpacer()
 
 for (let i of penTools) {
