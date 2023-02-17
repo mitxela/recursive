@@ -102,6 +102,7 @@ svg{position:absolute;left:0;top:0;transition:opacity 0.3s;transform-origin:0 0}
   height:calc(100% - 42px);
   overflow:auto;
   line-height:23px;
+  scroll-behavior:smooth;
 }
 #outline a{
   color:black;
@@ -2191,7 +2192,11 @@ function outlineHighlight(n){
     }
   }
 
-  if (offsetLeft) outlineLinksById[n.id].scrollIntoView({behavior:'smooth',block:'center'})
+  if (offsetLeft)
+    outline.scroll( 
+      Math.min( outline.scrollLeft, outlineLinksById[n.id].offsetLeft-22 ),
+      outlineLinksById[n.id].offsetTop - (window.innerHeight-32-22)/2
+    )
 }
 function populateOutline(n,parent){
 
