@@ -320,13 +320,7 @@ details>p{display:inline-block;}
 </div>
 
 <div class=sidebar  id=sidebarRight>
- <div id=activity>
-<div class=action>Moved note #3 into #4</div>
-<div class=action>Edited note #712</div>
-<div class=action>Moved/resized note #123</div>
-<div class=action>Moved/resized note #123</div>
-
-</div>
+ <div id=activity></div>
  <div class=sidebarAdj id=sidebarRightAdj></div>
 </div>
 
@@ -731,9 +725,8 @@ function createNote(n, editImmediately=false, index=-1){
     let suppressJump = mostOverlapping(n, targets)[1]>0;
 
     let undoAction =[];
-    let description = "setLayout on "+(targets.objects.length>1?'group':'#'+n.id);
     for (let n of targets.objects) {
-      undoAction.push({action:"setLayout", id:n.id, x:n.x,y:n.y,width:n.width,height:n.height, description})
+      undoAction.push({action:"setLayout", id:n.id, x:n.x,y:n.y,width:n.width,height:n.height})
     }
 
     d.style.cursor='move'
@@ -1248,7 +1241,6 @@ document.onmousedown=function(e){
       document.onmouseup=null;
       document.onmousemove=null;
       deltaPushRaw({
-        description:"drawing on #"+level.id,
         action:"eraseLine",
         id:level.id,
         index:level.lines.indexOf(line)
@@ -1621,19 +1613,44 @@ function randomColor(){
   let angle = sColor+=1.3 // Math.random()*2*3.1415926535;
   return yiq2hsl( 0.8, 0.5*Math.cos(angle), 0.5*Math.sin(angle) );
 }
-
-function createActivityNode(a){
-  let d=document.createElement('div');
-  d.classList.add('action')
-  d.innerHTML = a.description || (Array.isArray(a)&&a[0].description) || JSON.stringify(a);
-  return d
+const inverseDelta = {
+  "addLine":"eraseLine",
+  "eraseLine":"addLine",
+  "eraseAllLines":"undoEraseAllLines",
+  "undoEraseAllLines":"eraseAllLines",
+  "setTitle":"setTitle",
+  "setLayout":"setLayout",
+  "setColor":"setColor",
+  "toggleBulletStrike":"toggleBulletStrike",
+  "toggleStrike":"toggleStrike",
+  "togglePinned":"togglePinned",
+  "deleteNote":"addNote",
+  "addNote":"deleteNote",
+  "setParent":"setParent",
+  "newRoot":"undoNewRoot",
+  "undoNewRoot":"newRoot"
 }
 function populateActivity(){
   removeAllChildNodes(activity)
-  for (let a of deltaHistory)
-    activity.append(createActivityNode(a))
+  for (let a of deltaHistory) {
+    let d=document.createElement('div');
+    d.classList.add('action')
+    if (Array.isArray(a)) {
+      d.innerHTML = inverseDelta[a[a.length-1].action] + (a.length>1?' on group':' on #'+a[0].id)
+    } else {
+      d.innerHTML = inverseDelta[a.action] + ' on #'+a.id;
+    }
+    activity.append(d)
+  }
   for (let i=redoHistory.length;i--;) {
-    let d= createActivityNode(redoHistory[i])
+    let a=redoHistory[i]
+    let d=document.createElement('div');
+    d.classList.add('action')
+    if (Array.isArray(a)) {
+      d.innerHTML = a[0].action + (a.length>1?' on group':' on #'+a[0].id)
+    } else {
+      d.innerHTML = a.action + ' on #'+a.id;
+    }
     d.style.opacity=0.3
     activity.append( d )
   }
@@ -1698,7 +1715,6 @@ function deltaCleanup(){
 }
 function deltaAction(a){
   let undo = {id:a.id}, n=noteById[a.id], d=noteElementsById[n.id];
-  undo.description = a.description || (a.action + ' on #'+a.id);
   switch(a.action){
     case "addLine":
       undo.action="eraseLine"
