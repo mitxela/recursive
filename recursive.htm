@@ -173,6 +173,23 @@ details>p{display:inline-block;}
   width:calc(100% - 8px);
   height:22px;
 }
+#activity { 
+  position:absolute;
+  left:8px;
+  top:0px;
+  width:calc(100% - 9px);
+  height:100%;
+  overflow:auto;
+  scroll-behavior:smooth;
+}
+.action{
+  padding:5px;
+  border:5px solid #ccc;
+}
+.action:hover{
+  background:#ddd;
+  border-color:#bbb
+}
 #toolbar {
   position:absolute;
   z-index:2;
@@ -303,7 +320,13 @@ details>p{display:inline-block;}
 </div>
 
 <div class=sidebar  id=sidebarRight>
+ <div id=activity>
+<div class=action>Moved note #3 into #4</div>
+<div class=action>Edited note #712</div>
+<div class=action>Moved/resized note #123</div>
+<div class=action>Moved/resized note #123</div>
 
+</div>
  <div class=sidebarAdj id=sidebarRightAdj></div>
 </div>
 
@@ -403,6 +426,7 @@ var menu=document.getElementById('menu')
 var main=document.getElementById('main')
 var trail=document.getElementById('trail')
 var outline=document.getElementById('outline')
+var activity=document.getElementById('activity')
 var sidebarLeft=document.getElementById('sidebarLeft')
 var sidebarLeftAdj=document.getElementById('sidebarLeftAdj')
 var sidebarRight=document.getElementById('sidebarRight')
@@ -707,8 +731,9 @@ function createNote(n, editImmediately=false, index=-1){
     let suppressJump = mostOverlapping(n, targets)[1]>0;
 
     let undoAction =[];
+    let description = "setLayout on "+(targets.objects.length>1?'group':'#'+n.id);
     for (let n of targets.objects) {
-      undoAction.push({action:"setLayout", id:n.id, x:n.x,y:n.y,width:n.width,height:n.height})
+      undoAction.push({action:"setLayout", id:n.id, x:n.x,y:n.y,width:n.width,height:n.height, description})
     }
 
     d.style.cursor='move'
@@ -1223,6 +1248,7 @@ document.onmousedown=function(e){
       document.onmouseup=null;
       document.onmousemove=null;
       deltaPushRaw({
+        description:"drawing on #"+level.id,
         action:"eraseLine",
         id:level.id,
         index:level.lines.indexOf(line)
@@ -1596,8 +1622,24 @@ function randomColor(){
   return yiq2hsl( 0.8, 0.5*Math.cos(angle), 0.5*Math.sin(angle) );
 }
 
+function createActivityNode(a){
+  let d=document.createElement('div');
+  d.classList.add('action')
+  d.innerHTML = a.description || (Array.isArray(a)&&a[0].description) || JSON.stringify(a);
+  return d
+}
+function populateActivity(){
+  removeAllChildNodes(activity)
+  for (let a of deltaHistory)
+    activity.append(createActivityNode(a))
+  for (let i=redoHistory.length;i--;) {
+    let d= createActivityNode(redoHistory[i])
+    d.style.opacity=0.3
+    activity.append( d )
+  }
+}
 function save(){
-  //dbg.innerHTML='Undo:'+JSON.stringify(deltaHistory,' ',2)+'\nRedo:'+JSON.stringify(redoHistory,' ',2)
+  populateActivity()
   localStorage.tree=JSON.stringify(tree)
 }
 function saveView(){
@@ -1656,6 +1698,7 @@ function deltaCleanup(){
 }
 function deltaAction(a){
   let undo = {id:a.id}, n=noteById[a.id], d=noteElementsById[n.id];
+  undo.description = a.description || (a.action + ' on #'+a.id);
   switch(a.action){
     case "addLine":
       undo.action="eraseLine"
