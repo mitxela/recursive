@@ -448,12 +448,14 @@ function closeHelp(){
   help.style.display='none'
 }
 function setOffsetLeft(ol){
+  if (ol<32) ol=32
   viewById.sidebarLeft.size=offsetLeft=ol;
   ol+='px';
   canvas.style.left=ol;
   sidebarLeft.style.width=ol
 }
 function setOffsetRight(ol){
+  if (ol<32) ol=32
   viewById.sidebarRight.size=offsetRight=ol;
   sidebarRight.style.width=ol+'px'
 }
@@ -1109,6 +1111,7 @@ document.onmousedown=function(e){
       setOffsetLeft(e.clientX+4)
     }
     document.onmouseup=function(e){
+      if (offsetLeft<=32) toggleSidebarLeft();
       saveView()
       document.onmouseup=null;
       document.onmousemove=null;
@@ -1120,6 +1123,7 @@ document.onmousedown=function(e){
       setOffsetRight(window.innerWidth-e.clientX+4)
     }
     document.onmouseup=function(e){
+      if (offsetRight<=32) toggleSidebarRight();
       saveView()
       document.onmouseup=null;
       document.onmousemove=null;
