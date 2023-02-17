@@ -457,11 +457,9 @@ function setOffsetRight(ol){
   viewById.sidebarRight.size=offsetRight=ol;
   sidebarRight.style.width=ol+'px'
 }
-function toggleSidebarLeft(animate){
-  if (animate) {
-    canvas.style.transition='0.2s'
-    sidebarLeft.style.transition='left 0.2s'
-  }
+function toggleSidebarLeft(){
+  canvas.style.transition='0.2s'
+  sidebarLeft.style.transition='left 0.2s'
 
   if (offsetLeft) {
     viewById.sidebarLeft.open=false
@@ -483,12 +481,10 @@ function toggleSidebarLeft(animate){
     sidebarLeft.style.visibility=offsetLeft?"visible":"hidden"
     canvas.style.transition=''
     sidebarLeft.style.transition=''
-  },animate?200:1)
+  },200)
 }
-function toggleSidebarRight(animate){
-  if (animate) {
-    sidebarRight.style.transition='right 0.2s'
-  }
+function toggleSidebarRight(){
+  sidebarRight.style.transition='right 0.2s'
 
   if (offsetRight) {
     viewById.sidebarRight.open=false
@@ -507,7 +503,7 @@ function toggleSidebarRight(animate){
   setTimeout(function(){
     sidebarRight.style.visibility=offsetRight?"visible":"hidden"
     sidebarRight.style.transition=''
-  },animate?200:1)
+  },200)
 }
 function toggleMoreControls(){
   document.getElementById('drawingControls').classList.toggle("open")
@@ -1920,13 +1916,13 @@ document.onkeydown=function(e){
     case 'e': setPenTool('erase'); return;
     case 'h': setPenTool('hand'); return;
     case 'z': setPenTool('zoom'); return;
-    case 's': toggleSidebarLeft(1); return;
-    case 'S': toggleSidebarRight(1); return;
+    case 's': toggleSidebarLeft(); return;
+    case 'S': toggleSidebarRight(); return;
     case 'q': toggleMoreControls(); return;
     case '/':
       if (document.activeElement==searchInput) return;
       killEvent(e);
-      if (!offsetLeft) toggleSidebarLeft(1);
+      if (!offsetLeft) toggleSidebarLeft();
       searchInput.focus();
       return;
     case 'Escape':
@@ -2295,25 +2291,36 @@ function reloadAll(){
 
   window.onhashchange()
 
-  //TODO: rewrite this in a less messy way
   if (!viewById.sidebarLeft) viewById.sidebarLeft = {size:200,open:false}
   if (viewById.sidebarLeft.open) {
-    if (!offsetLeft) toggleSidebarLeft();
-    setOffsetLeft(viewById.sidebarLeft.size)
+    offsetLeft=viewById.sidebarLeft.size
+    sidebarLeft.style.visibility="visible"
+    sidebarLeft.style.left="0px"
+    sidebarLeft.style.width=offsetLeft+'px'
+    canvas.style.left=offsetLeft+'px'
+    toolButtons.sidebar.classList.add('active')
   } else {
-    if (offsetLeft) toggleSidebarLeft();
-    sidebarLeft.style.width=viewById.sidebarLeft.size+'px'
+    offsetLeft = 0;
+    sidebarLeft.style.visibility="hidden"
     sidebarLeft.style.left=-viewById.sidebarLeft.size+'px'
+    sidebarLeft.style.width=viewById.sidebarLeft.size+'px'
+    canvas.style.left="0px"
+    toolButtons.sidebar.classList.remove('active')
   }
 
   if (!viewById.sidebarRight) viewById.sidebarRight = {size:200,open:false}
   if (viewById.sidebarRight.open) {
-    if (!offsetRight) toggleSidebarRight();
-    setOffsetRight(viewById.sidebarRight.size)
+    offsetRight=viewById.sidebarRight.size
+    sidebarRight.style.visibility="visible"
+    sidebarRight.style.right="0px"
+    sidebarRight.style.width=offsetRight+'px'
+    toolButtons.history.classList.add('active')
   } else {
-    if (offsetRight) toggleSidebarRight();
-    sidebarRight.style.width=viewById.sidebarRight.size+'px'
+    offsetRight = 0;
+    sidebarRight.style.visibility="hidden"
     sidebarRight.style.right=-viewById.sidebarRight.size+'px'
+    sidebarRight.style.width= viewById.sidebarRight.size+'px'
+    toolButtons.history.classList.remove('active')
   }
 }
 
@@ -2366,7 +2373,6 @@ function toolButtonSpacer(){
   toolbox.append(document.createTextNode(' - '))
 }
 
-// somewhat hacky - toggleSidebarLeft is called with the event as an argument (truthy)
 toolButton("sidebar", "Toggle Sidebar [S]").onclick=toggleSidebarLeft
 toolButton("history", "Toggle History [Shift+S]").onclick=toggleSidebarRight
 toolButtonSpacer()
