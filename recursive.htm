@@ -1743,8 +1743,8 @@ function deltaAction(a){
       toggleBulletStrike(n,a.i,a.j)
       if (d) d.children[1].innerHTML = markdown(n.title);
       else if (subNoteById[n.id]) subNoteById[n.id].innerHTML=markdown(n.title)
-      updateOutlineLink(n)
-      // trail shouldn't be affected by toggling strike
+      // currently bulletstrike isn't even rendered in the outline or trail
+      //updateOutlineLink(n)
     break;
     case "toggleStrike":
       undo.action="toggleStrike"
@@ -1759,6 +1759,7 @@ function deltaAction(a){
       if (d) d.children[1].innerHTML = markdown(n.title)
       else if (subNoteById[n.id]) subNoteById[n.id].innerHTML=markdown(n.title)
       updateOutlineLink(n)
+      if (trailobj.includes(n)) regenTrail();
     break;
     case "togglePinned":
       undo.action="togglePinned"
