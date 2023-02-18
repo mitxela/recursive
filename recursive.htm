@@ -1631,7 +1631,7 @@ const inverseDelta = {
   "newRoot":"undoNewRoot",
   "undoNewRoot":"newRoot"
 }
-function updateActivity(a,d,redo){
+function describeActivity(a,redo){
   let desc, affected=[];
   if (Array.isArray(a)) {
     desc = a[redo?a.length-1:0].action
@@ -1641,25 +1641,25 @@ function updateActivity(a,d,redo){
     affected = [a.id]
   }
   if (redo) {
-    d.className="action redo"
     affected.reverse()
   } else {
-    d.className="action"
     desc=inverseDelta[desc];
   }
-  d.innerHTML = desc + ' on #' + affected.join(', #');
+  return desc + ' on #' + affected.join(', #');
 }
 function populateActivity(){
   removeAllChildNodes(activity)
   for (let a of deltaHistory) {
     let d=document.createElement('div');
-    updateActivity(a,d,0)
+    d.className="action"
+    d.innerHTML = describeActivity(a,0)
     activity.append(d)
   }
   for (let i=redoHistory.length;i--;) {
     let a=redoHistory[i]
     let d=document.createElement('div');
-    updateActivity(a,d,1)
+    d.className="action redo"
+    d.innerHTML = describeActivity(a,1)
     activity.append( d )
   }
 }
