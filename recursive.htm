@@ -190,6 +190,7 @@ details>p{display:inline-block;}
   background:#ddd;
   border-color:#bbb
 }
+.redo{opacity:0.3}
 #toolbar {
   position:absolute;
   z-index:2;
@@ -1626,32 +1627,39 @@ const inverseDelta = {
   "togglePinned":"togglePinned",
   "deleteNote":"addNote",
   "addNote":"deleteNote",
-  "setParent":"setParent",
+  "setParent":"setParent", //setparent/newroot will erroneously describe as group
   "newRoot":"undoNewRoot",
   "undoNewRoot":"newRoot"
+}
+function updateActivity(a,d,redo){
+  let desc, affected=[];
+  if (Array.isArray(a)) {
+    desc = a[redo?a.length-1:0].action
+    for (let n of a) affected.push(n.id)
+  } else {
+    desc = a.action
+    affected = [a.id]
+  }
+  if (redo) {
+    d.className="action redo"
+    affected.reverse()
+  } else {
+    d.className="action"
+    desc=inverseDelta[desc];
+  }
+  d.innerHTML = desc + ' on #' + affected.join(', #');
 }
 function populateActivity(){
   removeAllChildNodes(activity)
   for (let a of deltaHistory) {
     let d=document.createElement('div');
-    d.classList.add('action')
-    if (Array.isArray(a)) {
-      d.innerHTML = inverseDelta[a[a.length-1].action] + (a.length>1?' on group':' on #'+a[0].id)
-    } else {
-      d.innerHTML = inverseDelta[a.action] + ' on #'+a.id;
-    }
+    updateActivity(a,d,0)
     activity.append(d)
   }
   for (let i=redoHistory.length;i--;) {
     let a=redoHistory[i]
     let d=document.createElement('div');
-    d.classList.add('action')
-    if (Array.isArray(a)) {
-      d.innerHTML = a[0].action + (a.length>1?' on group':' on #'+a[0].id)
-    } else {
-      d.innerHTML = a.action + ' on #'+a.id;
-    }
-    d.style.opacity=0.3
+    updateActivity(a,d,1)
     activity.append( d )
   }
 }
