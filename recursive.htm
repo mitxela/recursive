@@ -1629,6 +1629,11 @@ const inverseDelta = {
   "newRoot":"undoNewRoot",
   "undoNewRoot":"newRoot"
 }
+const deltaDescription = {
+  "addLine":"drawing",
+  "eraseLine":"drawing",
+  "setTitle":"edit text"
+}
 function describeActivity(a,redo){
   let desc, affected=[];
   if (Array.isArray(a)) {
@@ -1643,6 +1648,7 @@ function describeActivity(a,redo){
   } else {
     desc=inverseDelta[desc];
   }
+  if (deltaDescription[desc]) desc = deltaDescription[desc]
   return desc + ' on #' + affected.join(', #');
 }
 function populateActivity(){
