@@ -224,7 +224,7 @@ details>p{display:inline-block;}
   background:rgba(212,212,212,0.8);
   width:280px;
   left:-280px;
-  top:115px;
+  top:174px;
   opacity:0;
   transition:0.2s;
 }
@@ -384,8 +384,6 @@ details>p{display:inline-block;}
 </div>
 
 <canvas id=favicanvas width=16 height=16 style='display:none'></canvas>
-
-<!--<pre id=dbg style="position:fixed;right:0;top:32px;height:calc(100% - 32px);margin:0;overflow:auto"></pre>-->
 
 
 <script>
@@ -1627,7 +1625,7 @@ const inverseDelta = {
   "togglePinned":"togglePinned",
   "deleteNote":"addNote",
   "addNote":"deleteNote",
-  "setParent":"setParent", //setparent/newroot will erroneously describe as group
+  "setParent":"setParent",
   "newRoot":"undoNewRoot",
   "undoNewRoot":"newRoot"
 }
@@ -1649,18 +1647,27 @@ function describeActivity(a,redo){
 }
 function populateActivity(){
   removeAllChildNodes(activity)
+  let activities=[], last;
   for (let a of deltaHistory) {
-    let d=document.createElement('div');
-    d.className="action"
-    d.innerHTML = describeActivity(a,0)
-    activity.append(d)
+    let d = describeActivity(a,0)
+    if (last && last==d) activities[activities.length-1][1]++;
+    else activities.push([d,1,0])
+    last=d
   }
+  last=null
   for (let i=redoHistory.length;i--;) {
-    let a=redoHistory[i]
+    let d = describeActivity(redoHistory[i],1)
+    if (last && last==d) activities[activities.length-1][1]++;
+    else activities.push([d,1,1])
+    last=d
+  }
+
+  for (let a of activities) {
     let d=document.createElement('div');
-    d.className="action redo"
-    d.innerHTML = describeActivity(a,1)
-    activity.append( d )
+    d.classList.add('action')
+    if (a[2]) d.classList.add('redo')
+    d.innerHTML = a[0] + (a[1]>1?' ('+a[1]+')':'');
+    activity.append(d)
   }
 }
 function save(){
