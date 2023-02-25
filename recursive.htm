@@ -2357,7 +2357,7 @@ function search(o){
   //todo: make async
   searchCheck(tree, r)
 
-  searchResults=[...new Set(searchResults)] // remove duplicates
+  searchResults=Array.from(new Set(searchResults)) // remove duplicates
 }
 function jumpFirstSearch(){
   if (searchResults.length) {
