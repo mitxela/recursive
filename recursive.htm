@@ -722,28 +722,34 @@ function createNote(n, editImmediately=false, index=-1){
 
     var startx=n.x, starty=n.y;
     var [sx, sy] = mousePos(e);
+    let dx=0,dy=0;
     let suppressJump = mostOverlapping(n, targets)[1]>0;
-
-    let undoAction =[];
-    for (let n of targets.objects) {
-      undoAction.push({action:"setLayout", id:n.id, x:n.x,y:n.y,width:n.width,height:n.height})
-    }
 
     d.style.cursor='move'
 
     document.onmousemove=function(e){
       if (d.style.width!=sw || d.style.height!=sh) {
-        n.width = parseFloat(d.style.width)
-        n.height= parseFloat(d.style.height)
-        return
+        // We cannot easily detect resizing before the first mousemove
+        // To avoid giving the whole group a nudge, we must explicitly undo it in the second onmousemove
+        if (dx||dy) {
+          dx=dy=0;
+          for (let i=0; i<targets.elements.length; i++) {
+            let n=targets.objects[i], d=targets.elements[i];
+            d.style.left = n.x +'px'
+            d.style.top  = n.y +'px'
+          }
+        }
+        return;
       }
 
       let [mx, my] = mousePos(e);
-      let dx = mx - sx, dy = my - sy;
-      sx=mx; sy=my;
+      dx = mx - sx;
+      dy = my - sy;
 
       for (let i=0; i<targets.elements.length; i++) {
-        moveNote(targets.objects[i], targets.elements[i],dx,dy)
+        let n=targets.objects[i], d=targets.elements[i];
+        d.style.left = (n.x+dx) +'px'
+        d.style.top  = (n.y+dy) +'px'
       }
       let [m, ma] = mostOverlapping(n, targets);
       for (let i of main.children){ i.classList.remove('hl')}
@@ -757,7 +763,12 @@ function createNote(n, editImmediately=false, index=-1){
       d.style.cursor='';
 
       if (d.style.width!=sw || d.style.height!=sh) {
-        deltaPushRaw(undoAction)
+        deltaPush([{ action:"setLayout", id:n.id, 
+          x:n.x,
+          y:n.y,
+          width:parseFloat(d.style.width),
+          height:parseFloat(d.style.height)
+        }])
         return
       }
       
@@ -768,7 +779,6 @@ function createNote(n, editImmediately=false, index=-1){
 
         if (confirm('Move '+p+' into "'+shortTitle(target.title)+'"?')) {
           openViewIfEmpty(target)
-          let dx = n.x-startx, dy = n.y-starty;
           let action=[]
 
           for (let i=0; i<targets.elements.length; i++) {
@@ -780,8 +790,6 @@ function createNote(n, editImmediately=false, index=-1){
               parent:target.id,
               animate:1,
             })
-            n.x -= dx
-            n.y -= dy
           }
           deltaPush(action)
           return
@@ -791,8 +799,18 @@ function createNote(n, editImmediately=false, index=-1){
         }
       }
 
-      if (n.x!=startx || n.y !=starty) {
-        deltaPushRaw(undoAction)
+      if (dx!=0 || dy!=0) {
+        let action=[]
+        for (let i=0; i<targets.elements.length; i++) {
+          let n=targets.objects[i], d=targets.elements[i];
+          action.push({action:"setLayout", id:n.id,
+            x:n.x+dx,
+            y:n.y+dy,
+            width:n.width,
+            height:n.height
+          })
+        }
+        deltaPush(action)
       }
     }
   }
@@ -855,12 +873,6 @@ function createSubNote(i) {
 
   subNoteById[i.id]=sn
   return sn
-}
-function moveNote(n,d,dx,dy) {
-  n.x += dx
-  n.y += dy
-  d.style.left = n.x +'px'
-  d.style.top  = n.y +'px'
 }
 function zoomReset(){
   view={x:0,y:0,s:1}
