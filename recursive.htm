@@ -1729,8 +1729,9 @@ function deltaCleanup(){
     deltaFlags.showNote=false
   }
   if (deltaFlags.delayedShowNote!==false) {
+    let dsn = deltaFlags.delayedShowNote
     setTimeout(()=>{
-      showNote(deltaFlags.delayedShowNote);
+      showNote(dsn);
       deltaFlags.delayedShowNote=false
     },300)
   }
