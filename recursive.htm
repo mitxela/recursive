@@ -1236,8 +1236,6 @@ document.onmousedown=function(e){
 
   } else { // draw a line of some sort
     var line = {points:[[sx,sy]]}, path=null;
-    if (!level.lines) level.lines=[]
-    level.lines.push(line)
     if (penTool=="arrow" && arrowStyle < 3) {line.fill=penColor}
     if (penWidth!="3px") line.width=penWidth;
     if (penColor!="black") line.color=penColor;
@@ -1249,11 +1247,12 @@ document.onmousedown=function(e){
       document.onmousemove(e)
       document.onmouseup=null;
       document.onmousemove=null;
-      deltaPushRaw({
-        action:"eraseLine",
+      deltaPush([{
+        action:"addLine",
         id:level.id,
-        index:level.lines.indexOf(line)
-      })
+        skipDom:true,
+        line
+      }])
     }
 
     if (penTool=="pencil") {
@@ -1758,6 +1757,7 @@ function deltaAction(a){
         n.lines.push(a.line)
         undo.index=n.lines.length-1
       }
+      if (a.skipDom) break;
       if (n==level) addSVGline(mainSvgG, a.line, undo.index)
       else if (level.children.includes(n)) {
         addSVGline(subNoteSvgById[n.id], a.line, undo.index)
