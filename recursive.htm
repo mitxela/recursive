@@ -764,7 +764,8 @@ function createNote(n, editImmediately=false, index=-1){
           x:n.x,
           y:n.y,
           width:parseFloat(d.style.width),
-          height:parseFloat(d.style.height)
+          height:parseFloat(d.style.height),
+          skipDom:true
         }])
         return
       }
@@ -804,7 +805,8 @@ function createNote(n, editImmediately=false, index=-1){
             x:n.x+dx,
             y:n.y+dy,
             width:n.width,
-            height:n.height
+            height:n.height,
+            skipDom:true
           })
         }
         deltaPush(action)
@@ -1701,12 +1703,6 @@ function deltaPush(actions){
   redoHistory=[]
   save()
 }
-function deltaPushRaw(undo) {
-  deltaHistory.push(undo)
-  deltaCleanup()
-  redoHistory=[]
-  save()
-}
 function undo(){
   traverseHistory(deltaHistory, redoHistory)
 }
@@ -1811,6 +1807,7 @@ function deltaAction(a){
       n.y = a.y
       n.width = a.width
       n.height = a.height
+      if (a.skipDom) break;
       if (d) setNoteLayout(n,d)
       else if (subNoteById[n.id]) setNoteLayout(n, subNoteById[n.id])
     break;
