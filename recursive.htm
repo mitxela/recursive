@@ -2186,6 +2186,7 @@ function validTree(t){
      || typeof c.color.l !=="number"
      || typeof c.color.h !=="number"
      || typeof c.color.s !=="number"
+     //|| typeof c.id !=="number"
      || !validTree(c)
     ) return false
   }
@@ -2204,7 +2205,7 @@ function idInUse(id) {
   return (allIds.includes(id))
 }
 function newId(){
-  while (idInUse(nextId)) nextId++;
+  while (idInUse(nextId)) nextId=(nextId+1||allIds.length);
   allIds.push(nextId)
   return nextId
 }
