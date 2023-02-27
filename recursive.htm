@@ -217,6 +217,14 @@ details>p{display:inline-block;}
   background-color: #bbb;
   background-position:1px 1px;
 }
+.tool:disabled{
+  /*
+  filter:grayscale(100%);
+  opacity:0.2;
+  background-position:0 0;
+  */
+  display:none;
+}
 #drawingControls{
   position:absolute;
   padding:12px;
@@ -303,13 +311,13 @@ details>p{display:inline-block;}
 <div id=marquee></div>
 
 <div id=menu>
-  <p>Change color <input id=notecolor type=color onchange='changeColor()'><br>(use black for transparent)
-  <p><a href='#' onclick='editNote(); return false'>Edit</a>
-  <p><a href='#' onclick='menuAction({action:"toggleStrike"}); return false'>Toggle strikethrough</a>
-  <p><a href='#' onclick='menuAction({action:"togglePinned"}); return false'>Toggle pinned</a>
+  <p class=ro-disable>Change color <input id=notecolor type=color onchange='changeColor()'><br>(use black for transparent)
+  <p><a href='#' class=ro-disable onclick='editNote(); return false'>Edit</a>
+  <p><a href='#' class=ro-disable onclick='menuAction({action:"toggleStrike"}); return false'>Toggle strikethrough</a>
+  <p><a href='#' class=ro-disable onclick='menuAction({action:"togglePinned"}); return false'>Toggle pinned</a>
   <p><a href='#' onclick='jumpInto(); return false' id=jumpInto>Jump Into</a>
-  <p><a href='#' onclick='moveUpNote(); return false'>Move up a level</a>
-  <p><a href='#' onclick='menuAction({action:"deleteNote"}); return false'>Delete</a>
+  <p><a href='#' class=ro-disable onclick='moveUpNote(); return false'>Move up a level</a>
+  <p><a href='#' class=ro-disable onclick='menuAction({action:"deleteNote"}); return false'>Delete</a>
 </div>
 
 <div id=trail></div>
@@ -336,7 +344,7 @@ details>p{display:inline-block;}
 <p><b>Sidebar</b>: drag &amp; drop a note onto another to move it. Shift+click a link to jump to the parent note.
 <p><b>Search</b>: Enter to jump to result, shift+Enter to search backwards, Esc to defocus
 <p><a href=# onclick='downloadJson(); return false'>Download the current state</a>, drag & drop .json file onto this page to load
-<p><a href='#' onclick='if (confirm("reset?")){localStorage.tree="";localStorage.view="";location.hash="";location.reload()} else return false'>Delete everything and reset</a>
+<p><a href='#' class=ro-disable onclick='if (confirm("reset?")){localStorage.tree="";localStorage.view="";location.hash="";location.reload()} else return false'>Delete everything and reset</a>
 
 <p>Keyboard shortcuts:
 <table>
@@ -443,6 +451,7 @@ var offsetRight = 0;
 var textEditing=false;
 var deltaHistory=[], redoHistory=[];
 var view, viewById={};
+var readonly = false;
 
 if (localStorage.tree) tree=JSON.parse(localStorage.tree);
 if (localStorage.view) viewById=JSON.parse(localStorage.view);
@@ -527,8 +536,29 @@ function toggleSidebarRight(){
   },200)
 }
 function toggleMoreControls(){
+  if (readonly) return;
   document.getElementById('drawingControls').classList.toggle("open")
   toolButtons.gear.classList.toggle('active')
+}
+function setReadOnly(){
+  readonly=true
+  //["addnote","marquee","pencil","line","arrow","rect","erase","gear"].forEach((b)=>toolButtons[b].disabled=true)
+
+  for (let i of document.getElementsByClassName('ro-disable'))
+    i.style.display='none'
+
+  // todo: if we are in the middle of an action, e.g. drawing a line / moving a note / editing text, terminate it safely
+
+  setPenTool('none')
+
+  document.getElementById('drawingControls').classList.remove("open")
+  toolButtons.gear.classList.remove('active')
+}
+function unsetReadOnly(){
+  readonly=false
+
+  for (let i of document.getElementsByClassName('ro-disable'))
+    i.style.display=''
 }
 function changeColor(){
   let c = hex2hsl(document.getElementById('notecolor').value);
@@ -630,6 +660,7 @@ function createNote(n, editImmediately=false, index=-1){
   d.appendChild(t)
 
   d.ondblclick=function(ev){
+    if (readonly) return;
     if (ev){
       if (ev.target.tagName=='TEXTAREA') return;
       if (ev.target.tagName=='LI' && ev.clientX < ev.target.getBoundingClientRect().x) {
@@ -710,7 +741,7 @@ function createNote(n, editImmediately=false, index=-1){
   }
 
   d.onmousedown=function(e){
-    if (e.target.tagName=="TEXTAREA" || e.button!=0 || n.pinned || penTool=="zoom" || penTool=="hand") return;
+    if (readonly || e.target.tagName=="TEXTAREA" || e.button!=0 || n.pinned || penTool=="zoom" || penTool=="hand") return;
     var sw = d.style.width, sh = d.style.height;
     d.style.zIndex = ++zTopIndex
 
@@ -1195,7 +1226,7 @@ document.onmousedown=function(e){
     }
     return;
   }
-  if (textEditing || !background(e.target)) return;
+  if (readonly || textEditing || !background(e.target)) return;
 
   if (penTool=="marquee"){
     let sx = e.pageX, sy=e.pageY;
@@ -1696,6 +1727,7 @@ function saveView(){
   localStorage.view=JSON.stringify(viewById)
 }
 function deltaPush(actions){
+  if (readonly) return;
   let undo=[];
   for (let a of actions) undo.push(deltaAction(a))
   deltaHistory.push(undo)
@@ -2034,6 +2066,8 @@ document.onkeydown=function(e){
 }
 function setPenTool(newTool){
   if (document.onmouseup!=null) return;
+  //if (toolButtons[newTool] && toolButtons[newTool].disabled) return;
+  if (readonly && newTool!="hand" && newTool!="zoom" && newTool != "none") return;
 
   for (let t of penTools) toolButtons[t].classList.remove("active")
   if (toolButtons[newTool]) toolButtons[newTool].classList.add("active");
@@ -2239,7 +2273,7 @@ function makeDropTarget(a, n) {
           if (s[0] != location.href.split('#')[0]) return;
           let moved = noteById[parseInt(s[1])];
 
-          if (moved && !noteContains(moved, n) && confirm('Move "'+shortTitle(moved.title)+'" into "'+shortTitle(n.title)+'"?')){
+          if (!readonly && moved && !noteContains(moved, n) && confirm('Move "'+shortTitle(moved.title)+'" into "'+shortTitle(n.title)+'"?')){
             openViewIfEmpty(n)
             deltaPush([{
               action:"setParent",
@@ -2493,6 +2527,9 @@ toolButton("zoomfit", "Zoom fit [End]").onclick = zoomFit
 toolButtonSpacer()
 toolButton("download", "Download JSON").onclick = downloadJson
 toolButton("help", "Help").onclick = openHelp
+
+;["addnote","marquee","pencil","line","arrow","rect","erase","gear"]
+  .forEach(b=>toolButtons[b].classList.add('ro-disable'))
 
 reloadAll()
 </script>
