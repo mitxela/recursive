@@ -2189,6 +2189,7 @@ document.body.addEventListener('drop', function(e){
       viewById = {} // todo: maybe load properly from old format
     }
     if (!validTree(newtree)) {alert("Invalid JSON data"); return }
+    if (!confirm("Delete everything and load "+files[0].name+'?')) return;
 
     tree=newtree;
     deltaHistory=[]
