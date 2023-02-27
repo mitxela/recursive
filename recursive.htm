@@ -217,14 +217,6 @@ details>p{display:inline-block;}
   background-color: #bbb;
   background-position:1px 1px;
 }
-.tool:disabled{
-  /*
-  filter:grayscale(100%);
-  opacity:0.2;
-  background-position:0 0;
-  */
-  display:none;
-}
 #drawingControls{
   position:absolute;
   padding:12px;
@@ -542,7 +534,6 @@ function toggleMoreControls(){
 }
 function setReadOnly(){
   readonly=true
-  //["addnote","marquee","pencil","line","arrow","rect","erase","gear"].forEach((b)=>toolButtons[b].disabled=true)
 
   for (let i of document.getElementsByClassName('ro-disable'))
     i.style.display='none'
@@ -2066,7 +2057,6 @@ document.onkeydown=function(e){
 }
 function setPenTool(newTool){
   if (document.onmouseup!=null) return;
-  //if (toolButtons[newTool] && toolButtons[newTool].disabled) return;
   if (readonly && newTool!="hand" && newTool!="zoom" && newTool != "none") return;
 
   for (let t of penTools) toolButtons[t].classList.remove("active")
