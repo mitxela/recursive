@@ -663,7 +663,7 @@ function createNote(n, editImmediately=false, index=-1){
         return
       }
     }
-    killEvent(ev)
+    if (ev) killEvent(ev)
     
     var e = document.createElement('textarea');
     var sw = (n.width-8)+'px', sh=(n.height-8)+'px';
