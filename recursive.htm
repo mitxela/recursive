@@ -620,6 +620,13 @@ function createNote(n, editImmediately=false, index=-1){
   setNoteColor(n,d)
   setNoteLayout(n,d)
   if (n.pinned) d.classList.add("pinned")
+  {
+    let si = selection.objects.indexOf(n)
+    if (si!=-1) {
+      selection.elements[si]=d
+      d.classList.add('selected')
+    }
+  }
 
   var a = document.createElement('div');
   a.className='gear'
