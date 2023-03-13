@@ -2025,6 +2025,7 @@ document.onkeydown=function(e){
   if (e.ctrlKey && e.key=='z') {undo(); return}
   if (e.ctrlKey && (e.key=='Z' || e.key=='y')) {redo(); return}
   if (e.ctrlKey && e.key=='a') {selectAll(); return}
+  if (e.altKey) return;
 
   switch(e.key) {
     case 'ArrowLeft': pan(100,0); return;
