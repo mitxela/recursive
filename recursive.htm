@@ -2025,6 +2025,7 @@ document.onkeydown=function(e){
   if (e.ctrlKey && e.key=='z') {undo(); return}
   if (e.ctrlKey && (e.key=='Z' || e.key=='y')) {redo(); return}
   if (e.ctrlKey && e.key=='a') {selectAll(); return}
+  if (e.ctrlKey && e.key=='s') {downloadJson(); return false}
   if (e.altKey) return;
 
   switch(e.key) {
@@ -2529,7 +2530,7 @@ toolButtonSpacer()
 toolButton("zoom100", "Zoom to 100% [Home]").onclick = zoomReset
 toolButton("zoomfit", "Zoom fit [End]").onclick = zoomFit
 toolButtonSpacer()
-toolButton("download", "Download JSON").onclick = downloadJson
+toolButton("download", "Download JSON [Ctrl+S]").onclick = downloadJson
 toolButton("help", "Help").onclick = openHelp
 
 ;["addnote","marquee","pencil","line","arrow","rect","erase","gear"]
