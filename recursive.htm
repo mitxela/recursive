@@ -2049,6 +2049,7 @@ document.onkeydown=function(e){
     case 's': toggleSidebarLeft(); return;
     case 'S': toggleSidebarRight(); return;
     case 'q': toggleMoreControls(); return;
+    case '?': openHelp(); return;
     case '/':
       if (document.activeElement==searchInput) return;
       killEvent(e);
@@ -2531,7 +2532,7 @@ toolButton("zoom100", "Zoom to 100% [Home]").onclick = zoomReset
 toolButton("zoomfit", "Zoom fit [End]").onclick = zoomFit
 toolButtonSpacer()
 toolButton("download", "Download JSON [Ctrl+S]").onclick = downloadJson
-toolButton("help", "Help").onclick = openHelp
+toolButton("help", "Help [?]").onclick = openHelp
 
 ;["addnote","marquee","pencil","line","arrow","rect","erase","gear"]
   .forEach(b=>toolButtons[b].classList.add('ro-disable'))
